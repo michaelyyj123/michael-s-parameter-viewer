@@ -108,8 +108,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .cg-lbl{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
 .cg-row{display:flex;gap:6px;align-items:center}
 
-input[type=number]{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
-  padding:5px 9px;color:var(--text);font-size:.83rem;width:96px;outline:none;transition:border-color .12s}
+input[type=number],select.cg-sel{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  padding:5px 9px;color:var(--text);font-size:.83rem;outline:none;transition:border-color .12s}
+input[type=number]{width:96px}
+select.cg-sel{cursor:pointer;width:auto}
 input[type=number]:focus{border-color:var(--accent)}
 input[type=number]::placeholder{color:var(--text4)}
 
@@ -414,11 +416,14 @@ function renderMag(divId,data,mkrs,xr,yr){
       bordercolor:mk.color,borderwidth:1,align:'left',
     });
   });
-  const xax={title:'Frequency (MHz)',gridcolor:th.grid,zerolinecolor:th.zero,
-    color:th.axis,linecolor:th.line,
+  const id=divId.replace('md-','');
+  const axFont=fileById(id)?.axisFont||'';
+  const afObj=axFont?{family:axFont}:undefined;
+  const xax={title:{text:'Frequency (MHz)',font:{color:th.axis,...(afObj||{})}},
+    tickfont:afObj,gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line,
     rangeslider:{visible:true,bgcolor:th.rsBg,bordercolor:th.line,thickness:.07}};
-  const yax={title:'Magnitude (dB)',gridcolor:th.grid,zerolinecolor:th.zero,
-    color:th.axis,linecolor:th.line};
+  const yax={title:{text:'Magnitude (dB)',font:{color:th.axis,...(afObj||{})}},
+    tickfont:afObj,gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line};
   if(xr[0]!==null&&xr[1]!==null)xax.range=xr;
   if(yr[0]!==null&&yr[1]!==null)yax.range=yr;
   Plotly.react(divId,traces,{
@@ -652,14 +657,24 @@ function setSmP(id,btn){
   if(fs.data)renderSmith('sc-'+id,fs.data,fs.sp,fs.mkrs);
 }
 
+// ── axis font ─────────────────────────────────────────────────────────────────
+function setAxisFont(id,font){
+  const fs=fileById(id); if(!fs)return;
+  fs.axisFont=font;
+  renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr);
+}
+
 // ── save ──────────────────────────────────────────────────────────────────────
-function savePlot(divId,filename){
+async function savePlot(divId,filename){
   const isSmith=divId.startsWith('sc-');
-  Plotly.downloadImage(document.getElementById(divId),{
+  const div=document.getElementById(divId);
+  if(!isSmith) await Plotly.relayout(div,{'xaxis.rangeslider.visible':false});
+  await Plotly.downloadImage(div,{
     format:'png',filename,
     width:isSmith?660:1050,height:isSmith?660:540,
     scale:4,
   });
+  if(!isSmith) await Plotly.relayout(div,{'xaxis.rangeslider.visible':true});
 }
 
 // ── create panel HTML ─────────────────────────────────────────────────────────
@@ -730,6 +745,17 @@ function createPanel(fs){
       <div class="cg"><div style="height:20px"></div>
         <button class="btn btn-ghost" onclick="resetY('${id}')">Reset Y</button>
       </div>
+      <div class="cg">
+        <div class="cg-lbl">Axis Font</div>
+        <select class="cg-sel" id="font-sel-${id}" onchange="setAxisFont('${id}',this.value)">
+          <option value="">Default</option>
+          <option value="Arial">Arial</option>
+          <option value="Helvetica">Helvetica</option>
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Courier New">Courier New</option>
+        </select>
+      </div>
     </div>
     <div class="mkr-list" id="ml-${id}"></div>`;
   return el;
@@ -743,7 +769,7 @@ function loadFiles(fileList){
     const fs={
       id:'f'+(_fid++),name:file.name,type:ext,
       data:null,mkrs:[],activeMkr:0,xr:[null,null],yr:[null,null],
-      _ev:false,_click:false,sp:'S11',
+      _ev:false,_click:false,sp:'S11',axisFont:'',
     };
     const r=new FileReader();
     r.onload=ev=>{
