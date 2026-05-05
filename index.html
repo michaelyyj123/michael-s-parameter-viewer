@@ -461,14 +461,14 @@ function renderMag(divId,data,mkrs,xr,yr){
     }
   });
   if(readoutLines.length){
-    const legBottom=Math.max(0.05,1.0-names.length*0.065-0.03);
+    const legBottom=Math.max(0.05,1.0-names.length*0.065-0.12);
     annos.push({
       x:1.02,y:legBottom,xref:'paper',yref:'paper',
       xanchor:'left',yanchor:'top',
       text:readoutLines.join('<br>'),showarrow:false,
       font:{size:10,color:th.text},
       bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left',
-      width:130,
+      width:115,
     });
   }
   const axFont=fs?.axisFont||'';
