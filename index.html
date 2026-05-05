@@ -159,7 +159,15 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
   border-top-color:color-mix(in srgb,var(--accent) 25%,var(--border));
   border-right-color:color-mix(in srgb,var(--accent) 25%,var(--border));
   border-bottom-color:color-mix(in srgb,var(--accent) 25%,var(--border))}
-.mkr-num{font-weight:700;font-size:.8rem;width:22px;flex-shrink:0}
+.mkr-color-inp{width:22px;height:22px;padding:1px;border:1px solid var(--border);
+  border-radius:4px;cursor:pointer;background:none;flex-shrink:0;outline:none;
+  transition:border-color .12s}
+.mkr-color-inp:hover{border-color:var(--text3)}
+.mkr-name-inp{background:transparent;border:1px solid transparent;border-radius:4px;
+  color:var(--text2);font-size:.81rem;font-weight:600;
+  width:58px;padding:2px 5px;outline:none;transition:all .12s;flex-shrink:0}
+.mkr-name-inp:hover{border-color:var(--border)}
+.mkr-name-inp:focus{border-color:var(--accent);background:var(--bg3)}
 .mkr-freq-inp{background:transparent;border:1px solid transparent;border-radius:4px;
   color:var(--text2);font-family:'Courier New',monospace;font-size:.81rem;
   width:86px;padding:2px 5px;outline:none;transition:all .12s;flex-shrink:0}
@@ -167,7 +175,12 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
 .mkr-freq-inp:focus{border-color:var(--accent);background:var(--bg3)}
 .mkr-unit{font-size:.7rem;color:var(--text4);flex-shrink:0}
 .mkr-snap{font-size:.73rem;color:var(--text3);flex-shrink:0;font-family:'Courier New',monospace}
-.mkr-vals{flex:1;display:flex;gap:12px;flex-wrap:wrap;font-family:'Courier New',monospace;font-size:.79rem}
+.mkr-cursor-btn{background:transparent;border:1px solid var(--border);border-radius:4px;
+  color:var(--text4);cursor:pointer;font-size:.72rem;padding:1px 6px;letter-spacing:.05em;
+  transition:all .12s;flex-shrink:0}
+.mkr-cursor-btn:hover{border-color:var(--text3);color:var(--text2)}
+.mkr-cursor-btn.on{border-color:var(--accent);color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 12%,transparent)}
 .mkr-del{background:transparent;border:none;color:var(--text4);cursor:pointer;
   font-size:1.1rem;line-height:1;padding:0 3px;transition:color .12s;flex-shrink:0}
 .mkr-del:hover{color:var(--red)}
@@ -397,24 +410,48 @@ function renderMag(divId,data,mkrs,xr,yr){
     visible:vis[nm]?true:'legendonly',
   }));
   const shapes=[],annos=[];
+  let rightY=0.97; // stacks right-side dB readouts downward
   mkrs.forEach((mk,i)=>{
     const idx=nearest(data.freqs,mk.freq);
     const mf=data.freqs[idx];
     const visNames=names.filter(nm=>vis[nm]);
-    shapes.push({type:'line',x0:mf,x1:mf,y0:0,y1:1,yref:'paper',
+    const mkName=mk.name||`M${i+1}`;
+
+    // Vertical cursor line (optional)
+    if(mk.showLine!==false)shapes.push({type:'line',x0:mf,x1:mf,y0:0,y1:1,yref:'paper',
       line:{color:mk.color,width:1.5,dash:'dash'}});
-    if(visNames.length)traces.push({
-      x:visNames.map(()=>mf),y:visNames.map(nm=>data.sp[nm].db[idx]),
-      mode:'markers',marker:{color:mk.color,size:10,line:{color:th.plot,width:1.8}},
-      showlegend:false,hoverinfo:'skip',
-    });
-    const valLines=visNames.map(nm=>`${nm}: ${data.sp[nm].db[idx].toFixed(2)} dB`).join('<br>');
-    if(valLines)annos.push({
-      x:mf,y:.99,yref:'paper',text:`<b>M${i+1}: ${fmtF(mf)}</b><br>${valLines}`,
-      showarrow:false,yanchor:'top',font:{color:mk.color,size:9},
-      bgcolor:isLight()?'rgba(246,248,250,.92)':'rgba(13,17,23,.9)',
-      bordercolor:mk.color,borderwidth:1,align:'left',
-    });
+
+    // Dots + name label below topmost dot
+    if(visNames.length){
+      const yVals=visNames.map(nm=>data.sp[nm].db[idx]);
+      const topI=yVals.reduce((mi,v,ci)=>v>yVals[mi]?ci:mi,0);
+      const texts=yVals.map((_,j)=>j===topI?mkName:'');
+      traces.push({
+        x:visNames.map(()=>mf),y:yVals,
+        mode:'markers+text',
+        marker:{color:mk.color,size:10,line:{color:th.plot,width:1.8}},
+        text:texts,textposition:'bottom center',
+        textfont:{color:mk.color,size:14,...(fs?.axisFont?{family:fs.axisFont}:{})},
+        showlegend:false,hoverinfo:'skip',
+      });
+    }
+
+    // Right-side dB readout (below legend)
+    if(visNames.length){
+      const valText=[
+        `<b>${mkName}</b>`,
+        ...visNames.map(nm=>`<span style="color:${pc[nm]}">${nm}: ${data.sp[nm].db[idx].toFixed(2)} dB</span>`),
+      ].join('<br>');
+      annos.push({
+        x:1.01,y:rightY,xref:'paper',yref:'paper',
+        xanchor:'left',yanchor:'top',
+        text:valText,showarrow:false,
+        font:{size:10,color:mk.color},
+        bgcolor:isLight()?'rgba(246,248,250,.92)':'rgba(13,17,23,.9)',
+        bordercolor:mk.color,borderwidth:1,align:'left',
+      });
+      rightY-=(visNames.length+1)*0.065+0.015;
+    }
   });
   const id=divId.replace('md-','');
   const fs=fileById(id);
@@ -433,7 +470,7 @@ function renderMag(divId,data,mkrs,xr,yr){
   if(yr[0]!==null&&yr[1]!==null)yax.range=yr;
   Plotly.react(divId,traces,{
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
-    font:{color:th.text,size:11},margin:{t:20,r:20,b:80,l:58},
+    font:{color:th.text,size:11},margin:{t:20,r:160,b:80,l:58},
     xaxis:xax,yaxis:yax,shapes,annotations:annos,
     legend:{bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},
     hovermode:'x unified',
@@ -455,9 +492,9 @@ function renderSmith(divId,data,paramName,mkrs){
     const db=s.db[idx].toFixed(2);
     trs.push({x:[s.re[idx]],y:[s.im[idx]],mode:'markers+text',
       marker:{color:mk.color,size:12,symbol:'circle',line:{color:th.plot,width:1.8}},
-      text:[`M${i+1}`],textposition:'top right',textfont:{color:mk.color,size:10},
+      text:[mk.name||`M${i+1}`],textposition:'top right',textfont:{color:mk.color,size:10},
       showlegend:false,
-      hovertemplate:`M${i+1}: ${fmtF(data.freqs[idx])}<br>${paramName}: ${db} dB<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`,
+      hovertemplate:`${mk.name||`M${i+1}`}: ${fmtF(data.freqs[idx])}<br>${paramName}: ${db} dB<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`,
     });
   });
   Plotly.react(divId,trs,{
@@ -482,7 +519,7 @@ function addMkr(id){
   const fs=fileById(id); if(!fs||fs.mkrs.length>=6)return;
   const f=parseFloat(document.getElementById('mk-inp-'+id).value);
   if(isNaN(f))return;
-  fs.mkrs.push({freq:f,color:MC()[fs.mkrs.length%6]});
+  fs.mkrs.push({freq:f,color:MC()[fs.mkrs.length%6],name:`M${fs.mkrs.length+1}`,showLine:true});
   document.getElementById('mk-inp-'+id).value='';
   renderAll(id); renderMkrList(id);
 }
@@ -502,6 +539,18 @@ function setActiveMkr(id,i){
   const fs=fileById(id); if(!fs)return;
   fs.activeMkr=i; renderMkrList(id);
 }
+function changeMkrColor(id,i,color){
+  const fs=fileById(id); if(!fs||!fs.mkrs[i])return;
+  fs.mkrs[i].color=color; renderAll(id); renderMkrList(id);
+}
+function changeMkrName(id,i,name){
+  const fs=fileById(id); if(!fs||!fs.mkrs[i])return;
+  fs.mkrs[i].name=name.trim()||`M${i+1}`; renderAll(id); renderMkrList(id);
+}
+function toggleMkrLine(id,i){
+  const fs=fileById(id); if(!fs||!fs.mkrs[i])return;
+  fs.mkrs[i].showLine=fs.mkrs[i].showLine===false; renderAll(id); renderMkrList(id);
+}
 function renderMkrList(id){
   const fs=fileById(id); if(!fs)return;
   const el=document.getElementById('ml-'+id);
@@ -514,13 +563,17 @@ function renderMkrList(id){
     const idx=nearest(fs.data.freqs,mk.freq);
     const mf=fs.data.freqs[idx];
     const isAct=i===fs.activeMkr;
-    const vals=Object.entries(fs.data.sp)
-      .filter(([nm])=>vis[nm])
-      .map(([nm,s])=>`<span style="color:${pc[nm]}">${nm}:&nbsp;${s.db[idx].toFixed(2)}&nbsp;dB</span>`)
-      .join('  ');
+    const mkName=mk.name||`M${i+1}`;
+    const lineOn=mk.showLine!==false;
     return `<div class="mkr-row${isAct?' active':''}" style="border-left-color:${mk.color}"
       onclick="setActiveMkr('${id}',${i})">
-      <span class="mkr-num" style="color:${mk.color}">M${i+1}</span>
+      <input type="color" class="mkr-color-inp" value="${mk.color}"
+        onclick="event.stopPropagation()"
+        onchange="changeMkrColor('${id}',${i},this.value)">
+      <input type="text" class="mkr-name-inp" value="${mkName}"
+        onclick="event.stopPropagation()"
+        onkeydown="if(event.key==='Enter')this.blur()"
+        onblur="changeMkrName('${id}',${i},this.value)">
       <input type="number" class="mkr-freq-inp" value="${mk.freq}" step="0.01"
         title="Edit and press Enter or click away to move"
         onkeydown="if(event.key==='Enter')this.blur()"
@@ -528,7 +581,9 @@ function renderMkrList(id){
         onclick="event.stopPropagation()">
       <span class="mkr-unit">MHz</span>
       <span class="mkr-snap">&#8594;&nbsp;${fmtF(mf)}</span>
-      <span class="mkr-vals">${vals||'<span style="color:var(--text4)">&#8212;</span>'}</span>
+      <button class="mkr-cursor-btn${lineOn?' on':''}"
+        onclick="event.stopPropagation();toggleMkrLine('${id}',${i})"
+        title="Toggle cursor line">cursor</button>
       <button class="mkr-del" onclick="event.stopPropagation();removeMkr('${id}',${i})" title="Remove">&#x00D7;</button>
     </div>`;
   }).join('');
@@ -819,7 +874,7 @@ function loadFiles(fileList){
           if(e.key==='Enter')addMkr(fs.id);
         });
         // default marker
-        fs.mkrs=[{freq:127.74,color:MC()[0]}];
+        fs.mkrs=[{freq:127.74,color:MC()[0],name:'M1',showLine:true}];
         renderAll(fs.id); renderMkrList(fs.id);
         // navigate & activate
         setActiveTab(idx);
