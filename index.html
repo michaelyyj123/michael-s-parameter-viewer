@@ -656,7 +656,9 @@ function setSmP(id,btn){
 function savePlot(divId,filename){
   const isSmith=divId.startsWith('sc-');
   Plotly.downloadImage(document.getElementById(divId),{
-    format:'png',filename,width:isSmith?660:1050,height:isSmith?660:540,
+    format:'png',filename,
+    width:isSmith?660:1050,height:isSmith?660:540,
+    scale:4,
   });
 }
 
