@@ -181,6 +181,11 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
 .mkr-cursor-btn:hover{border-color:var(--text3);color:var(--text2)}
 .mkr-cursor-btn.on{border-color:var(--accent);color:var(--accent);
   background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.mkr-trace-sel{background:var(--bg2);border:1px solid var(--border);border-radius:4px;
+  color:var(--text3);font-size:.72rem;padding:1px 4px;cursor:pointer;flex-shrink:0;
+  transition:all .12s;outline:none;max-width:70px}
+.mkr-trace-sel:hover{border-color:var(--text3);color:var(--text2)}
+.mkr-trace-sel:focus{border-color:var(--accent)}
 .mkr-del{background:transparent;border:none;color:var(--text4);cursor:pointer;
   font-size:1.1rem;line-height:1;padding:0 3px;transition:color .12s;flex-shrink:0}
 .mkr-del:hover{color:var(--red)}
@@ -412,11 +417,13 @@ function renderMag(divId,data,mkrs,xr,yr){
   const id=divId.replace('md-','');
   const fs=fileById(id);
   const shapes=[],annos=[];
-  let rightY=0.97; // stacks right-side dB readouts downward
+  let rightY=Math.max(0.15, 0.97 - names.length*0.075); // start below Plotly legend
   mkrs.forEach((mk,i)=>{
     const idx=nearest(data.freqs,mk.freq);
     const mf=data.freqs[idx];
-    const visNames=names.filter(nm=>vis[nm]);
+    const visNames=mk.trace
+      ? (vis[mk.trace]?[mk.trace]:[])
+      : names.filter(nm=>vis[nm]);
     const mkName=mk.name||`M${i+1}`;
 
     // Vertical cursor line (optional)
@@ -519,7 +526,7 @@ function addMkr(id){
   const fs=fileById(id); if(!fs||fs.mkrs.length>=6)return;
   const f=parseFloat(document.getElementById('mk-inp-'+id).value);
   if(isNaN(f))return;
-  fs.mkrs.push({freq:f,color:MC()[fs.mkrs.length%6],name:`M${fs.mkrs.length+1}`,showLine:true});
+  fs.mkrs.push({freq:f,color:MC()[fs.mkrs.length%6],name:`M${fs.mkrs.length+1}`,showLine:true,trace:null});
   document.getElementById('mk-inp-'+id).value='';
   renderAll(id); renderMkrList(id);
 }
@@ -551,6 +558,10 @@ function toggleMkrLine(id,i){
   const fs=fileById(id); if(!fs||!fs.mkrs[i])return;
   fs.mkrs[i].showLine=fs.mkrs[i].showLine===false; renderAll(id); renderMkrList(id);
 }
+function setMkrTrace(id,i,trace){
+  const fs=fileById(id); if(!fs||!fs.mkrs[i])return;
+  fs.mkrs[i].trace=trace||null; renderAll(id); renderMkrList(id);
+}
 function renderMkrList(id){
   const fs=fileById(id); if(!fs)return;
   const el=document.getElementById('ml-'+id);
@@ -565,6 +576,9 @@ function renderMkrList(id){
     const isAct=i===fs.activeMkr;
     const mkName=mk.name||`M${i+1}`;
     const lineOn=mk.showLine!==false;
+    const traceOpts=['<option value="">All</option>',
+      ...names.map(nm=>`<option value="${nm}"${mk.trace===nm?' selected':''}>${nm}</option>`)
+    ].join('');
     return `<div class="mkr-row${isAct?' active':''}" style="border-left-color:${mk.color}"
       onclick="setActiveMkr('${id}',${i})">
       <input type="color" class="mkr-color-inp" value="${mk.color}"
@@ -581,6 +595,9 @@ function renderMkrList(id){
         onclick="event.stopPropagation()">
       <span class="mkr-unit">MHz</span>
       <span class="mkr-snap">&#8594;&nbsp;${fmtF(mf)}</span>
+      <select class="mkr-trace-sel" title="Assign to trace"
+        onclick="event.stopPropagation()"
+        onchange="setMkrTrace('${id}',${i},this.value)">${traceOpts}</select>
       <button class="mkr-cursor-btn${lineOn?' on':''}"
         onclick="event.stopPropagation();toggleMkrLine('${id}',${i})"
         title="Toggle cursor line">cursor</button>
