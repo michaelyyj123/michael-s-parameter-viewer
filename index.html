@@ -185,6 +185,7 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
   <div class="drop-zone" id="dz-landing">
     <p class="dz-title">Drop .s1p / .s2p files here</p>
     <p class="dz-hint">or click to browse &nbsp;&middot;&nbsp; multiple files supported</p>
+    <p class="dz-hint" style="margin-top:10px;color:var(--text4)">Files are processed locally in your browser and are not uploaded.</p>
     <input type="file" id="fi-landing" accept=".s1p,.s2p,.S1P,.S2P" multiple>
   </div>
 </div>
@@ -700,7 +701,7 @@ function createPanel(fs){
     </div>
     <div class="ctrl-panel">
       <div class="cg">
-        <div class="cg-lbl">Add Marker (MHz)</div>
+        <div class="cg-lbl">Add Marker (MHz) <span style="font-size:.65rem;color:var(--text4);text-transform:none;letter-spacing:0">max 6</span></div>
         <div class="cg-row">
           <input type="number" id="mk-inp-${id}" placeholder="127.74" step="0.01">
           <button class="btn btn-pri" onclick="addMkr('${id}')">Add</button>
