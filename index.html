@@ -468,7 +468,7 @@ function renderMag(divId,data,mkrs,xr,yr){
       text:readoutLines.join('<br>'),showarrow:false,
       font:{size:10,color:th.text},
       bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left',
-      width:115,
+      width:105,
     });
   }
   const axFont=fs?.axisFont||'';
@@ -486,7 +486,7 @@ function renderMag(divId,data,mkrs,xr,yr){
   if(yr[0]!==null&&yr[1]!==null)yax.range=yr;
   Plotly.react(divId,traces,{
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
-    font:{color:th.text,size:11},margin:{t:20,r:160,b:80,l:38},
+    font:{color:th.text,size:11},margin:{t:20,r:160,b:80,l:72},
     xaxis:xax,yaxis:yax,shapes,annotations:annos,
     legend:{bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},
     hovermode:'x unified',
