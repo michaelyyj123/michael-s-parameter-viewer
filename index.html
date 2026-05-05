@@ -451,11 +451,12 @@ function renderMag(divId,data,mkrs,xr,yr){
   if(readoutLines.length){
     const legBottom=Math.max(0.05,1.0-names.length*0.065-0.03);
     annos.push({
-      x:1.0,y:legBottom,xref:'paper',yref:'paper',
-      xanchor:'right',yanchor:'top',
+      x:1.02,y:legBottom,xref:'paper',yref:'paper',
+      xanchor:'left',yanchor:'top',
       text:readoutLines.join('<br>'),showarrow:false,
       font:{size:11,color:th.text},
       bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left',
+      width:148,
     });
   }
   const axFont=fs?.axisFont||'';
@@ -473,7 +474,7 @@ function renderMag(divId,data,mkrs,xr,yr){
   if(yr[0]!==null&&yr[1]!==null)yax.range=yr;
   Plotly.react(divId,traces,{
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
-    font:{color:th.text,size:11},margin:{t:20,r:20,b:80,l:58},
+    font:{color:th.text,size:11},margin:{t:20,r:160,b:80,l:58},
     xaxis:xax,yaxis:yax,shapes,annotations:annos,
     legend:{bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},
     hovermode:'x unified',
@@ -484,6 +485,12 @@ function renderMag(divId,data,mkrs,xr,yr){
 // ── render Smith ──────────────────────────────────────────────────────────────
 function renderSmith(divId,data,paramName,mkrs){
   const th=TH(),pc=PC();
+  const id=divId.replace('sc-','');
+  const fs=fileById(id);
+  const axFont=fs?.axisFont||'';
+  const axSize=fs?.axisFontSize||null;
+  const afTitle={color:th.axis,...(axFont?{family:axFont}:{}), ...(axSize?{size:axSize}:{})};
+  const afTick={...(axFont?{family:axFont}:{}), ...(axSize?{size:axSize}:{})};
   const s=data.sp[paramName];
   const trs=[...smithGrid()];
   trs.push({x:s.re,y:s.im,name:paramName,mode:'lines',
@@ -495,17 +502,22 @@ function renderSmith(divId,data,paramName,mkrs){
     const db=s.db[idx].toFixed(2);
     trs.push({x:[s.re[idx]],y:[s.im[idx]],mode:'markers+text',
       marker:{color:mk.color,size:12,symbol:'circle',line:{color:th.plot,width:1.8}},
-      text:[mk.name||`M${i+1}`],textposition:'top right',textfont:{color:mk.color,size:10},
+      text:[mk.name||`M${i+1}`],textposition:'top right',
+      textfont:{color:mk.color,size:axSize||10,...(axFont?{family:axFont}:{})},
       showlegend:false,
       hovertemplate:`${mk.name||`M${i+1}`}: ${fmtF(data.freqs[idx])}<br>${paramName}: ${db} dB<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`,
     });
   });
   Plotly.react(divId,trs,{
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
-    font:{color:th.text,size:11},margin:{t:16,r:16,b:46,l:52},
-    xaxis:{range:[-1.15,1.15],scaleanchor:'y',scaleratio:1,title:'Re(Γ)',
+    font:{color:th.text,size:axSize||11},margin:{t:16,r:16,b:46,l:52},
+    xaxis:{range:[-1.15,1.15],scaleanchor:'y',scaleratio:1,
+      title:{text:'Re(Γ)',font:afTitle},
+      tickfont:Object.keys(afTick).length?afTick:undefined,
       gridcolor:'transparent',zerolinecolor:'transparent',color:th.axis,linecolor:th.line},
-    yaxis:{range:[-1.15,1.15],title:'Im(Γ)',
+    yaxis:{range:[-1.15,1.15],
+      title:{text:'Im(Γ)',font:afTitle},
+      tickfont:Object.keys(afTick).length?afTick:undefined,
       gridcolor:'transparent',zerolinecolor:'transparent',color:th.axis,linecolor:th.line},
     annotations:smithAnno(th),showlegend:false,
   },{responsive:true,displayModeBar:false});
