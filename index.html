@@ -417,7 +417,7 @@ function renderMag(divId,data,mkrs,xr,yr){
   const id=divId.replace('md-','');
   const fs=fileById(id);
   const shapes=[],annos=[];
-  let rightY=Math.max(0.15, 0.97 - names.length*0.075); // start below Plotly legend
+  const readoutLines=[];
   mkrs.forEach((mk,i)=>{
     const idx=nearest(data.freqs,mk.freq);
     const mf=data.freqs[idx];
@@ -426,11 +426,9 @@ function renderMag(divId,data,mkrs,xr,yr){
       : names.filter(nm=>vis[nm]);
     const mkName=mk.name||`M${i+1}`;
 
-    // Vertical cursor line (optional)
     if(mk.showLine!==false)shapes.push({type:'line',x0:mf,x1:mf,y0:0,y1:1,yref:'paper',
       line:{color:mk.color,width:1.5,dash:'dash'}});
 
-    // Dots + name label below topmost dot
     if(visNames.length){
       const yVals=visNames.map(nm=>data.sp[nm].db[idx]);
       const topI=yVals.reduce((mi,v,ci)=>v>yVals[mi]?ci:mi,0);
@@ -443,25 +441,23 @@ function renderMag(divId,data,mkrs,xr,yr){
         textfont:{color:mk.color,size:14,...(fs?.axisFont?{family:fs.axisFont}:{})},
         showlegend:false,hoverinfo:'skip',
       });
-    }
-
-    // Right-side dB readout (below legend)
-    if(visNames.length){
-      const valText=[
-        `<b>${mkName}</b>`,
-        ...visNames.map(nm=>`<span style="color:${pc[nm]}">${nm}: ${data.sp[nm].db[idx].toFixed(2)} dB</span>`),
-      ].join('<br>');
-      annos.push({
-        x:1.01,y:rightY,xref:'paper',yref:'paper',
-        xanchor:'left',yanchor:'top',
-        text:valText,showarrow:false,
-        font:{size:10,color:mk.color},
-        bgcolor:isLight()?'rgba(246,248,250,.92)':'rgba(13,17,23,.9)',
-        bordercolor:mk.color,borderwidth:1,align:'left',
+      if(readoutLines.length)readoutLines.push('');
+      readoutLines.push(`<b style="color:${mk.color}">${mkName}</b>`);
+      visNames.forEach(nm=>{
+        readoutLines.push(`<span style="color:${pc[nm]}">${nm}: ${data.sp[nm].db[idx].toFixed(2)} dB</span>`);
       });
-      rightY-=(visNames.length+1)*0.065+0.015;
     }
   });
+  if(readoutLines.length){
+    const legBottom=Math.max(0.05,1.0-names.length*0.065-0.03);
+    annos.push({
+      x:1.0,y:legBottom,xref:'paper',yref:'paper',
+      xanchor:'right',yanchor:'top',
+      text:readoutLines.join('<br>'),showarrow:false,
+      font:{size:11,color:th.text},
+      bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left',
+    });
+  }
   const axFont=fs?.axisFont||'';
   const axSize=fs?.axisFontSize||null;
   const afTitle={color:th.axis,...(axFont?{family:axFont}:{}), ...(axSize?{size:axSize}:{})};
@@ -477,7 +473,7 @@ function renderMag(divId,data,mkrs,xr,yr){
   if(yr[0]!==null&&yr[1]!==null)yax.range=yr;
   Plotly.react(divId,traces,{
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
-    font:{color:th.text,size:11},margin:{t:20,r:160,b:80,l:58},
+    font:{color:th.text,size:11},margin:{t:20,r:20,b:80,l:58},
     xaxis:xax,yaxis:yax,shapes,annotations:annos,
     legend:{bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},
     hovermode:'x unified',
