@@ -409,6 +409,8 @@ function renderMag(divId,data,mkrs,xr,yr){
     line:{color:pc[nm]||'#aaa',width:1.9},
     visible:vis[nm]?true:'legendonly',
   }));
+  const id=divId.replace('md-','');
+  const fs=fileById(id);
   const shapes=[],annos=[];
   let rightY=0.97; // stacks right-side dB readouts downward
   mkrs.forEach((mk,i)=>{
@@ -453,8 +455,6 @@ function renderMag(divId,data,mkrs,xr,yr){
       rightY-=(visNames.length+1)*0.065+0.015;
     }
   });
-  const id=divId.replace('md-','');
-  const fs=fileById(id);
   const axFont=fs?.axisFont||'';
   const axSize=fs?.axisFontSize||null;
   const afTitle={color:th.axis,...(axFont?{family:axFont}:{}), ...(axSize?{size:axSize}:{})};
