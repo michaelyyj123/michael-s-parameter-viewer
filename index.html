@@ -132,6 +132,18 @@ input[type=number]::placeholder{color:var(--text4)}
   padding:4px 11px;font-size:.78rem;flex-shrink:0}
 .btn-theme:hover{border-color:var(--accent);color:var(--accent)}
 
+/* preview modal */
+#preview-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);
+  z-index:999;align-items:center;justify-content:center}
+#preview-modal.open{display:flex}
+.preview-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  padding:16px;display:flex;flex-direction:column;gap:10px;
+  max-width:92vw;max-height:92vh}
+.preview-box img{max-width:100%;max-height:calc(90vh - 80px);object-fit:contain;
+  border-radius:4px;display:block}
+.preview-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.preview-title{font-size:.9rem;font-weight:600;color:var(--text2)}
+
 /* y sliders */
 .y-sliders{display:flex;flex-direction:column;gap:7px;min-width:220px}
 .ys-row{display:flex;align-items:center;gap:8px}
@@ -454,9 +466,9 @@ function renderMag(divId,data,mkrs,xr,yr){
       x:1.02,y:legBottom,xref:'paper',yref:'paper',
       xanchor:'left',yanchor:'top',
       text:readoutLines.join('<br>'),showarrow:false,
-      font:{size:11,color:th.text},
+      font:{size:10,color:th.text},
       bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left',
-      width:148,
+      width:130,
     });
   }
   const axFont=fs?.axisFont||'';
@@ -474,7 +486,7 @@ function renderMag(divId,data,mkrs,xr,yr){
   if(yr[0]!==null&&yr[1]!==null)yax.range=yr;
   Plotly.react(divId,traces,{
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
-    font:{color:th.text,size:11},margin:{t:20,r:160,b:80,l:58},
+    font:{color:th.text,size:11},margin:{t:20,r:160,b:80,l:38},
     xaxis:xax,yaxis:yax,shapes,annotations:annos,
     legend:{bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},
     hovermode:'x unified',
@@ -745,27 +757,36 @@ function setSmP(id,btn){
 // ── axis font ─────────────────────────────────────────────────────────────────
 function setAxisFont(id,font){
   const fs=fileById(id); if(!fs)return;
-  fs.axisFont=font;
-  renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr);
+  fs.axisFont=font; renderAll(id);
 }
 function setAxisFontSize(id,val){
   const fs=fileById(id); if(!fs)return;
   const n=parseFloat(val);
-  fs.axisFontSize=isNaN(n)||n<=0?null:n;
-  renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr);
+  fs.axisFontSize=isNaN(n)||n<=0?null:n; renderAll(id);
 }
 
-// ── save ──────────────────────────────────────────────────────────────────────
-async function savePlot(divId,filename){
+// ── save / preview ────────────────────────────────────────────────────────────
+async function _plotImage(divId){
   const isSmith=divId.startsWith('sc-');
   const div=document.getElementById(divId);
   if(!isSmith) await Plotly.relayout(div,{'xaxis.rangeslider.visible':false});
-  await Plotly.downloadImage(div,{
-    format:'png',filename,
-    width:isSmith?660:1050,height:isSmith?660:540,
-    scale:4,
+  const url=await Plotly.toImage(div,{
+    format:'png',width:isSmith?660:1050,height:isSmith?660:540,scale:4,
   });
   if(!isSmith) await Plotly.relayout(div,{'xaxis.rangeslider.visible':true});
+  return url;
+}
+async function previewPlot(divId,filename){
+  const url=await _plotImage(divId);
+  document.getElementById('preview-img').src=url;
+  document.getElementById('preview-dl-btn').onclick=()=>{
+    const a=document.createElement('a');a.href=url;a.download=filename+'.png';a.click();
+  };
+  document.getElementById('preview-modal').classList.add('open');
+}
+function closePreview(){
+  document.getElementById('preview-modal').classList.remove('open');
+  document.getElementById('preview-img').src='';
 }
 
 // ── create panel HTML ─────────────────────────────────────────────────────────
@@ -794,7 +815,7 @@ function createPanel(fs){
       <div class="plot-card">
         <div class="plot-card-hdr">
           <span class="pch-title">Magnitude (dB)</span>
-          <button class="btn btn-save" onclick="savePlot('md-${id}','${fnSafe}_magnitude')">Save PNG</button>
+          <button class="btn btn-save" onclick="previewPlot('md-${id}','${fnSafe}_magnitude')">Preview / Save</button>
         </div>
         <div id="md-${id}" class="plot-div"></div>
       </div>
@@ -802,7 +823,7 @@ function createPanel(fs){
         <div class="plot-card-hdr">
           <span class="pch-title">Smith Chart${is2?'':' — S11'}</span>
           ${smithSel}
-          <button class="btn btn-save" onclick="savePlot('sc-${id}','${fnSafe}_smith')">Save PNG</button>
+          <button class="btn btn-save" onclick="previewPlot('sc-${id}','${fnSafe}_smith')">Preview / Save</button>
         </div>
         <div id="sc-${id}" class="plot-div"></div>
       </div>
@@ -949,5 +970,18 @@ if(localStorage.getItem('spv-theme')==='light'){
   document.querySelectorAll('[id^=tbtn-]').forEach(b=>b.textContent='Dark mode');
 }
 </script>
+
+<div id="preview-modal" onclick="closePreview()">
+  <div class="preview-box" onclick="event.stopPropagation()">
+    <div class="preview-hdr">
+      <span class="preview-title">PNG Preview (4× resolution)</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-save" id="preview-dl-btn">Download PNG</button>
+        <button class="btn btn-ghost" onclick="closePreview()">Close</button>
+      </div>
+    </div>
+    <img id="preview-img" src="" alt="preview">
+  </div>
+</div>
 </body>
 </html>
