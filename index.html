@@ -7,8 +7,6 @@
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
-/* ── theme variables ── */
 :root{
   --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--border:#30363d;
   --text:#e2e8f0;--text2:#c9d1d9;--text3:#8b949e;--text4:#484f58;
@@ -19,73 +17,93 @@ body.light{
   --text:#1f2328;--text2:#24292f;--text3:#57606a;--text4:#8c959f;
   --accent:#0969da;--green:#1a7f37;--red:#cf222e;
 }
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .2s,color .2s}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);transition:background .2s,color .2s}
 
-/* ── pages ── */
-.page{display:none;flex-direction:column;min-height:100vh}
+/* pages */
+.page{display:none;flex-direction:column;height:100vh}
 .page.active{display:flex}
-#page-landing{align-items:center;justify-content:center;gap:40px}
+#page-landing{align-items:center;justify-content:center;gap:32px}
 
-/* ── landing ── */
+/* landing */
 .landing-title{font-size:1.9rem;font-weight:700;color:var(--accent);letter-spacing:-.5px}
-.landing-sub{font-size:.9rem;color:var(--text3);margin-top:-28px}
-.card-row{display:flex;gap:20px}
-.type-card{width:190px;padding:30px 20px;background:var(--bg2);border:1px solid var(--border);
-  border-radius:12px;text-align:center;cursor:pointer;transition:all .18s;user-select:none}
-.type-card:hover{border-color:var(--accent);transform:translateY(-3px)}
-.card-type{font-size:1.4rem;font-weight:700;color:var(--text2);margin-bottom:6px}
-.card-desc{font-size:.8rem;color:var(--text3);line-height:1.5}
-
-/* ── page header ── */
-.pg-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 20px;
-  display:flex;align-items:center;gap:14px;flex-shrink:0}
-.pg-header h1{font-size:1.05rem;color:var(--accent);font-weight:600}
-.pg-header .sub{font-size:.78rem;color:var(--text3)}
-.pg-header-right{margin-left:auto}
-
-/* ── content ── */
-.pg-body{flex:1;padding:18px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
-
-/* ── upload ── */
-.drop-zone{border:2px dashed var(--border);border-radius:10px;padding:34px;text-align:center;
-  cursor:pointer;background:var(--bg2);transition:all .18s}
-.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent)}
-.drop-zone .dz-title{font-size:.93rem;font-weight:500;margin-bottom:4px}
-.drop-zone .dz-hint{font-size:.78rem;color:var(--text3)}
+.landing-sub{font-size:.9rem;color:var(--text3);margin-top:-22px}
+.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:42px 70px;text-align:center;
+  cursor:pointer;background:var(--bg2);transition:all .18s;max-width:520px;width:100%}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 4%,var(--bg2))}
+.dz-title{font-size:.95rem;font-weight:500;margin-bottom:6px}
+.dz-hint{font-size:.78rem;color:var(--text3)}
 .drop-zone input{display:none}
 
-/* ── error ── */
+/* header */
+.pg-header{background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:8px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:48px}
+
+/* tab bar */
+.tab-bar{display:flex;gap:4px;flex:1;overflow-x:auto;align-items:center;min-width:0}
+.tab-bar::-webkit-scrollbar{height:3px}
+.tab-bar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.tab{display:flex;align-items:center;gap:5px;padding:4px 10px 4px 12px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  cursor:pointer;font-size:.78rem;color:var(--text3);
+  transition:all .12s;white-space:nowrap;max-width:200px;flex-shrink:0}
+.tab:hover:not(.active){border-color:var(--text4);color:var(--text2)}
+.tab.active{background:color-mix(in srgb,var(--accent) 11%,var(--bg3));
+  border-color:var(--accent);color:var(--text2)}
+.tab-name{overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;max-width:130px}
+.tab-badge{font-size:.62rem;background:var(--bg);border:1px solid var(--border);
+  color:var(--text4);padding:1px 5px;border-radius:3px;flex-shrink:0}
+.tab.active .tab-badge{background:var(--accent);border-color:var(--accent);
+  color:#fff;font-weight:600}
+.tab-close{background:transparent;border:none;color:var(--text4);cursor:pointer;
+  font-size:.82rem;line-height:1;padding:2px 3px;flex-shrink:0;border-radius:3px;
+  transition:all .12s;margin-left:2px}
+.tab-close:hover{color:var(--red);background:color-mix(in srgb,var(--red) 15%,transparent)}
+
+/* tab panels */
+#tab-panels{flex:1;min-height:0;display:flex}
+.tab-panel{display:none;flex:1;min-height:0;padding:16px;
+  flex-direction:column;gap:12px;overflow-y:auto}
+.tab-panel.active{display:flex}
+
+/* add-file label */
+.btn-add{background:var(--bg3);border:1px dashed var(--border);border-radius:5px;
+  color:var(--text3);cursor:pointer;font-size:.78rem;padding:4px 10px;
+  transition:all .12s;white-space:nowrap;flex-shrink:0}
+.btn-add:hover{border-color:var(--accent);color:var(--accent)}
+
+/* error */
 .err-box{display:none;background:color-mix(in srgb,var(--red) 12%,transparent);
   border:1px solid color-mix(in srgb,var(--red) 40%,transparent);
   border-radius:6px;padding:8px 14px;color:var(--red);font-size:.84rem}
 .err-box.on{display:block}
 
-/* ── info bar ── */
-.info-bar{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+/* info bar */
+.info-bar{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
   padding:10px 18px;flex-wrap:wrap;gap:22px;font-size:.82rem;align-items:center}
-.info-bar.on{display:flex}
 .ii{display:flex;flex-direction:column;gap:1px}
 .ii .lbl{font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
 .ii .val{color:var(--accent);font-weight:600}
 
-/* ── plots grid ── */
-.plots-grid{display:none;grid-template-columns:1fr 1fr;gap:14px}
-.plots-grid.on{display:grid}
-.plot-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden}
-.plot-card-hdr{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
+/* plots grid */
+.plots-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.plot-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  display:flex;flex-direction:column;overflow:hidden}
+.plot-card-hdr{padding:9px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;flex-shrink:0}
 .pch-title{font-size:.85rem;font-weight:500;flex:1;color:var(--text2)}
-.plot-div{height:420px}
+.plot-div{height:400px}
 
-/* ── smith selector ── */
+/* smith selector */
 .s-sel{display:flex;gap:3px}
 .s-sel button{padding:2px 9px;font-size:.74rem;background:var(--bg3);border:1px solid var(--border);
   border-radius:4px;color:var(--text3);cursor:pointer;transition:all .12s}
-.s-sel button.on,.s-sel button:hover{background:color-mix(in srgb,var(--accent) 15%,transparent);border-color:var(--accent);color:var(--accent)}
+.s-sel button.on,.s-sel button:hover{background:color-mix(in srgb,var(--accent) 15%,transparent);
+  border-color:var(--accent);color:var(--accent)}
 
-/* ── controls panel ── */
-.ctrl-panel{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+/* controls */
+.ctrl-panel{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
   padding:14px 18px;flex-wrap:wrap;gap:18px;align-items:flex-start}
-.ctrl-panel.on{display:flex}
 .cg{display:flex;flex-direction:column;gap:6px}
 .cg-lbl{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
 .cg-row{display:flex;gap:6px;align-items:center}
@@ -95,26 +113,29 @@ input[type=number]{background:var(--bg3);border:1px solid var(--border);border-r
 input[type=number]:focus{border-color:var(--accent)}
 input[type=number]::placeholder{color:var(--text4)}
 
-/* ── buttons ── */
+/* buttons */
 .btn{padding:5px 13px;border-radius:5px;font-size:.82rem;cursor:pointer;
   border:1px solid transparent;transition:all .14s;white-space:nowrap}
 .btn-pri{background:color-mix(in srgb,var(--accent) 14%,transparent);border-color:var(--accent);color:var(--accent)}
 .btn-pri:hover{background:color-mix(in srgb,var(--accent) 25%,transparent)}
 .btn-ghost{background:var(--bg3);border-color:var(--border);color:var(--text3)}
 .btn-ghost:hover{border-color:var(--text3);color:var(--text2)}
-.btn-back{background:var(--bg3);border-color:var(--border);color:var(--text2);padding:4px 11px;font-size:.8rem}
+.btn-back{background:var(--bg3);border-color:var(--border);color:var(--text2);
+  padding:4px 11px;font-size:.8rem;flex-shrink:0}
 .btn-back:hover{border-color:var(--text3)}
 .btn-save{background:color-mix(in srgb,var(--green) 12%,transparent);border-color:var(--green);
   color:var(--green);padding:3px 9px;font-size:.74rem}
 .btn-save:hover{background:color-mix(in srgb,var(--green) 22%,transparent)}
-.btn-theme{background:var(--bg3);border-color:var(--border);color:var(--text3);padding:4px 11px;font-size:.78rem}
+.btn-theme{background:var(--bg3);border-color:var(--border);color:var(--text3);
+  padding:4px 11px;font-size:.78rem;flex-shrink:0}
 .btn-theme:hover{border-color:var(--accent);color:var(--accent)}
 
-/* ── y-axis sliders ── */
+/* y sliders */
 .y-sliders{display:flex;flex-direction:column;gap:7px;min-width:220px}
 .ys-row{display:flex;align-items:center;gap:8px}
 .ys-lbl{font-size:.74rem;color:var(--text3);width:28px;text-align:right;flex-shrink:0}
-.ys-val{font-size:.76rem;color:var(--accent);font-family:'Courier New',monospace;width:46px;text-align:right;flex-shrink:0}
+.ys-val{font-size:.76rem;color:var(--accent);font-family:'Courier New',monospace;width:46px;
+  text-align:right;flex-shrink:0}
 .ys-unit{font-size:.7rem;color:var(--text4);flex-shrink:0}
 input[type=range].ys-track{flex:1;height:4px;-webkit-appearance:none;appearance:none;
   background:var(--bg3);border-radius:2px;outline:none;cursor:pointer}
@@ -125,7 +146,7 @@ input[type=range].ys-track:active::-webkit-slider-thumb{cursor:grabbing}
 input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radius:50%;
   background:var(--accent);border:2px solid var(--bg);cursor:grab}
 
-/* ── marker list ── */
+/* marker list */
 .chart-hint{font-size:.73rem;color:var(--accent);padding:2px 0;font-style:italic}
 .mkr-list{display:flex;flex-direction:column;gap:5px}
 .mkr-row{display:flex;align-items:center;gap:10px;background:var(--bg2);
@@ -149,7 +170,7 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
   font-size:1.1rem;line-height:1;padding:0 3px;transition:color .12s;flex-shrink:0}
 .mkr-del:hover{color:var(--red)}
 
-@media(max-width:860px){.plots-grid{grid-template-columns:1fr}.card-row{flex-direction:column}}
+@media(max-width:860px){.plots-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -161,240 +182,123 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
   </div>
   <div class="landing-title">S-Parameter Viewer</div>
   <div class="landing-sub">Touchstone file reader &amp; plotter for RF engineering</div>
-  <div class="card-row">
-    <div class="type-card" onclick="goTo('s1p')">
-      <div class="card-type">S1P</div>
-      <div class="card-desc">1-port network<br>S11 magnitude<br>+ Smith chart</div>
-    </div>
-    <div class="type-card" onclick="goTo('s2p')">
-      <div class="card-type">S2P</div>
-      <div class="card-desc">2-port network<br>S11 S21 S12 S22<br>+ Smith charts</div>
-    </div>
+  <div class="drop-zone" id="dz-landing">
+    <p class="dz-title">Drop .s1p / .s2p files here</p>
+    <p class="dz-hint">or click to browse &nbsp;&middot;&nbsp; multiple files supported</p>
+    <input type="file" id="fi-landing" accept=".s1p,.s2p,.S1P,.S2P" multiple>
   </div>
 </div>
 
-<!-- ════════ S1P -->
-<div id="page-s1p" class="page">
+<!-- ════════ VIEWER -->
+<div id="page-viewer" class="page">
   <div class="pg-header">
     <button class="btn btn-back" onclick="goTo('landing')">&#8592; Back</button>
-    <h1>S1P Viewer</h1><span class="sub">1-port · S11</span>
-    <div class="pg-header-right">
-      <button class="btn btn-theme" onclick="toggleTheme()" id="tbtn-s1p">Light mode</button>
+    <div class="tab-bar" id="tab-bar"></div>
+    <label class="btn-add" for="fi-add">&#43; Add file</label>
+    <input type="file" id="fi-add" accept=".s1p,.s2p,.S1P,.S2P" multiple style="display:none">
+    <div style="margin-left:6px;flex-shrink:0">
+      <button class="btn btn-theme" onclick="toggleTheme()" id="tbtn-viewer">Light mode</button>
     </div>
   </div>
-  <div class="pg-body">
-    <div class="drop-zone" id="dz-s1p">
-      <p class="dz-title">Drop your .s1p file here</p>
-      <p class="dz-hint">or click to browse</p>
-      <input type="file" id="fi-s1p" accept=".s1p,.S1P">
-    </div>
-    <div class="err-box" id="eb-s1p"></div>
-    <div class="info-bar" id="ib-s1p">
-      <div class="ii"><span class="lbl">File</span>  <span class="val" id="s1-f">—</span></div>
-      <div class="ii"><span class="lbl">Format</span><span class="val" id="s1-fmt">—</span></div>
-      <div class="ii"><span class="lbl">Points</span><span class="val" id="s1-n">—</span></div>
-      <div class="ii"><span class="lbl">Freq Range</span><span class="val" id="s1-fr">—</span></div>
-      <div class="ii"><span class="lbl">Z&#x2080;</span><span class="val" id="s1-z">—</span></div>
-    </div>
-    <div class="plots-grid" id="pg-s1p">
-      <div class="plot-card">
-        <div class="plot-card-hdr">
-          <span class="pch-title">Magnitude (dB)</span>
-          <button class="btn btn-save" onclick="savePlot('md-s1p','s1p_magnitude')">Save PNG</button>
-        </div>
-        <div id="md-s1p" class="plot-div"></div>
-      </div>
-      <div class="plot-card">
-        <div class="plot-card-hdr">
-          <span class="pch-title">Smith Chart — S11</span>
-          <button class="btn btn-save" onclick="savePlot('sc-s1p','s1p_smith')">Save PNG</button>
-        </div>
-        <div id="sc-s1p" class="plot-div"></div>
-      </div>
-    </div>
-    <div class="ctrl-panel" id="cp-s1p">
-      <div class="cg">
-        <div class="cg-lbl">Add Marker (MHz)</div>
-        <div class="cg-row">
-          <input type="number" id="mk-inp-s1p" placeholder="127.74" step="0.01">
-          <button class="btn btn-pri" onclick="addMkr('s1p')">Add</button>
-        </div>
-        <div id="hint-s1p" class="chart-hint"></div>
-      </div>
-      <div class="cg" style="flex:1;min-width:220px">
-        <div class="cg-lbl">Y Range (dB)</div>
-        <div class="y-sliders">
-          <div class="ys-row">
-            <span class="ys-lbl">Max</span>
-            <input type="range" id="yr-hi-s1p" class="ys-track">
-            <span class="ys-val" id="yrv-hi-s1p">0</span>
-            <span class="ys-unit">dB</span>
-          </div>
-          <div class="ys-row">
-            <span class="ys-lbl">Min</span>
-            <input type="range" id="yr-lo-s1p" class="ys-track">
-            <span class="ys-val" id="yrv-lo-s1p">-60</span>
-            <span class="ys-unit">dB</span>
-          </div>
-        </div>
-      </div>
-      <div class="cg"><div style="height:20px"></div>
-        <button class="btn btn-ghost" onclick="resetY('s1p')">Reset Y</button>
-      </div>
-    </div>
-    <div class="mkr-list" id="ml-s1p"></div>
-  </div>
-</div>
-
-<!-- ════════ S2P -->
-<div id="page-s2p" class="page">
-  <div class="pg-header">
-    <button class="btn btn-back" onclick="goTo('landing')">&#8592; Back</button>
-    <h1>S2P Viewer</h1><span class="sub">2-port · S11 S21 S12 S22</span>
-    <div class="pg-header-right">
-      <button class="btn btn-theme" onclick="toggleTheme()" id="tbtn-s2p">Light mode</button>
-    </div>
-  </div>
-  <div class="pg-body">
-    <div class="drop-zone" id="dz-s2p">
-      <p class="dz-title">Drop your .s2p file here</p>
-      <p class="dz-hint">or click to browse</p>
-      <input type="file" id="fi-s2p" accept=".s2p,.S2P">
-    </div>
-    <div class="err-box" id="eb-s2p"></div>
-    <div class="info-bar" id="ib-s2p">
-      <div class="ii"><span class="lbl">File</span>  <span class="val" id="s2-f">—</span></div>
-      <div class="ii"><span class="lbl">Format</span><span class="val" id="s2-fmt">—</span></div>
-      <div class="ii"><span class="lbl">Points</span><span class="val" id="s2-n">—</span></div>
-      <div class="ii"><span class="lbl">Freq Range</span><span class="val" id="s2-fr">—</span></div>
-      <div class="ii"><span class="lbl">Z&#x2080;</span><span class="val" id="s2-z">—</span></div>
-    </div>
-    <div class="plots-grid" id="pg-s2p">
-      <div class="plot-card">
-        <div class="plot-card-hdr">
-          <span class="pch-title">Magnitude (dB)</span>
-          <button class="btn btn-save" onclick="savePlot('md-s2p','s2p_magnitude')">Save PNG</button>
-        </div>
-        <div id="md-s2p" class="plot-div"></div>
-      </div>
-      <div class="plot-card">
-        <div class="plot-card-hdr">
-          <span class="pch-title">Smith Chart</span>
-          <div class="s-sel" id="ss-s2p">
-            <button class="on" data-p="S11" onclick="setSmP(this)">S11</button>
-            <button data-p="S21" onclick="setSmP(this)">S21</button>
-            <button data-p="S12" onclick="setSmP(this)">S12</button>
-            <button data-p="S22" onclick="setSmP(this)">S22</button>
-          </div>
-          <button class="btn btn-save" onclick="savePlot('sc-s2p','s2p_smith')">Save PNG</button>
-        </div>
-        <div id="sc-s2p" class="plot-div"></div>
-      </div>
-    </div>
-    <div class="ctrl-panel" id="cp-s2p">
-      <div class="cg">
-        <div class="cg-lbl">Add Marker (MHz)</div>
-        <div class="cg-row">
-          <input type="number" id="mk-inp-s2p" placeholder="127.74" step="0.01">
-          <button class="btn btn-pri" onclick="addMkr('s2p')">Add</button>
-        </div>
-        <div id="hint-s2p" class="chart-hint"></div>
-      </div>
-      <div class="cg" style="flex:1;min-width:220px">
-        <div class="cg-lbl">Y Range (dB)</div>
-        <div class="y-sliders">
-          <div class="ys-row">
-            <span class="ys-lbl">Max</span>
-            <input type="range" id="yr-hi-s2p" class="ys-track">
-            <span class="ys-val" id="yrv-hi-s2p">0</span>
-            <span class="ys-unit">dB</span>
-          </div>
-          <div class="ys-row">
-            <span class="ys-lbl">Min</span>
-            <input type="range" id="yr-lo-s2p" class="ys-track">
-            <span class="ys-val" id="yrv-lo-s2p">-60</span>
-            <span class="ys-unit">dB</span>
-          </div>
-        </div>
-      </div>
-      <div class="cg"><div style="height:20px"></div>
-        <button class="btn btn-ghost" onclick="resetY('s2p')">Reset Y</button>
-      </div>
-    </div>
-    <div class="mkr-list" id="ml-s2p"></div>
-  </div>
+  <div id="tab-panels"></div>
 </div>
 
 <script>
 // ── state ─────────────────────────────────────────────────────────────────────
-const S = {
-  s1p:{ data:null, mkrs:[], activeMkr:0, xr:[null,null], yr:[null,null], _ev:false, _click:false },
-  s2p:{ data:null, mkrs:[], activeMkr:0, xr:[null,null], yr:[null,null], _ev:false, _click:false, sp:'S11' },
-};
+let _fid=0;
+const S={files:[],active:0};
+function fileById(id){return S.files.find(f=>f.id===id);}
 
-// ── theme helpers ─────────────────────────────────────────────────────────────
-const isLight = () => document.body.classList.contains('light');
-
-function TH() {
-  const L = isLight();
-  return {
-    paper: L?'#f6f8fa':'#161b22',  plot:  L?'#ffffff':'#0f1117',
-    grid:  L?'#eaeef2':'#21262d',  zero:  L?'#d0d7de':'#30363d',
-    text:  L?'#24292f':'#c9d1d9',  axis:  L?'#57606a':'#8b949e',
-    line:  L?'#d0d7de':'#30363d',
-    legBg: L?'rgba(246,248,250,.9)':'rgba(22,27,34,.85)',
-    legBd: L?'#d0d7de':'#30363d',
-    rsBg:  L?'#f0f2f4':'#0d1117',
+// ── theme ─────────────────────────────────────────────────────────────────────
+const isLight=()=>document.body.classList.contains('light');
+function TH(){
+  const L=isLight();
+  return{
+    paper:L?'#f6f8fa':'#161b22', plot:L?'#ffffff':'#0f1117',
+    grid:L?'#eaeef2':'#21262d',  zero:L?'#d0d7de':'#30363d',
+    text:L?'#24292f':'#c9d1d9',  axis:L?'#57606a':'#8b949e',
+    line:L?'#d0d7de':'#30363d',
+    legBg:L?'rgba(246,248,250,.9)':'rgba(22,27,34,.85)',
+    legBd:L?'#d0d7de':'#30363d',
+    rsBg:L?'#f0f2f4':'#0d1117',
     smGrid:L?'rgba(80,100,120,.25)':'rgba(110,130,150,.33)',
-    smBd:  L?'rgba(60,80,100,.6)':'rgba(160,180,200,.65)',
+    smBd:L?'rgba(60,80,100,.6)':'rgba(160,180,200,.65)',
   };
 }
+function PC(){return isLight()
+  ?{S11:'#0969da',S21:'#1a7f37',S12:'#bc4c00',S22:'#8250df'}
+  :{S11:'#58a6ff',S21:'#3fb950',S12:'#f78166',S22:'#d2a8ff'};}
+function MC(){return isLight()
+  ?['#cf222e','#bc4c00','#bf8700','#1a7f37','#0969da','#8250df']
+  :['#f85149','#ffa657','#e3b341','#7ee787','#79c0ff','#bf8ff8'];}
 
-function PC() {
-  return isLight()
-    ? {S11:'#0969da',S21:'#1a7f37',S12:'#bc4c00',S22:'#8250df'}
-    : {S11:'#58a6ff',S21:'#3fb950',S12:'#f78166',S22:'#d2a8ff'};
-}
-
-function MC() {
-  return isLight()
-    ? ['#cf222e','#bc4c00','#bf8700','#1a7f37','#0969da','#8250df']
-    : ['#f85149','#ffa657','#e3b341','#7ee787','#79c0ff','#bf8ff8'];
-}
-
-function toggleTheme() {
+function toggleTheme(){
   document.body.classList.toggle('light');
-  const lbl = isLight() ? 'Dark mode' : 'Light mode';
-  document.querySelectorAll('[id^=tbtn-]').forEach(b => b.textContent = lbl);
-  localStorage.setItem('spv-theme', isLight() ? 'light' : 'dark');
-  // Re-colour markers and re-render
-  const mc = MC();
-  ['s1p','s2p'].forEach(t => {
-    if (!S[t].data) return;
-    S[t].mkrs.forEach((mk,i) => { mk.color = mc[i % mc.length]; });
-    renderAll(t);
-    renderMkrList(t);
+  const lbl=isLight()?'Dark mode':'Light mode';
+  document.querySelectorAll('[id^=tbtn-]').forEach(b=>b.textContent=lbl);
+  localStorage.setItem('spv-theme',isLight()?'light':'dark');
+  const mc=MC();
+  S.files.forEach(fs=>{
+    if(!fs.data)return;
+    fs.mkrs.forEach((mk,i)=>{mk.color=mc[i%6];});
+    renderAll(fs.id); renderMkrList(fs.id);
   });
 }
 
 // ── navigation ────────────────────────────────────────────────────────────────
-function goTo(page) {
+function goTo(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  if (page!=='landing'&&S[page]&&S[page].data) {
-    setTimeout(()=>{
-      Plotly.Plots.resize(document.getElementById('md-'+page));
-      Plotly.Plots.resize(document.getElementById('sc-'+page));
+  if(page==='viewer'){
+    const f=S.files[S.active];
+    if(f&&f.data) setTimeout(()=>{
+      Plotly.Plots.resize(document.getElementById('md-'+f.id));
+      Plotly.Plots.resize(document.getElementById('sc-'+f.id));
     },30);
   }
 }
 
+// ── tabs ──────────────────────────────────────────────────────────────────────
+function renderTabs(){
+  document.getElementById('tab-bar').innerHTML=S.files.map((f,i)=>
+    `<div class="tab${i===S.active?' active':''}" onclick="setActiveTab(${i})">
+      <span class="tab-name" title="${f.name}">${f.name}</span>
+      <span class="tab-badge">${f.type.toUpperCase()}</span>
+      <button class="tab-close" onclick="event.stopPropagation();closeTab(${i})" title="Close">&#x2715;</button>
+    </div>`
+  ).join('');
+}
+
+function setActiveTab(i){
+  S.active=Math.max(0,Math.min(i,S.files.length-1));
+  document.querySelectorAll('.tab-panel').forEach((p,j)=>p.classList.toggle('active',j===S.active));
+  renderTabs();
+  const f=S.files[S.active];
+  if(f&&f.data) setTimeout(()=>{
+    Plotly.Plots.resize(document.getElementById('md-'+f.id));
+    Plotly.Plots.resize(document.getElementById('sc-'+f.id));
+  },30);
+}
+
+function closeTab(i){
+  const f=S.files[i];
+  if(f){
+    const md=document.getElementById('md-'+f.id),sc=document.getElementById('sc-'+f.id);
+    if(md)Plotly.purge(md); if(sc)Plotly.purge(sc);
+    const panel=document.getElementById('panel-'+f.id);
+    if(panel)panel.remove();
+  }
+  S.files.splice(i,1);
+  if(!S.files.length){goTo('landing');return;}
+  S.active=Math.min(S.active,S.files.length-1);
+  setActiveTab(S.active);
+}
+
 // ── parser ────────────────────────────────────────────────────────────────────
-function parse(text,filename) {
+function parse(text,filename){
   const ext=filename.split('.').pop().toLowerCase();
   const ports=ext==='s1p'?1:ext==='s2p'?2:null;
-  if(!ports) throw new Error('Use .s1p or .s2p file');
-
+  if(!ports)throw new Error('Use .s1p or .s2p file');
   let fu='GHZ',fmt='MA',z0=50;
   const tok=[];
   for(const raw of text.split(/\r?\n/)){
@@ -412,9 +316,8 @@ function parse(text,filename) {
     const d=ln.split('!')[0].trim();
     if(d)tok.push(...d.split(/\s+/).filter(Boolean));
   }
-  const tpp=1+2*ports*ports, n=Math.floor(tok.length/tpp);
+  const tpp=1+2*ports*ports,n=Math.floor(tok.length/tpp);
   if(n===0)throw new Error('No data points found');
-
   const freqs=[],sp={};
   const names=ports===1?['S11']:['S11','S21','S12','S22'];
   names.forEach(nm=>{sp[nm]={re:[],im:[],db:[]};});
@@ -430,28 +333,22 @@ function parse(text,filename) {
   }
   return{freqs,sp,z0,fmt,ports,n};
 }
-
 function toMHz(f,u){return u==='HZ'?f/1e6:u==='KHZ'?f/1e3:u==='MHZ'?f:f*1e3;}
 function toCpx(a,b,fmt){
   if(fmt==='RI')return[a,b];
   const m=fmt==='DB'?Math.pow(10,a/20):Math.abs(a),r=b*Math.PI/180;
   return[m*Math.cos(r),m*Math.sin(r)];
 }
-function fmtF(m){
-  return m>=1000?(m/1000).toFixed(4)+' GHz':m>=1?m.toFixed(4)+' MHz':(m*1000).toFixed(4)+' kHz';
-}
-function nearest(freqs,t){
-  return freqs.reduce((b,f,i)=>Math.abs(f-t)<Math.abs(freqs[b]-t)?i:b,0);
-}
+function fmtF(m){return m>=1000?(m/1000).toFixed(4)+' GHz':m>=1?m.toFixed(4)+' MHz':(m*1000).toFixed(4)+' kHz';}
+function nearest(freqs,t){return freqs.reduce((b,f,i)=>Math.abs(f-t)<Math.abs(freqs[b]-t)?i:b,0);}
 
-// ── Smith chart grid ──────────────────────────────────────────────────────────
+// ── Smith grid ────────────────────────────────────────────────────────────────
 function smithGrid(){
   const th=TH(),N=400;
   const T=Array.from({length:N+1},(_,i)=>i*2*Math.PI/N);
   const trs=[];
   const add=(xs,ys,col,w)=>trs.push({x:xs,y:ys,mode:'lines',
     line:{color:col||th.smGrid,width:w||0.7},showlegend:false,hoverinfo:'skip'});
-
   add(T.map(t=>Math.cos(t)),T.map(t=>Math.sin(t)),th.smBd,1.3);
   add([-1,1],[0,0],th.smGrid,0.7);
   for(const R of[0.2,0.5,1,2,5]){
@@ -469,76 +366,53 @@ function smithGrid(){
 function smithAnno(th){
   const a=[];
   for(const[R,lbl]of[[0.2,'0.2'],[0.5,'0.5'],[1,'1'],[2,'2'],[5,'5']])
-    a.push({x:R/(1+R),y:.07,text:lbl,showarrow:false,
-      font:{size:9,color:th.smGrid},xanchor:'center'});
+    a.push({x:R/(1+R),y:.07,text:lbl,showarrow:false,font:{size:9,color:th.smGrid},xanchor:'center'});
   a.push({x:-.97,y:.08,text:'SC',showarrow:false,font:{size:9,color:th.smGrid}});
-  a.push({x:.93, y:.08,text:'OC',showarrow:false,font:{size:9,color:th.smGrid}});
+  a.push({x:.93,y:.08,text:'OC',showarrow:false,font:{size:9,color:th.smGrid}});
   return a;
 }
 
-// ── read which S-params are currently visible in the Plotly figure ────────────
-function getVis(divId, names) {
+// ── visibility helper ─────────────────────────────────────────────────────────
+function getVis(divId,names){
   const div=document.getElementById(divId);
-  const vis={};
-  names.forEach(nm=>{vis[nm]=true;});
+  const vis={};names.forEach(nm=>{vis[nm]=true;});
   if(!div||!div.data)return vis;
-  // S-param line traces are always the first N traces (by construction)
   names.forEach((nm,i)=>{
-    if(div.data[i]&&div.data[i].name===nm)
-      vis[nm]=(div.data[i].visible!=='legendonly');
+    if(div.data[i]&&div.data[i].name===nm)vis[nm]=(div.data[i].visible!=='legendonly');
   });
   return vis;
 }
 
 // ── render magnitude ──────────────────────────────────────────────────────────
 function renderMag(divId,data,mkrs,xr,yr){
-  const th=TH(), pc=PC();
+  const th=TH(),pc=PC();
   const names=Object.keys(data.sp);
   const vis=getVis(divId,names);
-
-  // Base traces — preserve any legend-hidden state
   const traces=names.map(nm=>({
-    x:data.freqs, y:data.sp[nm].db, name:nm, mode:'lines',
+    x:data.freqs,y:data.sp[nm].db,name:nm,mode:'lines',
     line:{color:pc[nm]||'#aaa',width:1.9},
-    visible: vis[nm]?true:'legendonly',
+    visible:vis[nm]?true:'legendonly',
   }));
-
   const shapes=[],annos=[];
-
   mkrs.forEach((mk,i)=>{
     const idx=nearest(data.freqs,mk.freq);
     const mf=data.freqs[idx];
     const visNames=names.filter(nm=>vis[nm]);
-
-    // Vertical line
     shapes.push({type:'line',x0:mf,x1:mf,y0:0,y1:1,yref:'paper',
       line:{color:mk.color,width:1.5,dash:'dash'}});
-
-    // Dots only on visible traces
-    if(visNames.length>0){
-      traces.push({
-        x:visNames.map(()=>mf),
-        y:visNames.map(nm=>data.sp[nm].db[idx]),
-        mode:'markers',
-        marker:{color:mk.color,size:10,line:{color:th.plot,width:1.8}},
-        showlegend:false, hoverinfo:'skip',
-      });
-    }
-
-    // Annotation: only visible params
+    if(visNames.length)traces.push({
+      x:visNames.map(()=>mf),y:visNames.map(nm=>data.sp[nm].db[idx]),
+      mode:'markers',marker:{color:mk.color,size:10,line:{color:th.plot,width:1.8}},
+      showlegend:false,hoverinfo:'skip',
+    });
     const valLines=visNames.map(nm=>`${nm}: ${data.sp[nm].db[idx].toFixed(2)} dB`).join('<br>');
-    if(valLines){
-      annos.push({
-        x:mf,y:.99,yref:'paper',
-        text:`<b>M${i+1}: ${fmtF(mf)}</b><br>${valLines}`,
-        showarrow:false,yanchor:'top',
-        font:{color:mk.color,size:9},
-        bgcolor:isLight()?'rgba(246,248,250,.92)':'rgba(13,17,23,.9)',
-        bordercolor:mk.color,borderwidth:1,align:'left',
-      });
-    }
+    if(valLines)annos.push({
+      x:mf,y:.99,yref:'paper',text:`<b>M${i+1}: ${fmtF(mf)}</b><br>${valLines}`,
+      showarrow:false,yanchor:'top',font:{color:mk.color,size:9},
+      bgcolor:isLight()?'rgba(246,248,250,.92)':'rgba(13,17,23,.9)',
+      bordercolor:mk.color,borderwidth:1,align:'left',
+    });
   });
-
   const xax={title:'Frequency (MHz)',gridcolor:th.grid,zerolinecolor:th.zero,
     color:th.axis,linecolor:th.line,
     rangeslider:{visible:true,bgcolor:th.rsBg,bordercolor:th.line,thickness:.07}};
@@ -546,309 +420,235 @@ function renderMag(divId,data,mkrs,xr,yr){
     color:th.axis,linecolor:th.line};
   if(xr[0]!==null&&xr[1]!==null)xax.range=xr;
   if(yr[0]!==null&&yr[1]!==null)yax.range=yr;
-
   Plotly.react(divId,traces,{
-    paper_bgcolor:th.paper, plot_bgcolor:th.plot,
-    font:{color:th.text,size:11}, margin:{t:20,r:20,b:80,l:58},
-    xaxis:xax, yaxis:yax, shapes, annotations:annos,
+    paper_bgcolor:th.paper,plot_bgcolor:th.plot,
+    font:{color:th.text,size:11},margin:{t:20,r:20,b:80,l:58},
+    xaxis:xax,yaxis:yax,shapes,annotations:annos,
     legend:{bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},
     hovermode:'x unified',
   },{responsive:true,displayModeBar:true,
     modeBarButtonsToRemove:['select2d','lasso2d'],displaylogo:false});
 }
 
-// ── render Smith chart ────────────────────────────────────────────────────────
+// ── render Smith ──────────────────────────────────────────────────────────────
 function renderSmith(divId,data,paramName,mkrs){
-  const th=TH(), pc=PC();
+  const th=TH(),pc=PC();
   const s=data.sp[paramName];
   const trs=[...smithGrid()];
-
-  trs.push({
-    x:s.re,y:s.im,name:paramName,mode:'lines',
+  trs.push({x:s.re,y:s.im,name:paramName,mode:'lines',
     line:{color:pc[paramName]||th.axis,width:2.2},
     hovertemplate:`${paramName}<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`,
   });
-
   mkrs.forEach((mk,i)=>{
     const idx=nearest(data.freqs,mk.freq);
     const db=s.db[idx].toFixed(2);
-    trs.push({
-      x:[s.re[idx]],y:[s.im[idx]],
-      mode:'markers+text',
+    trs.push({x:[s.re[idx]],y:[s.im[idx]],mode:'markers+text',
       marker:{color:mk.color,size:12,symbol:'circle',line:{color:th.plot,width:1.8}},
-      text:[`M${i+1}`],
-      textposition:'top right',
-      textfont:{color:mk.color,size:10},
+      text:[`M${i+1}`],textposition:'top right',textfont:{color:mk.color,size:10},
       showlegend:false,
       hovertemplate:`M${i+1}: ${fmtF(data.freqs[idx])}<br>${paramName}: ${db} dB<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`,
     });
   });
-
   Plotly.react(divId,trs,{
-    paper_bgcolor:th.paper, plot_bgcolor:th.plot,
-    font:{color:th.text,size:11}, margin:{t:16,r:16,b:46,l:52},
-    xaxis:{range:[-1.15,1.15],scaleanchor:'y',scaleratio:1,
-      title:'Re(Γ)',gridcolor:'transparent',zerolinecolor:'transparent',
-      color:th.axis,linecolor:th.line},
-    yaxis:{range:[-1.15,1.15],
-      title:'Im(Γ)',gridcolor:'transparent',zerolinecolor:'transparent',
-      color:th.axis,linecolor:th.line},
-    annotations:smithAnno(th), showlegend:false,
+    paper_bgcolor:th.paper,plot_bgcolor:th.plot,
+    font:{color:th.text,size:11},margin:{t:16,r:16,b:46,l:52},
+    xaxis:{range:[-1.15,1.15],scaleanchor:'y',scaleratio:1,title:'Re(Γ)',
+      gridcolor:'transparent',zerolinecolor:'transparent',color:th.axis,linecolor:th.line},
+    yaxis:{range:[-1.15,1.15],title:'Im(Γ)',
+      gridcolor:'transparent',zerolinecolor:'transparent',color:th.axis,linecolor:th.line},
+    annotations:smithAnno(th),showlegend:false,
   },{responsive:true,displayModeBar:false});
 }
 
-function renderAll(t){
-  const st=S[t],d=st.data; if(!d)return;
-  renderMag('md-'+t,d,st.mkrs,st.xr,st.yr);
-  renderSmith('sc-'+t,d,t==='s1p'?'S11':st.sp,st.mkrs);
+function renderAll(id){
+  const fs=fileById(id); if(!fs||!fs.data)return;
+  renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr);
+  renderSmith('sc-'+id,fs.data,fs.type==='s1p'?'S11':fs.sp,fs.mkrs);
 }
 
 // ── markers ───────────────────────────────────────────────────────────────────
-function addMkr(t){
-  if(S[t].mkrs.length>=6)return;
-  const f=parseFloat(document.getElementById('mk-inp-'+t).value);
+function addMkr(id){
+  const fs=fileById(id); if(!fs||fs.mkrs.length>=6)return;
+  const f=parseFloat(document.getElementById('mk-inp-'+id).value);
   if(isNaN(f))return;
-  S[t].mkrs.push({freq:f,color:MC()[S[t].mkrs.length%6]});
-  document.getElementById('mk-inp-'+t).value='';
-  renderAll(t); renderMkrList(t);
+  fs.mkrs.push({freq:f,color:MC()[fs.mkrs.length%6]});
+  document.getElementById('mk-inp-'+id).value='';
+  renderAll(id); renderMkrList(id);
 }
-function removeMkr(t,i){
-  S[t].mkrs.splice(i,1);
-  const mc=MC();
-  S[t].mkrs.forEach((mk,j)=>{mk.color=mc[j%6];});
-  if(S[t].activeMkr>=S[t].mkrs.length) S[t].activeMkr=Math.max(0,S[t].mkrs.length-1);
-  renderAll(t); renderMkrList(t);
+function removeMkr(id,i){
+  const fs=fileById(id); if(!fs)return;
+  fs.mkrs.splice(i,1);
+  const mc=MC(); fs.mkrs.forEach((mk,j)=>{mk.color=mc[j%6];});
+  if(fs.activeMkr>=fs.mkrs.length)fs.activeMkr=Math.max(0,fs.mkrs.length-1);
+  renderAll(id); renderMkrList(id);
 }
-function moveMkr(t,i,val){
-  const f=parseFloat(val);
-  if(isNaN(f)||!S[t].mkrs[i])return;
-  S[t].mkrs[i].freq=f;
-  renderAll(t); renderMkrList(t);
+function moveMkr(id,i,val){
+  const fs=fileById(id); if(!fs)return;
+  const f=parseFloat(val); if(isNaN(f)||!fs.mkrs[i])return;
+  fs.mkrs[i].freq=f; renderAll(id); renderMkrList(id);
 }
-function setActiveMkr(t,i){
-  S[t].activeMkr=i;
-  renderMkrList(t);
+function setActiveMkr(id,i){
+  const fs=fileById(id); if(!fs)return;
+  fs.activeMkr=i; renderMkrList(id);
 }
-
-function renderMkrList(t){
-  const d=S[t].data, el=document.getElementById('ml-'+t);
-  if(!d||S[t].mkrs.length===0){el.innerHTML='';updateHint(t);return;}
-  const names=Object.keys(d.sp);
-  const vis=getVis('md-'+t,names);
+function renderMkrList(id){
+  const fs=fileById(id); if(!fs)return;
+  const el=document.getElementById('ml-'+id);
+  if(!el)return;
+  if(!fs.data||!fs.mkrs.length){el.innerHTML='';updateHint(id);return;}
+  const names=Object.keys(fs.data.sp);
+  const vis=getVis('md-'+id,names);
   const pc=PC();
-
-  el.innerHTML=S[t].mkrs.map((mk,i)=>{
-    const idx=nearest(d.freqs,mk.freq);
-    const mf=d.freqs[idx];
-    const isAct=i===S[t].activeMkr;
-    // Only show dB values for currently visible params
-    const vals=Object.entries(d.sp)
+  el.innerHTML=fs.mkrs.map((mk,i)=>{
+    const idx=nearest(fs.data.freqs,mk.freq);
+    const mf=fs.data.freqs[idx];
+    const isAct=i===fs.activeMkr;
+    const vals=Object.entries(fs.data.sp)
       .filter(([nm])=>vis[nm])
       .map(([nm,s])=>`<span style="color:${pc[nm]}">${nm}:&nbsp;${s.db[idx].toFixed(2)}&nbsp;dB</span>`)
       .join('  ');
     return `<div class="mkr-row${isAct?' active':''}" style="border-left-color:${mk.color}"
-      onclick="setActiveMkr('${t}',${i})">
+      onclick="setActiveMkr('${id}',${i})">
       <span class="mkr-num" style="color:${mk.color}">M${i+1}</span>
       <input type="number" class="mkr-freq-inp" value="${mk.freq}" step="0.01"
         title="Edit and press Enter or click away to move"
         onkeydown="if(event.key==='Enter')this.blur()"
-        onblur="moveMkr('${t}',${i},this.value)"
+        onblur="moveMkr('${id}',${i},this.value)"
         onclick="event.stopPropagation()">
       <span class="mkr-unit">MHz</span>
       <span class="mkr-snap">&#8594;&nbsp;${fmtF(mf)}</span>
-      <span class="mkr-vals">${vals||'<span style="color:var(--text4)">—</span>'}</span>
-      <button class="mkr-del" onclick="event.stopPropagation();removeMkr('${t}',${i})" title="Remove">&#x00D7;</button>
+      <span class="mkr-vals">${vals||'<span style="color:var(--text4)">&#8212;</span>'}</span>
+      <button class="mkr-del" onclick="event.stopPropagation();removeMkr('${id}',${i})" title="Remove">&#x00D7;</button>
     </div>`;
   }).join('');
-
-  updateHint(t);
+  updateHint(id);
+}
+function updateHint(id){
+  const el=document.getElementById('hint-'+id); if(!el)return;
+  const fs=fileById(id);
+  el.textContent=fs&&fs.mkrs.length?'Drag a marker line to move it':'';
 }
 
-function updateHint(t){
-  const el=document.getElementById('hint-'+t); if(!el)return;
-  el.textContent=S[t].mkrs.length>0?'Drag a marker line to move it':'';
-}
-
-// ── drag marker lines on the magnitude plot ───────────────────────────────────
-function attachClickListener(t){
-  if(S[t]._click)return;
-  S[t]._click=true;
-  const div=document.getElementById('md-'+t);
-  let drag=null, rafId=null;
+// ── drag markers on magnitude plot ────────────────────────────────────────────
+function attachDragListener(id){
+  const fs=fileById(id); if(!fs||fs._click)return;
+  fs._click=true;
+  const div=document.getElementById('md-'+id);
+  let drag=null,rafId=null;
 
   function axInfo(){
     const l=div._fullLayout;
     if(!l||!l.xaxis||!l.xaxis._length||l.xaxis._offset==null||
        !l.yaxis||!l.yaxis._length||l.yaxis._offset==null)return null;
-    return {xa:l.xaxis,ya:l.yaxis};
+    return{xa:l.xaxis,ya:l.yaxis};
   }
-  function pxToFreq(px,xa){
-    const r=xa.range;
-    return r[0]+(Math.max(0,Math.min(px,xa._length))/xa._length)*(r[1]-r[0]);
-  }
-  function freqToPx(freq,xa){
-    const r=xa.range;
-    return (freq-r[0])/(r[1]-r[0])*xa._length;
-  }
-  function clientPx(clientX,xa){
-    return clientX-div.getBoundingClientRect().left-xa._offset;
-  }
+  function pxToFreq(px,xa){const r=xa.range;return r[0]+(Math.max(0,Math.min(px,xa._length))/xa._length)*(r[1]-r[0]);}
+  function freqToPx(freq,xa){const r=xa.range;return(freq-r[0])/(r[1]-r[0])*xa._length;}
+  function clientPx(cx,xa){return cx-div.getBoundingClientRect().left-xa._offset;}
   function nearestMkr(px,xa){
-    const THRESH=12;
+    const THRESH=12,fs=fileById(id);
     let best=-1,bestD=Infinity;
-    S[t].mkrs.forEach((mk,i)=>{
-      const mf=S[t].data.freqs[nearest(S[t].data.freqs,mk.freq)];
+    if(!fs||!fs.data)return best;
+    fs.mkrs.forEach((mk,i)=>{
+      const mf=fs.data.freqs[nearest(fs.data.freqs,mk.freq)];
       const d=Math.abs(px-freqToPx(mf,xa));
       if(d<THRESH&&d<bestD){best=i;bestD=d;}
     });
     return best;
   }
 
-  // Capture phase — runs before Plotly's own handlers
   div.addEventListener('mousedown',e=>{
-    if(!S[t].data||!S[t].mkrs.length)return;
+    const fs=fileById(id); if(!fs||!fs.data||!fs.mkrs.length)return;
     const ax=axInfo(); if(!ax)return;
-    const {xa,ya}=ax;
-    const rect=div.getBoundingClientRect();
+    const{xa,ya}=ax;
     const px=clientPx(e.clientX,xa);
-    const py=e.clientY-rect.top-ya._offset;
+    const py=e.clientY-div.getBoundingClientRect().top-ya._offset;
     if(px<0||px>xa._length||py<-5||py>ya._length+5)return;
-    const mi=nearestMkr(px,xa);
-    if(mi===-1)return;
+    const mi=nearestMkr(px,xa); if(mi===-1)return;
     drag={idx:mi};
-    if(S[t].activeMkr!==mi){S[t].activeMkr=mi;renderMkrList(t);}
-    e.stopPropagation();
-    e.preventDefault();
+    if(fs.activeMkr!==mi){fs.activeMkr=mi;renderMkrList(id);}
+    e.stopPropagation(); e.preventDefault();
   },true);
 
   div.addEventListener('mousemove',e=>{
-    const ax=axInfo();
-    if(!ax)return;
-    const {xa,ya}=ax;
+    const ax=axInfo(); if(!ax)return;
+    const{xa,ya}=ax;
     const px=clientPx(e.clientX,xa);
-    const rect=div.getBoundingClientRect();
-    const py=e.clientY-rect.top-ya._offset;
+    const py=e.clientY-div.getBoundingClientRect().top-ya._offset;
     const inArea=px>=0&&px<=xa._length&&py>=-5&&py<=ya._length+5;
-
     if(!drag){
-      // Cursor feedback when hovering near a marker line
-      const mi=inArea&&S[t].data&&S[t].mkrs.length?nearestMkr(px,xa):-1;
-      div.style.cursor=mi!==-1?'ew-resize':'';
+      const fs=fileById(id);
+      div.style.cursor=inArea&&fs&&fs.data&&fs.mkrs.length&&nearestMkr(px,xa)!==-1?'ew-resize':'';
       return;
     }
-    // Dragging
-    e.stopPropagation();
-    e.preventDefault();
+    e.stopPropagation(); e.preventDefault();
     const freq=pxToFreq(px,xa);
-    S[t].mkrs[drag.idx].freq=freq;
-    // Update the frequency input in-place without full list re-render
-    const inputs=document.querySelectorAll('#ml-'+t+' .mkr-freq-inp');
+    const fs=fileById(id); if(!fs)return;
+    fs.mkrs[drag.idx].freq=freq;
+    const inputs=document.querySelectorAll('#ml-'+id+' .mkr-freq-inp');
     if(inputs[drag.idx])inputs[drag.idx].value=freq.toFixed(4);
-    // Throttled redraw
     if(rafId)cancelAnimationFrame(rafId);
-    rafId=requestAnimationFrame(()=>{renderAll(t);rafId=null;});
+    rafId=requestAnimationFrame(()=>{renderAll(id);rafId=null;});
   },true);
 
   const endDrag=()=>{
     if(!drag)return;
-    drag=null;
-    div.style.cursor='';
+    drag=null; div.style.cursor='';
     if(rafId){cancelAnimationFrame(rafId);rafId=null;}
-    renderAll(t);
-    renderMkrList(t);
+    renderAll(id); renderMkrList(id);
   };
   div.addEventListener('mouseup',endDrag,true);
   document.addEventListener('mouseup',endDrag);
 }
 
-// ── Y-axis sliders ─────────────────────────────────────────────────────────────
-function initSliders(t){
-  const data=S[t].data;
-  const allDb=Object.values(data.sp).flatMap(s=>s.db);
-  const dMin=Math.min(...allDb), dMax=Math.max(...allDb);
+// ── Y sliders ─────────────────────────────────────────────────────────────────
+function initSliders(id){
+  const fs=fileById(id); if(!fs||!fs.data)return;
+  const allDb=Object.values(fs.data.sp).flatMap(s=>s.db);
+  const dMin=Math.min(...allDb),dMax=Math.max(...allDb);
   const pad=Math.max((dMax-dMin)*0.12,3);
-  const sMin=Math.floor(dMin-pad*3), sMax=Math.ceil(dMax+pad);
+  const sMin=Math.floor(dMin-pad*3),sMax=Math.ceil(dMax+pad);
+  const lo=Math.floor(dMin-pad),hi=Math.ceil(dMax+pad);
   for(const k of['lo','hi']){
-    const el=document.getElementById('yr-'+k+'-'+t);
-    el.min=sMin;el.max=sMax;el.step=0.5;
+    const el=document.getElementById('yr-'+k+'-'+id);
+    if(el){el.min=sMin;el.max=sMax;el.step=0.5;}
   }
-  document.getElementById('yr-lo-'+t).value=Math.floor(dMin-pad);
-  document.getElementById('yr-hi-'+t).value=Math.ceil(dMax+pad);
-  S[t].yr=[Math.floor(dMin-pad),Math.ceil(dMax+pad)];
-  updateSliderLabels(t);
+  const loEl=document.getElementById('yr-lo-'+id),hiEl=document.getElementById('yr-hi-'+id);
+  if(loEl)loEl.value=lo; if(hiEl)hiEl.value=hi;
+  fs.yr=[lo,hi]; updateSliderLabels(id);
 }
-function updateSliderLabels(t){
-  const lo=parseFloat(document.getElementById('yr-lo-'+t).value);
-  const hi=parseFloat(document.getElementById('yr-hi-'+t).value);
-  document.getElementById('yrv-lo-'+t).textContent=lo.toFixed(1);
-  document.getElementById('yrv-hi-'+t).textContent=hi.toFixed(1);
+function updateSliderLabels(id){
+  const lo=parseFloat(document.getElementById('yr-lo-'+id)?.value||0);
+  const hi=parseFloat(document.getElementById('yr-hi-'+id)?.value||0);
+  const lv=document.getElementById('yrv-lo-'+id),hv=document.getElementById('yrv-hi-'+id);
+  if(lv)lv.textContent=lo.toFixed(1); if(hv)hv.textContent=hi.toFixed(1);
 }
-function setupSliders(t){
-  const loEl=document.getElementById('yr-lo-'+t);
-  const hiEl=document.getElementById('yr-hi-'+t);
+function setupSliders(id){
+  const loEl=document.getElementById('yr-lo-'+id),hiEl=document.getElementById('yr-hi-'+id);
+  if(!loEl||!hiEl)return;
   const chg=(which)=>()=>{
     let lo=parseFloat(loEl.value),hi=parseFloat(hiEl.value);
     if(lo>=hi){which==='lo'?loEl.value=hi-.5:hiEl.value=lo+.5;}
-    lo=parseFloat(loEl.value);hi=parseFloat(hiEl.value);
-    S[t].yr=[lo,hi]; updateSliderLabels(t);
-    Plotly.relayout('md-'+t,{'yaxis.range':[lo,hi]});
+    lo=parseFloat(loEl.value); hi=parseFloat(hiEl.value);
+    const fs=fileById(id); if(fs)fs.yr=[lo,hi];
+    updateSliderLabels(id);
+    Plotly.relayout('md-'+id,{'yaxis.range':[lo,hi]});
   };
   loEl.addEventListener('input',chg('lo'));
   hiEl.addEventListener('input',chg('hi'));
 }
-function resetY(t){
-  if(!S[t].data)return;
-  initSliders(t);
-  Plotly.relayout('md-'+t,{'yaxis.range':S[t].yr});
-}
-
-// ── file loading ──────────────────────────────────────────────────────────────
-function loadFile(t,file){
-  clrErr(t);
-  const r=new FileReader();
-  r.onload=e=>{
-    try{
-      const d=parse(e.target.result,file.name);
-      S[t].data=d; S[t].mkrs=[]; S[t].activeMkr=0; S[t].xr=[null,null];
-
-      const p=t==='s1p'?'s1':'s2';
-      document.getElementById(p+'-f').textContent=file.name;
-      document.getElementById(p+'-fmt').textContent=d.fmt;
-      document.getElementById(p+'-n').textContent=d.n;
-      document.getElementById(p+'-z').textContent=d.z0+' Ω';
-      document.getElementById(p+'-fr').textContent=
-        fmtF(Math.min(...d.freqs))+' – '+fmtF(Math.max(...d.freqs));
-
-      ['ib-','pg-','cp-'].forEach(pre=>document.getElementById(pre+t).classList.add('on'));
-
-      initSliders(t);
-      renderAll(t);     // first render — no markers
-
-      // Attach listeners once
-      if(!S[t]._ev){
-        S[t]._ev=true;
-        document.getElementById('md-'+t).on('plotly_relayout',ev=>{
-          if('xaxis.range[0]'in ev) S[t].xr=[ev['xaxis.range[0]'],ev['xaxis.range[1]']];
-          else if(ev['xaxis.autorange']) S[t].xr=[null,null];
-        });
-      }
-      attachClickListener(t);
-
-      // Default marker at 127.74 MHz
-      S[t].mkrs=[{freq:127.74,color:MC()[0]}];
-      renderAll(t);
-      renderMkrList(t);
-    }catch(err){showErr(t,'Parse error: '+err.message);}
-  };
-  r.readAsText(file);
+function resetY(id){
+  const fs=fileById(id); if(!fs||!fs.data)return;
+  initSliders(id); Plotly.relayout('md-'+id,{'yaxis.range':fs.yr});
 }
 
 // ── Smith param selector ──────────────────────────────────────────────────────
-function setSmP(btn){
-  document.querySelectorAll('#ss-s2p button').forEach(b=>b.classList.remove('on'));
+function setSmP(id,btn){
+  document.querySelectorAll('#ss-'+id+' button').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  S.s2p.sp=btn.dataset.p;
-  if(S.s2p.data)renderSmith('sc-s2p',S.s2p.data,S.s2p.sp,S.s2p.mkrs);
+  const fs=fileById(id); if(!fs)return;
+  fs.sp=btn.dataset.p;
+  if(fs.data)renderSmith('sc-'+id,fs.data,fs.sp,fs.mkrs);
 }
 
 // ── save ──────────────────────────────────────────────────────────────────────
@@ -859,26 +659,165 @@ function savePlot(divId,filename){
   });
 }
 
-// ── error helpers ─────────────────────────────────────────────────────────────
-function showErr(t,msg){const el=document.getElementById('eb-'+t);el.textContent=msg;el.classList.add('on');}
-function clrErr(t){document.getElementById('eb-'+t).classList.remove('on');}
+// ── create panel HTML ─────────────────────────────────────────────────────────
+function createPanel(fs){
+  const id=fs.id,is2=fs.type==='s2p';
+  const fnSafe=fs.name.replace(/[^a-z0-9_\-]/gi,'_');
+  const smithSel=is2
+    ?`<div class="s-sel" id="ss-${id}">
+        <button class="on" data-p="S11" onclick="setSmP('${id}',this)">S11</button>
+        <button data-p="S21" onclick="setSmP('${id}',this)">S21</button>
+        <button data-p="S12" onclick="setSmP('${id}',this)">S12</button>
+        <button data-p="S22" onclick="setSmP('${id}',this)">S22</button>
+      </div>` : '';
+  const el=document.createElement('div');
+  el.id='panel-'+id; el.className='tab-panel';
+  el.innerHTML=`
+    <div class="err-box" id="eb-${id}"></div>
+    <div class="info-bar">
+      <div class="ii"><span class="lbl">File</span><span class="val">${fs.name}</span></div>
+      <div class="ii"><span class="lbl">Format</span><span class="val" id="iifmt-${id}">—</span></div>
+      <div class="ii"><span class="lbl">Points</span><span class="val" id="iin-${id}">—</span></div>
+      <div class="ii"><span class="lbl">Freq Range</span><span class="val" id="iifr-${id}">—</span></div>
+      <div class="ii"><span class="lbl">Z&#x2080;</span><span class="val" id="iiz-${id}">—</span></div>
+    </div>
+    <div class="plots-grid">
+      <div class="plot-card">
+        <div class="plot-card-hdr">
+          <span class="pch-title">Magnitude (dB)</span>
+          <button class="btn btn-save" onclick="savePlot('md-${id}','${fnSafe}_magnitude')">Save PNG</button>
+        </div>
+        <div id="md-${id}" class="plot-div"></div>
+      </div>
+      <div class="plot-card">
+        <div class="plot-card-hdr">
+          <span class="pch-title">Smith Chart${is2?'':' — S11'}</span>
+          ${smithSel}
+          <button class="btn btn-save" onclick="savePlot('sc-${id}','${fnSafe}_smith')">Save PNG</button>
+        </div>
+        <div id="sc-${id}" class="plot-div"></div>
+      </div>
+    </div>
+    <div class="ctrl-panel">
+      <div class="cg">
+        <div class="cg-lbl">Add Marker (MHz)</div>
+        <div class="cg-row">
+          <input type="number" id="mk-inp-${id}" placeholder="127.74" step="0.01">
+          <button class="btn btn-pri" onclick="addMkr('${id}')">Add</button>
+        </div>
+        <div id="hint-${id}" class="chart-hint"></div>
+      </div>
+      <div class="cg" style="flex:1;min-width:220px">
+        <div class="cg-lbl">Y Range (dB)</div>
+        <div class="y-sliders">
+          <div class="ys-row">
+            <span class="ys-lbl">Max</span>
+            <input type="range" id="yr-hi-${id}" class="ys-track">
+            <span class="ys-val" id="yrv-hi-${id}">0</span>
+            <span class="ys-unit">dB</span>
+          </div>
+          <div class="ys-row">
+            <span class="ys-lbl">Min</span>
+            <input type="range" id="yr-lo-${id}" class="ys-track">
+            <span class="ys-val" id="yrv-lo-${id}">-60</span>
+            <span class="ys-unit">dB</span>
+          </div>
+        </div>
+      </div>
+      <div class="cg"><div style="height:20px"></div>
+        <button class="btn btn-ghost" onclick="resetY('${id}')">Reset Y</button>
+      </div>
+    </div>
+    <div class="mkr-list" id="ml-${id}"></div>`;
+  return el;
+}
+
+// ── load file ─────────────────────────────────────────────────────────────────
+function loadFiles(fileList){
+  Array.from(fileList).forEach(file=>{
+    const ext=file.name.split('.').pop().toLowerCase();
+    if(!['s1p','s2p'].includes(ext))return;
+    const fs={
+      id:'f'+(_fid++),name:file.name,type:ext,
+      data:null,mkrs:[],activeMkr:0,xr:[null,null],yr:[null,null],
+      _ev:false,_click:false,sp:'S11',
+    };
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const d=parse(ev.target.result,file.name);
+        fs.data=d;
+        const panel=createPanel(fs);
+        document.getElementById('tab-panels').appendChild(panel);
+        const idx=S.files.length;
+        S.files.push(fs);
+        // fill info bar
+        document.getElementById('iifmt-'+fs.id).textContent=d.fmt;
+        document.getElementById('iin-'+fs.id).textContent=d.n;
+        document.getElementById('iiz-'+fs.id).textContent=d.z0+' Ω';
+        document.getElementById('iifr-'+fs.id).textContent=
+          fmtF(Math.min(...d.freqs))+' – '+fmtF(Math.max(...d.freqs));
+        // setup
+        initSliders(fs.id); setupSliders(fs.id);
+        renderAll(fs.id);
+        // x-range tracking
+        if(!fs._ev){
+          fs._ev=true;
+          document.getElementById('md-'+fs.id).on('plotly_relayout',e=>{
+            if('xaxis.range[0]'in e)fs.xr=[e['xaxis.range[0]'],e['xaxis.range[1]']];
+            else if(e['xaxis.autorange'])fs.xr=[null,null];
+          });
+        }
+        attachDragListener(fs.id);
+        document.getElementById('mk-inp-'+fs.id).addEventListener('keydown',e=>{
+          if(e.key==='Enter')addMkr(fs.id);
+        });
+        // default marker
+        fs.mkrs=[{freq:127.74,color:MC()[0]}];
+        renderAll(fs.id); renderMkrList(fs.id);
+        // navigate & activate
+        setActiveTab(idx);
+        goTo('viewer');
+        renderTabs();
+      }catch(err){
+        const eb=document.getElementById('eb-'+fs.id);
+        if(eb){eb.textContent='Parse error: '+err.message;eb.classList.add('on');}
+      }
+    };
+    r.readAsText(file);
+  });
+}
 
 // ── wire up ───────────────────────────────────────────────────────────────────
-['s1p','s2p'].forEach(t=>{
-  const dz=document.getElementById('dz-'+t),fi=document.getElementById('fi-'+t);
+// Landing drop zone
+(()=>{
+  const dz=document.getElementById('dz-landing'),fi=document.getElementById('fi-landing');
   dz.addEventListener('click',()=>fi.click());
-  fi.addEventListener('change',e=>{if(e.target.files[0])loadFile(t,e.target.files[0]);});
-  dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('drag-over');});
+  fi.addEventListener('change',e=>{loadFiles(e.target.files);fi.value='';});
+  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
   dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
   dz.addEventListener('drop',e=>{
-    e.preventDefault();dz.classList.remove('drag-over');
-    if(e.dataTransfer.files[0])loadFile(t,e.dataTransfer.files[0]);
+    e.preventDefault();dz.classList.remove('drag-over');loadFiles(e.dataTransfer.files);
   });
-  document.getElementById('mk-inp-'+t).addEventListener('keydown',e=>{if(e.key==='Enter')addMkr(t);});
-  setupSliders(t);
-});
+})();
 
-// ── restore saved theme ───────────────────────────────────────────────────────
+// Viewer "+ Add file" button
+(()=>{
+  const fi=document.getElementById('fi-add');
+  fi.addEventListener('change',e=>{loadFiles(e.target.files);fi.value='';});
+})();
+
+// Drop files anywhere on viewer page
+(()=>{
+  const pv=document.getElementById('page-viewer');
+  pv.addEventListener('dragover',e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault();});
+  pv.addEventListener('drop',e=>{
+    if(!e.dataTransfer.files.length)return;
+    e.preventDefault(); loadFiles(e.dataTransfer.files);
+  });
+})();
+
+// restore theme
 if(localStorage.getItem('spv-theme')==='light'){
   document.body.classList.add('light');
   document.querySelectorAll('[id^=tbtn-]').forEach(b=>b.textContent='Dark mode');
