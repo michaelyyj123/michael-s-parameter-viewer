@@ -863,7 +863,7 @@ function createPanel(fs){
           <select class="cg-sel" id="font-sel-${id}" onchange="setAxisFont('${id}',this.value)">
             <option value="">Default</option>
             <option value="Arial">Arial</option>
-            <option value="Helvetica">Helvetica</option>
+            <option value="Helvetica" selected>Helvetica</option>
             <option value="Times New Roman">Times New Roman</option>
             <option value="Georgia">Georgia</option>
             <option value="Courier New">Courier New</option>
@@ -887,7 +887,7 @@ function loadFiles(fileList){
     const fs={
       id:'f'+(_fid++),name:file.name,type:ext,
       data:null,mkrs:[],activeMkr:0,xr:[null,null],yr:[null,null],
-      _ev:false,_click:false,sp:'S11',axisFont:'',axisFontSize:null,
+      _ev:false,_click:false,sp:'S11',axisFont:'Helvetica',axisFontSize:null,
     };
     const r=new FileReader();
     r.onload=ev=>{
