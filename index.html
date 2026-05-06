@@ -11,7 +11,6 @@
   --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--border:#30363d;
   --text:#e2e8f0;--text2:#c9d1d9;--text3:#8b949e;--text4:#484f58;
   --accent:#58a6ff;--green:#3fb950;--red:#f85149;
-  /* glow variables */
   --glow:#58a6ff;--glow-dim:rgba(88,166,255,.18);--glow-strong:rgba(88,166,255,.45);
   --glow-trace:rgba(63,185,80,.55);--sweep-col:rgba(88,166,255,.7);
 }
@@ -29,34 +28,23 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .page{display:none;flex-direction:column;height:100vh;
   transition:opacity .45s ease,transform .45s ease,filter .45s ease}
 .page.active{display:flex}
-/* transition states */
 .page.leaving{opacity:0;transform:scale(1.06);filter:blur(4px);pointer-events:none}
 .page.entering{opacity:0;transform:scale(.96);filter:blur(2px)}
 .page.entered{opacity:1;transform:scale(1);filter:none;transition:opacity .4s ease,transform .4s ease,filter .4s ease}
 
-/* ── landing page layout ─────────────────────────────────────────────────── */
+/* ── landing ────────────────────────────────────────────────────────────── */
 #page-landing{align-items:center;justify-content:center;gap:28px;
   position:relative;overflow:hidden}
-
-/* animated VNA canvas background */
 #vna-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;
   opacity:.9;pointer-events:none}
 body.light #vna-bg{opacity:.55}
-
-/* landing content sits above canvas */
-.landing-content{
-  position:relative;z-index:1;display:flex;flex-direction:column;
+.landing-content{position:relative;z-index:1;display:flex;flex-direction:column;
   align-items:center;gap:28px;width:100%}
-
-.landing-badge{
-  font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+.landing-badge{font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
   color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
   background:color-mix(in srgb,var(--accent) 8%,transparent);
-  padding:4px 14px;border-radius:99px;
-  box-shadow:0 0 12px var(--glow-dim)}
-
-.landing-title{
-  font-size:2.5rem;font-weight:800;letter-spacing:-.8px;text-align:center;
+  padding:4px 14px;border-radius:99px;box-shadow:0 0 12px var(--glow-dim)}
+.landing-title{font-size:2.5rem;font-weight:800;letter-spacing:-.8px;text-align:center;
   background:linear-gradient(135deg,var(--accent) 0%,#a5d8ff 60%,var(--accent) 100%);
   background-size:200% auto;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
@@ -66,52 +54,34 @@ body.light .landing-title{
   background-size:200% auto;
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 @keyframes titleShimmer{0%{background-position:0% center}100%{background-position:200% center}}
-
 .landing-sub{font-size:.88rem;color:var(--text3);margin-top:-18px;letter-spacing:.02em}
 
 /* ── drop zone ───────────────────────────────────────────────────────────── */
-.drop-zone{
-  border:1.5px solid color-mix(in srgb,var(--accent) 35%,var(--border));
+.drop-zone{border:1.5px solid color-mix(in srgb,var(--accent) 35%,var(--border));
   border-radius:16px;padding:44px 72px;text-align:center;cursor:pointer;
   background:color-mix(in srgb,var(--accent) 4%,var(--bg2));
   transition:all .22s ease;max-width:520px;width:100%;
   box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 12%,transparent),
-             0 8px 40px rgba(0,0,0,.35),
-             inset 0 1px 0 rgba(255,255,255,.04);
+             0 8px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);
   position:relative;overflow:hidden}
-
-/* sweeping highlight inside drop zone */
-.drop-zone::before{
-  content:'';position:absolute;inset:0;border-radius:14px;
+.drop-zone::before{content:'';position:absolute;inset:0;border-radius:14px;
   background:linear-gradient(90deg,transparent 0%,var(--glow-dim) 50%,transparent 100%);
   background-size:200% 100%;opacity:0;
   animation:dzSweep 2.8s ease-in-out infinite;transition:opacity .3s}
 .drop-zone:hover::before,.drop-zone.drag-over::before{opacity:1}
 @keyframes dzSweep{0%{background-position:200% center}100%{background-position:-200% center}}
-
-/* outer glow ring on hover */
-.drop-zone:hover,.drop-zone.drag-over{
-  border-color:var(--accent);
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);
   background:color-mix(in srgb,var(--accent) 7%,var(--bg2));
   box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent),
-             0 0 32px var(--glow-strong),
-             0 8px 40px rgba(0,0,0,.4),
+             0 0 32px var(--glow-strong),0 8px 40px rgba(0,0,0,.4),
              inset 0 1px 0 rgba(255,255,255,.06)}
 .drop-zone.drag-over{
-  box-shadow:0 0 0 2px var(--accent),
-             0 0 48px var(--glow-strong),
-             0 8px 40px rgba(0,0,0,.4);
+  box-shadow:0 0 0 2px var(--accent),0 0 48px var(--glow-strong),0 8px 40px rgba(0,0,0,.4);
   transform:scale(1.015)}
-
-/* pulse ring around drop zone when dragging */
-.drop-zone.drag-over::after{
-  content:'';position:absolute;inset:-6px;border-radius:20px;
+.drop-zone.drag-over::after{content:'';position:absolute;inset:-6px;border-radius:20px;
   border:2px solid color-mix(in srgb,var(--accent) 50%,transparent);
   animation:pulseRing .9s ease-out infinite}
-@keyframes pulseRing{
-  0%{opacity:.8;transform:scale(1)}
-  100%{opacity:0;transform:scale(1.04)}}
-
+@keyframes pulseRing{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.04)}}
 .dz-icon{font-size:2rem;margin-bottom:10px;opacity:.75;
   filter:drop-shadow(0 0 8px var(--glow-dim))}
 .dz-title{font-size:.96rem;font-weight:600;margin-bottom:6px;color:var(--text2)}
@@ -122,27 +92,20 @@ body.light .landing-title{
 .drop-zone input{display:none}
 
 /* ── loading overlay ─────────────────────────────────────────────────────── */
-#loading-overlay{
-  position:fixed;inset:0;z-index:500;
+#loading-overlay{position:fixed;inset:0;z-index:500;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:18px;background:var(--bg);
-  opacity:0;pointer-events:none;transition:opacity .22s ease}
+  gap:18px;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .22s ease}
 #loading-overlay.active{opacity:1;pointer-events:auto}
-
-.loading-scanner{
-  width:220px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
-.loading-scanner::after{
-  content:'';display:block;height:100%;width:60%;
+.loading-scanner{width:220px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.loading-scanner::after{content:'';display:block;height:100%;width:60%;
   background:linear-gradient(90deg,transparent,var(--accent),transparent);
   animation:scan .9s ease-in-out infinite}
 @keyframes scan{0%{transform:translateX(-100%)}100%{transform:translateX(280%)}}
-
 .loading-text{font-size:.8rem;color:var(--text3);letter-spacing:.1em;
   text-transform:uppercase;font-weight:500}
 
 /* ── header ─────────────────────────────────────────────────────────────── */
-.pg-header{
-  background:color-mix(in srgb,var(--bg2) 95%,transparent);
+.pg-header{background:color-mix(in srgb,var(--bg2) 95%,transparent);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
   padding:8px 14px;display:flex;align-items:center;gap:8px;
@@ -156,8 +119,7 @@ body.light .landing-title{
   background:var(--bg3);border:1px solid var(--border);border-radius:5px;
   cursor:pointer;font-size:.78rem;color:var(--text3);
   transition:all .15s ease;white-space:nowrap;max-width:200px;flex-shrink:0}
-.tab:hover:not(.active){border-color:var(--text4);color:var(--text2);
-  transform:translateY(-1px)}
+.tab:hover:not(.active){border-color:var(--text4);color:var(--text2);transform:translateY(-1px)}
 .tab.active{background:color-mix(in srgb,var(--accent) 11%,var(--bg3));
   border-color:var(--accent);color:var(--text2);
   box-shadow:0 0 8px color-mix(in srgb,var(--accent) 20%,transparent)}
@@ -166,6 +128,10 @@ body.light .landing-title{
   color:var(--text4);padding:1px 5px;border-radius:3px;flex-shrink:0}
 .tab.active .tab-badge{background:var(--accent);border-color:var(--accent);
   color:#fff;font-weight:600}
+/* spectrum tab badge uses green tint */
+.tab-badge.spec{background:color-mix(in srgb,var(--green) 15%,var(--bg));
+  border-color:color-mix(in srgb,var(--green) 40%,var(--border));color:var(--green)}
+.tab.active .tab-badge.spec{background:var(--green);border-color:var(--green);color:#fff}
 .tab-close{background:transparent;border:none;color:var(--text4);cursor:pointer;
   font-size:.82rem;line-height:1;padding:2px 3px;flex-shrink:0;border-radius:3px;
   transition:all .12s;margin-left:2px}
@@ -177,7 +143,7 @@ body.light .landing-title{
   flex-direction:column;gap:12px;overflow-y:auto}
 .tab-panel.active{display:flex}
 
-/* ── add-file label ──────────────────────────────────────────────────────── */
+/* ── add-file ────────────────────────────────────────────────────────────── */
 .btn-add{background:var(--bg3);border:1px dashed var(--border);border-radius:5px;
   color:var(--text3);cursor:pointer;font-size:.78rem;padding:4px 10px;
   transition:all .12s;white-space:nowrap;flex-shrink:0}
@@ -198,29 +164,22 @@ body.light .landing-title{
 
 /* ── plots grid ──────────────────────────────────────────────────────────── */
 .plots-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-
-/* plot card with glassmorphism glow */
-.plot-card{
-  background:color-mix(in srgb,var(--bg2) 92%,var(--accent) 3%);
+.plot-card{background:color-mix(in srgb,var(--bg2) 92%,var(--accent) 3%);
   border:1px solid color-mix(in srgb,var(--accent) 18%,var(--border));
   border-radius:10px;display:flex;flex-direction:column;overflow:hidden;
   box-shadow:0 0 0 1px transparent,0 4px 24px rgba(0,0,0,.25);
   transition:box-shadow .25s ease,border-color .25s ease;
-  /* entrance animation */
-  opacity:0;transform:translateY(10px);
-  animation:cardEntrance .4s ease forwards}
+  opacity:0;transform:translateY(10px);animation:cardEntrance .4s ease forwards}
 .plot-card:nth-child(2){animation-delay:.07s}
 @keyframes cardEntrance{to{opacity:1;transform:translateY(0)}}
-
-.plot-card:hover{
-  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent),
-             0 6px 32px rgba(0,0,0,.3),
-             0 0 20px color-mix(in srgb,var(--accent) 8%,transparent)}
-
+.plot-card:hover{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent),
+  0 6px 32px rgba(0,0,0,.3),0 0 20px color-mix(in srgb,var(--accent) 8%,transparent)}
 .plot-card-hdr{padding:9px 14px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;gap:8px;flex-shrink:0}
 .pch-title{font-size:.85rem;font-weight:500;flex:1;color:var(--text2)}
 .plot-div{height:400px}
+/* full-width spectrum card */
+.plot-div-tall{height:460px}
 
 /* ── smith selector ──────────────────────────────────────────────────────── */
 .s-sel{display:flex;gap:3px}
@@ -235,7 +194,6 @@ body.light .landing-title{
 .cg{display:flex;flex-direction:column;gap:6px}
 .cg-lbl{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
 .cg-row{display:flex;gap:6px;align-items:center}
-
 input[type=number],select.cg-sel{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
   padding:5px 9px;color:var(--text);font-size:.83rem;outline:none;transition:border-color .12s}
 input[type=number]{width:96px}
@@ -265,8 +223,7 @@ input[type=number]::placeholder{color:var(--text4)}
   z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 #preview-modal.open{display:flex}
 .preview-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
-  padding:16px;display:flex;flex-direction:column;gap:10px;
-  max-width:92vw;max-height:92vh}
+  padding:16px;display:flex;flex-direction:column;gap:10px;max-width:92vw;max-height:92vh}
 .preview-box img{max-width:100%;max-height:calc(90vh - 80px);object-fit:contain;
   border-radius:4px;display:block}
 .preview-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -300,8 +257,7 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
   border-right-color:color-mix(in srgb,var(--accent) 25%,var(--border));
   border-bottom-color:color-mix(in srgb,var(--accent) 25%,var(--border))}
 .mkr-color-inp{width:22px;height:22px;padding:1px;border:1px solid var(--border);
-  border-radius:4px;cursor:pointer;background:none;flex-shrink:0;outline:none;
-  transition:border-color .12s}
+  border-radius:4px;cursor:pointer;background:none;flex-shrink:0;outline:none;transition:border-color .12s}
 .mkr-color-inp:hover{border-color:var(--text3)}
 .mkr-name-inp{background:transparent;border:1px solid transparent;border-radius:4px;
   color:var(--text2);font-size:.81rem;font-weight:600;
@@ -337,23 +293,20 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
 
 <!-- ════════ LANDING -->
 <div id="page-landing" class="page active">
-  <!-- VNA background canvas -->
   <canvas id="vna-bg"></canvas>
-
   <div style="position:absolute;top:16px;right:20px;z-index:2">
     <button class="btn btn-theme" onclick="toggleTheme()" id="tbtn-landing">Light mode</button>
   </div>
-
   <div class="landing-content">
-    <div class="landing-badge">RF · S-Parameter · Touchstone</div>
+    <div class="landing-badge">RF · S-Parameter · Spectrum · Touchstone</div>
     <div class="landing-title">S-Parameter Viewer</div>
     <div class="landing-sub">Touchstone file reader &amp; plotter for RF engineering</div>
     <div class="drop-zone" id="dz-landing">
       <div class="dz-icon">📡</div>
-      <p class="dz-title">Drop .s1p / .s2p files here</p>
+      <p class="dz-title">Drop .s1p / .s2p / spectrum .csv files here</p>
       <p class="dz-hint">or click to browse &nbsp;·&nbsp; multiple files supported</p>
       <p class="dz-privacy">Files are processed locally in your browser and are not uploaded.</p>
-      <input type="file" id="fi-landing" accept=".s1p,.s2p,.S1P,.S2P" multiple>
+      <input type="file" id="fi-landing" accept=".s1p,.s2p,.S1P,.S2P,.csv,.CSV" multiple>
     </div>
   </div>
 </div>
@@ -364,7 +317,7 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
     <button class="btn btn-back" onclick="goTo('landing')">&#8592; Back</button>
     <div class="tab-bar" id="tab-bar"></div>
     <label class="btn-add" for="fi-add">&#43; Add file</label>
-    <input type="file" id="fi-add" accept=".s1p,.s2p,.S1P,.S2P" multiple style="display:none">
+    <input type="file" id="fi-add" accept=".s1p,.s2p,.S1P,.S2P,.csv,.CSV" multiple style="display:none">
     <div style="margin-left:6px;flex-shrink:0">
       <button class="btn btn-theme" onclick="toggleTheme()" id="tbtn-viewer">Light mode</button>
     </div>
@@ -375,7 +328,7 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
 <!-- ════════ LOADING OVERLAY -->
 <div id="loading-overlay">
   <div class="loading-scanner"></div>
-  <div class="loading-text" id="loading-text">Analyzing Touchstone file…</div>
+  <div class="loading-text" id="loading-text">Analyzing file…</div>
 </div>
 
 <script>
@@ -383,6 +336,11 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
 let _fid=0;
 const S={files:[],active:0};
 function fileById(id){return S.files.find(f=>f.id===id);}
+
+// Returns the frequency array (MHz) for any file kind
+function fsFreqs(fs){
+  return fs.kind==='spectrum'?fs.data.freqsMHz:fs.data.freqs;
+}
 
 // ── theme ─────────────────────────────────────────────────────────────────────
 const isLight=()=>document.body.classList.contains('light');
@@ -418,7 +376,6 @@ function toggleTheme(){
     fs.mkrs.forEach((mk,i)=>{mk.color=mc[i%6];});
     renderAll(fs.id); renderMkrList(fs.id);
   });
-  // restart background with new palette
   initVnaBg();
 }
 
@@ -427,46 +384,40 @@ function goTo(page){
   const current=document.querySelector('.page.active');
   const next=document.getElementById('page-'+page);
   if(!current||current===next)return;
-
-  // show next immediately (but invisible) so layout exists
   next.style.display='flex';
   next.classList.remove('leaving');
   next.classList.add('entering');
-
-  // force reflow so animation triggers
   void next.offsetWidth;
-
-  // animate current out
   current.classList.add('leaving');
   current.classList.remove('active');
-
-  // animate next in
   next.classList.add('active');
-  requestAnimationFrame(()=>{
-    next.classList.remove('entering');
-    next.classList.add('entered');
-  });
-
-  // cleanup after transition
+  requestAnimationFrame(()=>{next.classList.remove('entering');next.classList.add('entered');});
   setTimeout(()=>{
     current.classList.remove('leaving','entered');
     current.style.display='';
     next.classList.remove('entered');
     if(page==='viewer'){
       const f=S.files[S.active];
-      if(f&&f.data){
-        Plotly.Plots.resize(document.getElementById('md-'+f.id));
-        Plotly.Plots.resize(document.getElementById('sc-'+f.id));
-      }
+      if(f&&f.data) resizePlots(f);
     }
   },480);
 }
 
-// ── loading overlay helpers ────────────────────────────────────────────────────
+// Resize the correct Plotly divs for a file
+function resizePlots(f){
+  if(f.kind==='spectrum'){
+    const sp=document.getElementById('sp-'+f.id);
+    if(sp)Plotly.Plots.resize(sp);
+  } else {
+    const md=document.getElementById('md-'+f.id),sc=document.getElementById('sc-'+f.id);
+    if(md)Plotly.Plots.resize(md); if(sc)Plotly.Plots.resize(sc);
+  }
+}
+
+// ── loading overlay ────────────────────────────────────────────────────────────
 function showLoading(msg){
-  const ol=document.getElementById('loading-overlay');
-  document.getElementById('loading-text').textContent=msg||'Analyzing Touchstone file…';
-  ol.classList.add('active');
+  document.getElementById('loading-text').textContent=msg||'Analyzing file…';
+  document.getElementById('loading-overlay').classList.add('active');
 }
 function hideLoading(){
   document.getElementById('loading-overlay').classList.remove('active');
@@ -474,13 +425,16 @@ function hideLoading(){
 
 // ── tabs ──────────────────────────────────────────────────────────────────────
 function renderTabs(){
-  document.getElementById('tab-bar').innerHTML=S.files.map((f,i)=>
-    `<div class="tab${i===S.active?' active':''}" onclick="setActiveTab(${i})">
+  document.getElementById('tab-bar').innerHTML=S.files.map((f,i)=>{
+    const isSpec=f.kind==='spectrum';
+    const badge=isSpec?'SPEC':f.type.toUpperCase();
+    const badgeCls=isSpec?'tab-badge spec':'tab-badge';
+    return `<div class="tab${i===S.active?' active':''}" onclick="setActiveTab(${i})">
       <span class="tab-name" title="${f.name}">${f.name}</span>
-      <span class="tab-badge">${f.type.toUpperCase()}</span>
+      <span class="${badgeCls}">${badge}</span>
       <button class="tab-close" onclick="event.stopPropagation();closeTab(${i})" title="Close">&#x2715;</button>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
 }
 
 function setActiveTab(i){
@@ -488,17 +442,19 @@ function setActiveTab(i){
   document.querySelectorAll('.tab-panel').forEach((p,j)=>p.classList.toggle('active',j===S.active));
   renderTabs();
   const f=S.files[S.active];
-  if(f&&f.data) setTimeout(()=>{
-    Plotly.Plots.resize(document.getElementById('md-'+f.id));
-    Plotly.Plots.resize(document.getElementById('sc-'+f.id));
-  },30);
+  if(f&&f.data) setTimeout(()=>resizePlots(f),30);
 }
 
 function closeTab(i){
   const f=S.files[i];
   if(f){
-    const md=document.getElementById('md-'+f.id),sc=document.getElementById('sc-'+f.id);
-    if(md)Plotly.purge(md); if(sc)Plotly.purge(sc);
+    if(f.kind==='spectrum'){
+      const sp=document.getElementById('sp-'+f.id);
+      if(sp)Plotly.purge(sp);
+    } else {
+      const md=document.getElementById('md-'+f.id),sc=document.getElementById('sc-'+f.id);
+      if(md)Plotly.purge(md); if(sc)Plotly.purge(sc);
+    }
     const panel=document.getElementById('panel-'+f.id);
     if(panel)panel.remove();
   }
@@ -508,7 +464,7 @@ function closeTab(i){
   setActiveTab(S.active);
 }
 
-// ── parser ────────────────────────────────────────────────────────────────────
+// ── Touchstone parser (unchanged) ─────────────────────────────────────────────
 function parse(text,filename){
   const ext=filename.split('.').pop().toLowerCase();
   const ports=ext==='s1p'?1:ext==='s2p'?2:null;
@@ -545,7 +501,7 @@ function parse(text,filename){
       sp[nm].db.push(20*Math.log10(Math.sqrt(re*re+im*im)||1e-15));
     });
   }
-  return{freqs,sp,z0,fmt,ports,n};
+  return{kind:'sparameter',freqs,sp,z0,fmt,ports,n};
 }
 function toMHz(f,u){return u==='HZ'?f/1e6:u==='KHZ'?f/1e3:u==='MHZ'?f:f*1e3;}
 function toCpx(a,b,fmt){
@@ -554,9 +510,71 @@ function toCpx(a,b,fmt){
   return[m*Math.cos(r),m*Math.sin(r)];
 }
 function fmtF(m){return m>=1000?(m/1000).toFixed(4)+' GHz':m>=1?m.toFixed(4)+' MHz':(m*1000).toFixed(4)+' kHz';}
-function nearest(freqs,t){return freqs.reduce((b,f,i)=>Math.abs(f-t)<Math.abs(freqs[b]-t)?i:b,0);}
+function nearest(arr,t){return arr.reduce((b,f,i)=>Math.abs(f-t)<Math.abs(arr[b]-t)?i:b,0);}
 
-// ── Smith grid ────────────────────────────────────────────────────────────────
+// ── Spectrum CSV parser ────────────────────────────────────────────────────────
+// Handles Rohde & Schwarz ZVH / similar spectrum analyzer CSV exports.
+// Reads metadata key-value pairs before the data table, then parses
+// frequency (Hz) and magnitude (dBm) columns.
+function parseSpectrumCsv(text,filename){
+  // strip BOM
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  const lines=text.split(/\r?\n/);
+  const meta={};
+  let dataStart=-1;
+
+  for(let i=0;i<lines.length;i++){
+    const cols=lines[i].split(',');
+    const c0=(cols[0]||'').trim();
+    const c1=(cols[1]||'').trim();
+    const c2=(cols[2]||'').trim();
+    // data header row: first col starts with "Frequency", second with "Magnitude"
+    if(c0.toLowerCase().startsWith('frequency')&&c1.toLowerCase().startsWith('magnitude')){
+      dataStart=i+1;
+      break;
+    }
+    // accumulate metadata: key → value, also store unit
+    if(c0&&c1){
+      meta[c0]=c1;
+      if(c2)meta['_unit_'+c0]=c2;
+    }
+  }
+
+  if(dataStart===-1)throw new Error(
+    'Cannot find data header row. Expected a row starting with "Frequency" and "Magnitude".');
+
+  const freqsHz=[],freqsMHz=[],dbm=[];
+  for(let i=dataStart;i<lines.length;i++){
+    const ln=lines[i].trim();
+    if(!ln)continue;
+    const cols=ln.split(',');
+    const f=parseFloat(cols[0]),m=parseFloat(cols[1]);
+    if(isNaN(f)||isNaN(m))continue;
+    freqsHz.push(f);
+    freqsMHz.push(f/1e6);
+    dbm.push(m);
+  }
+
+  if(freqsHz.length===0)throw new Error('No numeric data rows found in CSV.');
+
+  return{kind:'spectrum',freqsHz,freqsMHz,dbm,n:freqsHz.length,meta};
+}
+
+// Format a spectrum metadata value for display
+function fmtSpecMeta(meta,key){
+  const v=meta[key]; if(!v)return'—';
+  const unit=meta['_unit_'+key]||'';
+  // convert Hz-valued fields to human-readable frequency
+  if(['Center Frequency','Span'].includes(key)&&unit==='Hz')
+    return fmtF(parseFloat(v)/1e6);
+  if(['RBW','VBW'].includes(key))
+    return v+(unit?' '+unit:' Hz');
+  if(key==='Ref Level')
+    return v+(unit?' '+unit:' dBm');
+  return v+(unit?' '+unit:'');
+}
+
+// ── Smith grid (unchanged) ────────────────────────────────────────────────────
 function smithGrid(){
   const th=TH(),N=400;
   const T=Array.from({length:N+1},(_,i)=>i*2*Math.PI/N);
@@ -597,7 +615,7 @@ function getVis(divId,names){
   return vis;
 }
 
-// ── render magnitude ──────────────────────────────────────────────────────────
+// ── render magnitude (S-parameter, unchanged) ─────────────────────────────────
 function renderMag(divId,data,mkrs,xr,yr){
   const th=TH(),pc=PC();
   const names=Object.keys(data.sp);
@@ -609,26 +627,20 @@ function renderMag(divId,data,mkrs,xr,yr){
   }));
   const id=divId.replace('md-','');
   const fs=fileById(id);
-  const shapes=[],annos=[];
-  const readoutLines=[];
+  const shapes=[],annos=[],readoutLines=[];
   mkrs.forEach((mk,i)=>{
     const idx=nearest(data.freqs,mk.freq);
     const mf=data.freqs[idx];
-    const visNames=mk.trace
-      ? (vis[mk.trace]?[mk.trace]:[])
-      : names.filter(nm=>vis[nm]);
+    const visNames=mk.trace?(vis[mk.trace]?[mk.trace]:[]):names.filter(nm=>vis[nm]);
     const mkName=mk.name||`M${i+1}`;
-
     if(mk.showLine!==false)shapes.push({type:'line',x0:mf,x1:mf,y0:0,y1:1,yref:'paper',
       line:{color:mk.color,width:1.5,dash:'dash'}});
-
     if(visNames.length){
       const yVals=visNames.map(nm=>data.sp[nm].db[idx]);
       const topI=yVals.reduce((mi,v,ci)=>v>yVals[mi]?ci:mi,0);
       const texts=yVals.map((_,j)=>j===topI?mkName:'');
       traces.push({
-        x:visNames.map(()=>mf),y:yVals,
-        mode:'markers+text',
+        x:visNames.map(()=>mf),y:yVals,mode:'markers+text',
         marker:{color:mk.color,size:10,line:{color:th.plot,width:1.8}},
         text:texts,textposition:'bottom center',
         textfont:{color:mk.color,size:14,...(fs?.axisFont?{family:fs.axisFont}:{})},
@@ -643,19 +655,14 @@ function renderMag(divId,data,mkrs,xr,yr){
   });
   if(readoutLines.length){
     const legBottom=Math.max(0.05,1.0-names.length*0.065-0.12);
-    annos.push({
-      x:1.02,y:legBottom,xref:'paper',yref:'paper',
-      xanchor:'left',yanchor:'top',
-      text:readoutLines.join('<br>'),showarrow:false,
-      font:{size:10,color:th.text},
-      bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left',
-      width:115,
-    });
+    annos.push({x:1.02,y:legBottom,xref:'paper',yref:'paper',
+      xanchor:'left',yanchor:'top',text:readoutLines.join('<br>'),showarrow:false,
+      font:{size:10,color:th.text},bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,
+      align:'left',width:115});
   }
-  const axFont=fs?.axisFont||'';
-  const axSize=fs?.axisFontSize||null;
-  const afTitle={color:th.axis,...(axFont?{family:axFont}:{}), ...(axSize?{size:axSize}:{})};
-  const afTick={...(axFont?{family:axFont}:{}), ...(axSize?{size:axSize}:{})};
+  const axFont=fs?.axisFont||'',axSize=fs?.axisFontSize||null;
+  const afTitle={color:th.axis,...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
+  const afTick={...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
   const xax={title:{text:'Frequency (MHz)',font:afTitle},
     tickfont:Object.keys(afTick).length?afTick:undefined,
     gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line,
@@ -669,27 +676,24 @@ function renderMag(divId,data,mkrs,xr,yr){
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
     font:{color:th.text,size:11},margin:{t:20,r:160,b:80,l:72},
     xaxis:xax,yaxis:yax,shapes,annotations:annos,
-    legend:{bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},
-    hovermode:'x unified',
+    legend:{bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},hovermode:'x unified',
   },{responsive:true,displayModeBar:true,
     modeBarButtonsToRemove:['select2d','lasso2d'],displaylogo:false});
 }
 
-// ── render Smith ──────────────────────────────────────────────────────────────
+// ── render Smith (unchanged) ───────────────────────────────────────────────────
 function renderSmith(divId,data,paramName,mkrs){
   const th=TH(),pc=PC();
   const id=divId.replace('sc-','');
   const fs=fileById(id);
-  const axFont=fs?.axisFont||'';
-  const axSize=fs?.axisFontSize||null;
-  const afTitle={color:th.axis,...(axFont?{family:axFont}:{}), ...(axSize?{size:axSize}:{})};
-  const afTick={...(axFont?{family:axFont}:{}), ...(axSize?{size:axSize}:{})};
+  const axFont=fs?.axisFont||'',axSize=fs?.axisFontSize||null;
+  const afTitle={color:th.axis,...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
+  const afTick={...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
   const s=data.sp[paramName];
   const trs=[...smithGrid()];
   trs.push({x:s.re,y:s.im,name:paramName,mode:'lines',
     line:{color:pc[paramName]||th.axis,width:2.2},
-    hovertemplate:`${paramName}<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`,
-  });
+    hovertemplate:`${paramName}<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`});
   mkrs.forEach((mk,i)=>{
     const idx=nearest(data.freqs,mk.freq);
     const db=s.db[idx].toFixed(2);
@@ -698,8 +702,7 @@ function renderSmith(divId,data,paramName,mkrs){
       text:[mk.name||`M${i+1}`],textposition:'top right',
       textfont:{color:mk.color,size:axSize||10,...(axFont?{family:axFont}:{})},
       showlegend:false,
-      hovertemplate:`${mk.name||`M${i+1}`}: ${fmtF(data.freqs[idx])}<br>${paramName}: ${db} dB<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`,
-    });
+      hovertemplate:`${mk.name||`M${i+1}`}: ${fmtF(data.freqs[idx])}<br>${paramName}: ${db} dB<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`});
   });
   Plotly.react(divId,trs,{
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
@@ -708,18 +711,76 @@ function renderSmith(divId,data,paramName,mkrs){
       title:{text:'Re(Γ)',font:afTitle},
       tickfont:Object.keys(afTick).length?afTick:undefined,
       gridcolor:'transparent',zerolinecolor:'transparent',color:th.axis,linecolor:th.line},
-    yaxis:{range:[-1.15,1.15],
-      title:{text:'Im(Γ)',font:afTitle},
+    yaxis:{range:[-1.15,1.15],title:{text:'Im(Γ)',font:afTitle},
       tickfont:Object.keys(afTick).length?afTick:undefined,
       gridcolor:'transparent',zerolinecolor:'transparent',color:th.axis,linecolor:th.line},
     annotations:smithAnno(th),showlegend:false,
   },{responsive:true,displayModeBar:false});
 }
 
+// ── render spectrum (CSV) ─────────────────────────────────────────────────────
+function renderSpectrum(divId,data,mkrs,xr,yr,fs){
+  const th=TH();
+  const specColor=isLight()?'#0969da':'#58a6ff';
+  const traces=[{
+    x:data.freqsMHz,y:data.dbm,name:'Spectrum',mode:'lines',
+    line:{color:specColor,width:1.6},
+  }];
+  const shapes=[],annos=[],readoutLines=[];
+  mkrs.forEach((mk,i)=>{
+    const idx=nearest(data.freqsMHz,mk.freq);
+    const mf=data.freqsMHz[idx];
+    const mkName=mk.name||`M${i+1}`;
+    if(mk.showLine!==false)shapes.push({type:'line',x0:mf,x1:mf,y0:0,y1:1,yref:'paper',
+      line:{color:mk.color,width:1.5,dash:'dash'}});
+    traces.push({
+      x:[mf],y:[data.dbm[idx]],mode:'markers+text',
+      marker:{color:mk.color,size:10,line:{color:th.plot,width:1.8}},
+      text:[mkName],textposition:'bottom center',
+      textfont:{color:mk.color,size:14,...(fs?.axisFont?{family:fs.axisFont}:{})},
+      showlegend:false,hoverinfo:'skip',
+    });
+    if(readoutLines.length)readoutLines.push('');
+    readoutLines.push(`<b style="color:${mk.color}">${mkName}</b>`);
+    readoutLines.push(`<span style="color:${specColor}">${data.dbm[idx].toFixed(2)} dBm</span>`);
+    readoutLines.push(`<span style="color:${th.axis}">${fmtF(mf)}</span>`);
+  });
+  if(readoutLines.length){
+    annos.push({x:1.02,y:0.97,xref:'paper',yref:'paper',
+      xanchor:'left',yanchor:'top',text:readoutLines.join('<br>'),showarrow:false,
+      font:{size:10,color:th.text},bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,
+      align:'left',width:130});
+  }
+  const axFont=fs?.axisFont||'',axSize=fs?.axisFontSize||null;
+  const afTitle={color:th.axis,...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
+  const afTick={...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
+  const xax={title:{text:'Frequency (MHz)',font:afTitle},
+    tickfont:Object.keys(afTick).length?afTick:undefined,
+    gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line,
+    rangeslider:{visible:true,bgcolor:th.rsBg,bordercolor:th.line,thickness:.07}};
+  const yax={title:{text:'Power (dBm)',font:afTitle},
+    tickfont:Object.keys(afTick).length?afTick:undefined,
+    gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line};
+  if(xr[0]!==null&&xr[1]!==null)xax.range=xr;
+  if(yr[0]!==null&&yr[1]!==null)yax.range=yr;
+  Plotly.react(divId,traces,{
+    paper_bgcolor:th.paper,plot_bgcolor:th.plot,
+    font:{color:th.text,size:11},margin:{t:20,r:160,b:80,l:72},
+    xaxis:xax,yaxis:yax,shapes,annotations:annos,
+    legend:{bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},hovermode:'x unified',
+  },{responsive:true,displayModeBar:true,
+    modeBarButtonsToRemove:['select2d','lasso2d'],displaylogo:false});
+}
+
+// ── renderAll: branches on kind ───────────────────────────────────────────────
 function renderAll(id){
   const fs=fileById(id); if(!fs||!fs.data)return;
-  renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr);
-  renderSmith('sc-'+id,fs.data,fs.type==='s1p'?'S11':fs.sp,fs.mkrs);
+  if(fs.kind==='spectrum'){
+    renderSpectrum('sp-'+id,fs.data,fs.mkrs,fs.xr,fs.yr,fs);
+  } else {
+    renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr);
+    renderSmith('sc-'+id,fs.data,fs.type==='s1p'?'S11':fs.sp,fs.mkrs);
+  }
 }
 
 // ── markers ───────────────────────────────────────────────────────────────────
@@ -763,23 +824,39 @@ function setMkrTrace(id,i,trace){
   const fs=fileById(id); if(!fs||!fs.mkrs[i])return;
   fs.mkrs[i].trace=trace||null; renderAll(id); renderMkrList(id);
 }
+
 function renderMkrList(id){
   const fs=fileById(id); if(!fs)return;
   const el=document.getElementById('ml-'+id);
   if(!el)return;
   if(!fs.data||!fs.mkrs.length){el.innerHTML='';updateHint(id);return;}
-  const names=Object.keys(fs.data.sp);
-  const vis=getVis('md-'+id,names);
-  const pc=PC();
+
+  const freqs=fsFreqs(fs);
+  // for s-parameter only: trace names + visibility
+  const names=fs.kind==='spectrum'?[]:Object.keys(fs.data.sp);
+
   el.innerHTML=fs.mkrs.map((mk,i)=>{
-    const idx=nearest(fs.data.freqs,mk.freq);
-    const mf=fs.data.freqs[idx];
+    const idx=nearest(freqs,mk.freq);
+    const mf=freqs[idx];
     const isAct=i===fs.activeMkr;
     const mkName=mk.name||`M${i+1}`;
     const lineOn=mk.showLine!==false;
-    const traceOpts=['<option value="">All</option>',
-      ...names.map(nm=>`<option value="${nm}"${mk.trace===nm?' selected':''}>${nm}</option>`)
-    ].join('');
+
+    // snap label: for spectrum also show dBm
+    const snapLabel=fs.kind==='spectrum'
+      ?`&#8594;&nbsp;${fmtF(mf)}&nbsp;<span style="color:var(--text4)">${fs.data.dbm[idx].toFixed(1)} dBm</span>`
+      :`&#8594;&nbsp;${fmtF(mf)}`;
+
+    // trace selector only for s-parameter
+    const traceSelHtml=fs.kind==='sparameter'
+      ?`<select class="mkr-trace-sel" title="Assign to trace"
+          onclick="event.stopPropagation()"
+          onchange="setMkrTrace('${id}',${i},this.value)">
+          <option value="">All</option>
+          ${names.map(nm=>`<option value="${nm}"${mk.trace===nm?' selected':''}>${nm}</option>`).join('')}
+        </select>`
+      :'';
+
     return `<div class="mkr-row${isAct?' active':''}" style="border-left-color:${mk.color}"
       onclick="setActiveMkr('${id}',${i})">
       <input type="color" class="mkr-color-inp" value="${mk.color}"
@@ -795,10 +872,8 @@ function renderMkrList(id){
         onblur="moveMkr('${id}',${i},this.value)"
         onclick="event.stopPropagation()">
       <span class="mkr-unit">MHz</span>
-      <span class="mkr-snap">&#8594;&nbsp;${fmtF(mf)}</span>
-      <select class="mkr-trace-sel" title="Assign to trace"
-        onclick="event.stopPropagation()"
-        onchange="setMkrTrace('${id}',${i},this.value)">${traceOpts}</select>
+      <span class="mkr-snap">${snapLabel}</span>
+      ${traceSelHtml}
       <button class="mkr-cursor-btn${lineOn?' on':''}"
         onclick="event.stopPropagation();toggleMkrLine('${id}',${i})"
         title="Toggle cursor line">cursor</button>
@@ -813,11 +888,14 @@ function updateHint(id){
   el.textContent=fs&&fs.mkrs.length?'Drag a marker line to move it':'';
 }
 
-// ── drag markers on magnitude plot ────────────────────────────────────────────
+// ── drag markers ──────────────────────────────────────────────────────────────
+// Works for both kinds: uses fsFreqs() to get the right frequency array,
+// and looks up the correct plot div id based on fs.kind.
 function attachDragListener(id){
   const fs=fileById(id); if(!fs||fs._click)return;
   fs._click=true;
-  const div=document.getElementById('md-'+id);
+  const divId=fs.kind==='spectrum'?'sp-'+id:'md-'+id;
+  const div=document.getElementById(divId);
   let drag=null,rafId=null;
 
   function axInfo(){
@@ -833,8 +911,9 @@ function attachDragListener(id){
     const THRESH=12,fs=fileById(id);
     let best=-1,bestD=Infinity;
     if(!fs||!fs.data)return best;
+    const freqs=fsFreqs(fs);
     fs.mkrs.forEach((mk,i)=>{
-      const mf=fs.data.freqs[nearest(fs.data.freqs,mk.freq)];
+      const mf=freqs[nearest(freqs,mk.freq)];
       const d=Math.abs(px-freqToPx(mf,xa));
       if(d<THRESH&&d<bestD){best=i;bestD=d;}
     });
@@ -888,7 +967,10 @@ function attachDragListener(id){
 // ── Y sliders ─────────────────────────────────────────────────────────────────
 function initSliders(id){
   const fs=fileById(id); if(!fs||!fs.data)return;
-  const allDb=Object.values(fs.data.sp).flatMap(s=>s.db);
+  // get the dB/dBm values depending on kind
+  const allDb=fs.kind==='spectrum'
+    ?fs.data.dbm
+    :Object.values(fs.data.sp).flatMap(s=>s.db);
   const dMin=Math.min(...allDb),dMax=Math.max(...allDb);
   const pad=Math.max((dMax-dMin)*0.12,3);
   const sMin=Math.floor(dMin-pad*3),sMax=Math.ceil(dMax+pad);
@@ -908,22 +990,26 @@ function updateSliderLabels(id){
   if(lv)lv.textContent=lo.toFixed(1); if(hv)hv.textContent=hi.toFixed(1);
 }
 function setupSliders(id){
+  const fs=fileById(id); if(!fs)return;
   const loEl=document.getElementById('yr-lo-'+id),hiEl=document.getElementById('yr-hi-'+id);
   if(!loEl||!hiEl)return;
+  // use sp- for spectrum, md- for s-parameter
+  const plotId=fs.kind==='spectrum'?'sp-'+id:'md-'+id;
   const chg=(which)=>()=>{
     let lo=parseFloat(loEl.value),hi=parseFloat(hiEl.value);
     if(lo>=hi){which==='lo'?loEl.value=hi-.5:hiEl.value=lo+.5;}
     lo=parseFloat(loEl.value); hi=parseFloat(hiEl.value);
     const fs=fileById(id); if(fs)fs.yr=[lo,hi];
     updateSliderLabels(id);
-    Plotly.relayout('md-'+id,{'yaxis.range':[lo,hi]});
+    Plotly.relayout(plotId,{'yaxis.range':[lo,hi]});
   };
   loEl.addEventListener('input',chg('lo'));
   hiEl.addEventListener('input',chg('hi'));
 }
 function resetY(id){
   const fs=fileById(id); if(!fs||!fs.data)return;
-  initSliders(id); Plotly.relayout('md-'+id,{'yaxis.range':fs.yr});
+  const plotId=fs.kind==='spectrum'?'sp-'+id:'md-'+id;
+  initSliders(id); Plotly.relayout(plotId,{'yaxis.range':fs.yr});
 }
 
 // ── Smith param selector ──────────────────────────────────────────────────────
@@ -970,7 +1056,28 @@ function closePreview(){
   document.getElementById('preview-img').src='';
 }
 
-// ── create panel HTML ─────────────────────────────────────────────────────────
+// ── font controls shared HTML fragment ────────────────────────────────────────
+function fontCtrlHtml(id){
+  return `<div class="cg">
+    <div class="cg-lbl">Axis Font</div>
+    <div class="cg-row">
+      <select class="cg-sel" id="font-sel-${id}" onchange="setAxisFont('${id}',this.value)">
+        <option value="">Default</option>
+        <option value="Arial">Arial</option>
+        <option value="Helvetica" selected>Helvetica</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Courier New">Courier New</option>
+      </select>
+      <input type="number" id="fontsize-${id}" placeholder="size" min="6" max="32" step="1"
+        style="width:68px" title="Font size (pt)"
+        onchange="setAxisFontSize('${id}',this.value)"
+        oninput="setAxisFontSize('${id}',this.value)">
+    </div>
+  </div>`;
+}
+
+// ── create S-parameter panel ───────────────────────────────────────────────────
 function createPanel(fs){
   const id=fs.id,is2=fs.type==='s2p';
   const fnSafe=fs.name.replace(/[^a-z0-9_\-]/gi,'_');
@@ -1038,23 +1145,69 @@ function createPanel(fs){
       <div class="cg"><div style="height:20px"></div>
         <button class="btn btn-ghost" onclick="resetY('${id}')">Reset Y</button>
       </div>
+      ${fontCtrlHtml(id)}
+    </div>
+    <div class="mkr-list" id="ml-${id}"></div>`;
+  return el;
+}
+
+// ── create spectrum panel ──────────────────────────────────────────────────────
+function createSpectrumPanel(fs){
+  const id=fs.id;
+  const fnSafe=fs.name.replace(/[^a-z0-9_\-]/gi,'_');
+  const meta=fs.data.meta||{};
+  const el=document.createElement('div');
+  el.id='panel-'+id; el.className='tab-panel';
+  el.innerHTML=`
+    <div class="err-box" id="eb-${id}"></div>
+    <div class="info-bar">
+      <div class="ii"><span class="lbl">File</span><span class="val">${fs.name}</span></div>
+      <div class="ii"><span class="lbl">Instrument</span><span class="val">${meta['Instrument']||'—'}</span></div>
+      <div class="ii"><span class="lbl">Center</span><span class="val">${fmtSpecMeta(meta,'Center Frequency')}</span></div>
+      <div class="ii"><span class="lbl">Span</span><span class="val">${fmtSpecMeta(meta,'Span')}</span></div>
+      <div class="ii"><span class="lbl">RBW</span><span class="val">${fmtSpecMeta(meta,'RBW')}</span></div>
+      <div class="ii"><span class="lbl">VBW</span><span class="val">${fmtSpecMeta(meta,'VBW')}</span></div>
+      <div class="ii"><span class="lbl">Points</span><span class="val">${fs.data.n}</span></div>
+    </div>
+    <div class="plots-grid" style="grid-template-columns:1fr">
+      <div class="plot-card">
+        <div class="plot-card-hdr">
+          <span class="pch-title">Spectrum Analyzer Trace</span>
+          <button class="btn btn-save" onclick="previewPlot('sp-${id}','${fnSafe}_spectrum')">Preview / Save</button>
+        </div>
+        <div id="sp-${id}" class="plot-div plot-div-tall"></div>
+      </div>
+    </div>
+    <div class="ctrl-panel">
       <div class="cg">
-        <div class="cg-lbl">Axis Font</div>
+        <div class="cg-lbl">Add Marker (MHz) <span style="font-size:.65rem;color:var(--text4);text-transform:none;letter-spacing:0">max 6</span></div>
         <div class="cg-row">
-          <select class="cg-sel" id="font-sel-${id}" onchange="setAxisFont('${id}',this.value)">
-            <option value="">Default</option>
-            <option value="Arial">Arial</option>
-            <option value="Helvetica" selected>Helvetica</option>
-            <option value="Times New Roman">Times New Roman</option>
-            <option value="Georgia">Georgia</option>
-            <option value="Courier New">Courier New</option>
-          </select>
-          <input type="number" id="fontsize-${id}" placeholder="size" min="6" max="32" step="1"
-            style="width:68px" title="Font size (pt)"
-            onchange="setAxisFontSize('${id}',this.value)"
-            oninput="setAxisFontSize('${id}',this.value)">
+          <input type="number" id="mk-inp-${id}" placeholder="127.74" step="0.01">
+          <button class="btn btn-pri" onclick="addMkr('${id}')">Add</button>
+        </div>
+        <div id="hint-${id}" class="chart-hint"></div>
+      </div>
+      <div class="cg" style="flex:1;min-width:220px">
+        <div class="cg-lbl">Y Range (dBm)</div>
+        <div class="y-sliders">
+          <div class="ys-row">
+            <span class="ys-lbl">Max</span>
+            <input type="range" id="yr-hi-${id}" class="ys-track">
+            <span class="ys-val" id="yrv-hi-${id}">0</span>
+            <span class="ys-unit">dBm</span>
+          </div>
+          <div class="ys-row">
+            <span class="ys-lbl">Min</span>
+            <input type="range" id="yr-lo-${id}" class="ys-track">
+            <span class="ys-val" id="yrv-lo-${id}">-100</span>
+            <span class="ys-unit">dBm</span>
+          </div>
         </div>
       </div>
+      <div class="cg"><div style="height:20px"></div>
+        <button class="btn btn-ghost" onclick="resetY('${id}')">Reset Y</button>
+      </div>
+      ${fontCtrlHtml(id)}
     </div>
     <div class="mkr-list" id="ml-${id}"></div>`;
   return el;
@@ -1062,62 +1215,80 @@ function createPanel(fs){
 
 // ── load file ─────────────────────────────────────────────────────────────────
 function loadFiles(fileList){
-  const validFiles=Array.from(fileList).filter(f=>['s1p','s2p'].includes(f.name.split('.').pop().toLowerCase()));
+  const validExts=['s1p','s2p','csv'];
+  const validFiles=Array.from(fileList).filter(f=>
+    validExts.includes(f.name.split('.').pop().toLowerCase()));
   if(!validFiles.length)return;
 
-  showLoading('Analyzing Touchstone file…');
+  showLoading('Analyzing file…');
 
-  // small delay so the loading overlay is visible before heavy parse/render work
   setTimeout(()=>{
     validFiles.forEach(file=>{
       const ext=file.name.split('.').pop().toLowerCase();
+      const kind=ext==='csv'?'spectrum':'sparameter';
       const fs={
         id:'f'+(_fid++),name:file.name,type:ext,
+        kind,
         data:null,mkrs:[],activeMkr:0,xr:[null,null],yr:[null,null],
         _ev:false,_click:false,sp:'S11',axisFont:'Helvetica',axisFontSize:null,
       };
       const r=new FileReader();
       r.onload=ev=>{
         try{
-          const d=parse(ev.target.result,file.name);
+          const d=kind==='spectrum'
+            ?parseSpectrumCsv(ev.target.result,file.name)
+            :parse(ev.target.result,file.name);
           fs.data=d;
-          const panel=createPanel(fs);
+
+          // create appropriate panel
+          const panel=kind==='spectrum'?createSpectrumPanel(fs):createPanel(fs);
           document.getElementById('tab-panels').appendChild(panel);
           const idx=S.files.length;
           S.files.push(fs);
-          // fill info bar
-          document.getElementById('iifmt-'+fs.id).textContent=d.fmt;
-          document.getElementById('iin-'+fs.id).textContent=d.n;
-          document.getElementById('iiz-'+fs.id).textContent=d.z0+' Ω';
-          document.getElementById('iifr-'+fs.id).textContent=
-            fmtF(Math.min(...d.freqs))+' – '+fmtF(Math.max(...d.freqs));
-          // setup
+
+          if(kind==='sparameter'){
+            // fill s-parameter info bar
+            document.getElementById('iifmt-'+fs.id).textContent=d.fmt;
+            document.getElementById('iin-'+fs.id).textContent=d.n;
+            document.getElementById('iiz-'+fs.id).textContent=d.z0+' Ω';
+            document.getElementById('iifr-'+fs.id).textContent=
+              fmtF(Math.min(...d.freqs))+' – '+fmtF(Math.max(...d.freqs));
+          }
+
           initSliders(fs.id); setupSliders(fs.id);
           renderAll(fs.id);
-          // x-range tracking
+
+          // x-range tracking — use correct plot div id
           if(!fs._ev){
             fs._ev=true;
-            document.getElementById('md-'+fs.id).on('plotly_relayout',e=>{
+            const trackId=kind==='spectrum'?'sp-'+fs.id:'md-'+fs.id;
+            document.getElementById(trackId).on('plotly_relayout',e=>{
               if('xaxis.range[0]'in e)fs.xr=[e['xaxis.range[0]'],e['xaxis.range[1]']];
               else if(e['xaxis.autorange'])fs.xr=[null,null];
             });
           }
+
           attachDragListener(fs.id);
           document.getElementById('mk-inp-'+fs.id).addEventListener('keydown',e=>{
             if(e.key==='Enter')addMkr(fs.id);
           });
-          // default marker
-          fs.mkrs=[{freq:127.74,color:MC()[0],name:'M1',showLine:true}];
+
+          // default marker at centre frequency
+          const freqs=fsFreqs(fs);
+          const midFreq=freqs[Math.floor(freqs.length/2)]||127.74;
+          fs.mkrs=[{freq:midFreq,color:MC()[0],name:'M1',showLine:true,trace:null}];
           renderAll(fs.id); renderMkrList(fs.id);
-          // navigate & activate
+
           setActiveTab(idx);
           renderTabs();
           hideLoading();
           goTo('viewer');
         }catch(err){
           hideLoading();
+          // try to show in error box if panel exists, otherwise alert
           const eb=document.getElementById('eb-'+fs.id);
           if(eb){eb.textContent='Parse error: '+err.message;eb.classList.add('on');}
+          else{console.error(err);}
         }
       };
       r.readAsText(file);
@@ -1126,7 +1297,6 @@ function loadFiles(fileList){
 }
 
 // ── wire up ───────────────────────────────────────────────────────────────────
-// Landing drop zone
 (()=>{
   const dz=document.getElementById('dz-landing'),fi=document.getElementById('fi-landing');
   dz.addEventListener('click',()=>fi.click());
@@ -1137,14 +1307,10 @@ function loadFiles(fileList){
     e.preventDefault();dz.classList.remove('drag-over');loadFiles(e.dataTransfer.files);
   });
 })();
-
-// Viewer "+ Add file" button
 (()=>{
   const fi=document.getElementById('fi-add');
   fi.addEventListener('change',e=>{loadFiles(e.target.files);fi.value='';});
 })();
-
-// Drop files anywhere on viewer page
 (()=>{
   const pv=document.getElementById('page-viewer');
   pv.addEventListener('dragover',e=>{if(e.dataTransfer.types.includes('Files'))e.preventDefault();});
@@ -1160,161 +1326,101 @@ if(localStorage.getItem('spv-theme')==='light'){
   document.querySelectorAll('[id^=tbtn-]').forEach(b=>b.textContent='Dark mode');
 }
 
-// ── VNA background canvas animation ──────────────────────────────────────────
-// Draws a futuristic RF/VNA-style background: grid, S-parameter traces,
-// Smith chart rings, and a sweeping frequency line.
+// ── VNA background canvas ─────────────────────────────────────────────────────
 let _vnaBgRaf=null;
 function initVnaBg(){
   const canvas=document.getElementById('vna-bg');
   if(!canvas)return;
   if(_vnaBgRaf){cancelAnimationFrame(_vnaBgRaf);_vnaBgRaf=null;}
-
   const ctx=canvas.getContext('2d');
   const light=isLight();
-
-  // color palette
   const col={
     grid:    light?'rgba(9,105,218,.07)' :'rgba(88,166,255,.07)',
     gridHi:  light?'rgba(9,105,218,.13)' :'rgba(88,166,255,.14)',
     sweep:   light?'rgba(9,105,218,.55)' :'rgba(88,166,255,.6)',
     trace1:  light?'rgba(9,105,218,.22)' :'rgba(88,166,255,.22)',
     trace2:  light?'rgba(26,127,55,.18)' :'rgba(63,185,80,.18)',
-    trace3:  light?'rgba(188,76,0,.14)'  :'rgba(247,129,102,.14)',
     smith:   light?'rgba(9,105,218,.06)' :'rgba(88,166,255,.07)',
     smithHi: light?'rgba(9,105,218,.12)' :'rgba(88,166,255,.13)',
   };
-
-  // build a few S-parameter-like waveforms as static paths
-  // Each is a function of x (0..1) returning y (0..1, centred at 0.5)
-  function sTrace(x, fc, bw, depth){
-    // bandpass-like response centred at fc, bandwidth bw
-    const norm=(x-fc)/bw;
-    return 0.5 + depth*(1/(1+norm*norm*4)-0.08);
-  }
+  function sTrace(x,fc,bw,depth){const norm=(x-fc)/bw;return 0.5+depth*(1/(1+norm*norm*4)-0.08);}
   function s21Trace(x){
     const flat=0.5+0.06*Math.sin(x*Math.PI*1.4+0.3);
-    const notch1=0.09/(0.01+(x-0.38)*(x-0.38)*60);
-    const notch2=0.06/(0.01+(x-0.65)*(x-0.65)*60);
-    return flat - notch1 - notch2 + 0.02*Math.sin(x*Math.PI*5);
+    const n1=0.09/(0.01+(x-0.38)*(x-0.38)*60);
+    const n2=0.06/(0.01+(x-0.65)*(x-0.65)*60);
+    return flat-n1-n2+0.02*Math.sin(x*Math.PI*5);
   }
-
-  let sweepX=0; // 0..1, position of the frequency sweep line
-  let lastTime=0;
-
-  function resize(){
-    canvas.width=canvas.offsetWidth;
-    canvas.height=canvas.offsetHeight;
-  }
+  let sweepX=0,lastTime=0;
+  function resize(){canvas.width=canvas.offsetWidth;canvas.height=canvas.offsetHeight;}
   resize();
   window.addEventListener('resize',resize);
-
   function drawSmithRings(cx,cy,r){
-    ctx.strokeStyle=col.smith;
-    ctx.lineWidth=0.8;
-    // outer unit circle
+    ctx.strokeStyle=col.smith; ctx.lineWidth=0.8;
     ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
-    // constant R circles
     for(const R of[0.2,0.5,1,2,5]){
-      const rr=r/(1+R), ccx=cx+r-rr;
+      const rr=r/(1+R),ccx=cx+r-rr;
       ctx.beginPath();ctx.arc(ccx,cy,rr,0,Math.PI*2);ctx.stroke();
     }
-    // horizontal axis
     ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.stroke();
-    // constant X arcs (just sketch 4)
     ctx.strokeStyle=col.smithHi;
     for(const X of[0.5,1,2])for(const s of[1,-1]){
       const ry=r/X;
-      ctx.beginPath();
-      ctx.arc(cx+r, cy-s*ry, ry, 0, Math.PI*2);
-      ctx.save();
-      // clip to unit circle
-      ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.clip();
+      ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.clip();
       ctx.beginPath();ctx.arc(cx+r,cy-s*ry,ry,0,Math.PI*2);ctx.stroke();
       ctx.restore();
     }
   }
-
   function frame(ts){
     const W=canvas.width,H=canvas.height;
     if(!W||!H){_vnaBgRaf=requestAnimationFrame(frame);return;}
     const dt=Math.min((ts-lastTime)/1000,.05);
     lastTime=ts;
     sweepX=(sweepX+dt*0.12)%1;
-
     ctx.clearRect(0,0,W,H);
-
-    // ── grid ──────────────────────────────────────────────────────────────
-    const COLS=18,ROWS=10;
-    const gw=W/COLS,gh=H/ROWS;
+    const COLS=18,ROWS=10,gw=W/COLS,gh=H/ROWS;
     for(let c=0;c<=COLS;c++){
       ctx.strokeStyle=(c%3===0)?col.gridHi:col.grid;
-      ctx.lineWidth=(c%3===0)?0.7:0.4;
+      ctx.lineWidth=(c%3===0)?.7:.4;
       ctx.beginPath();ctx.moveTo(c*gw,0);ctx.lineTo(c*gw,H);ctx.stroke();
     }
     for(let r=0;r<=ROWS;r++){
       ctx.strokeStyle=(r%2===0)?col.gridHi:col.grid;
-      ctx.lineWidth=(r%2===0)?0.7:0.4;
+      ctx.lineWidth=(r%2===0)?.7:.4;
       ctx.beginPath();ctx.moveTo(0,r*gh);ctx.lineTo(W,r*gh);ctx.stroke();
     }
-
-    // ── S-parameter trace 1 (S11 reflection, top half) ───────────────────
-    const traceH=H*0.38; // height of trace area
-    const traceTop=H*0.08;
-    ctx.strokeStyle=col.trace1;
-    ctx.lineWidth=1.2;
-    ctx.beginPath();
+    const traceH=H*0.38,traceTop=H*0.08;
+    ctx.strokeStyle=col.trace1; ctx.lineWidth=1.2; ctx.beginPath();
     for(let px=0;px<W;px++){
-      const xn=px/W;
-      const yn=sTrace(xn,0.35,0.18,0.28)+0.05*Math.sin(xn*Math.PI*3.2);
+      const xn=px/W,yn=sTrace(xn,0.35,0.18,0.28)+0.05*Math.sin(xn*Math.PI*3.2);
       const py=traceTop+traceH*(1-Math.min(Math.max(yn,0),1));
       px===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
     }
     ctx.stroke();
-
-    // ── S-parameter trace 2 (S21 transmission) ───────────────────────────
-    ctx.strokeStyle=col.trace2;
-    ctx.lineWidth=1.1;
-    ctx.beginPath();
+    ctx.strokeStyle=col.trace2; ctx.lineWidth=1.1; ctx.beginPath();
     for(let px=0;px<W;px++){
-      const xn=px/W;
-      const yn=s21Trace(xn);
+      const xn=px/W,yn=s21Trace(xn);
       const py=traceTop+traceH*(1-Math.min(Math.max(yn,0),1));
       px===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
     }
     ctx.stroke();
-
-    // ── Smith chart ghost (bottom-right corner) ────────────────────────
-    const smR=Math.min(W,H)*0.14;
-    const smCx=W-smR-W*0.04, smCy=H-smR-H*0.04;
+    const smR=Math.min(W,H)*0.14,smCx=W-smR-W*0.04,smCy=H-smR-H*0.04;
     drawSmithRings(smCx,smCy,smR);
-
-    // ── Smith chart ghost (top-left, smaller) ─────────────────────────
     const sm2R=Math.min(W,H)*0.085;
-    drawSmithRings(W*0.055+sm2R, H*0.06+sm2R, sm2R);
-
-    // ── frequency sweep line ───────────────────────────────────────────
+    drawSmithRings(W*0.055+sm2R,H*0.06+sm2R,sm2R);
     const sx=sweepX*W;
     const grad=ctx.createLinearGradient(sx-18,0,sx+6,0);
-    grad.addColorStop(0,'transparent');
-    grad.addColorStop(0.6,col.sweep);
-    grad.addColorStop(1,'transparent');
-    ctx.strokeStyle=grad;
-    ctx.lineWidth=1.5;
+    grad.addColorStop(0,'transparent');grad.addColorStop(0.6,col.sweep);grad.addColorStop(1,'transparent');
+    ctx.strokeStyle=grad; ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,H);ctx.stroke();
-
-    // glow dot on trace1 at sweep position
     const xn=sweepX;
     const yn1=sTrace(xn,0.35,0.18,0.28)+0.05*Math.sin(xn*Math.PI*3.2);
     const dotY=traceTop+traceH*(1-Math.min(Math.max(yn1,0),1));
     ctx.beginPath();ctx.arc(sx,dotY,3,0,Math.PI*2);
     ctx.fillStyle=col.sweep;ctx.fill();
-
     _vnaBgRaf=requestAnimationFrame(frame);
   }
   _vnaBgRaf=requestAnimationFrame(frame);
 }
-
-// start background once DOM is ready
 initVnaBg();
 </script>
 
