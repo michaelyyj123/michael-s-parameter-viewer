@@ -4,11 +4,6 @@ A lightweight browser-based S-parameter viewer for RF engineering.
 
 This tool reads Touchstone .s1p and .s2p files directly in the browser and plots magnitude response and Smith charts using Plotly.js.
 
-## Live Demo
-
-Add your Netlify link here:
-
-https://your-site-name.netlify.app
 
 ## Features
 
