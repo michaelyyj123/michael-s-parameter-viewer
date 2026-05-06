@@ -11,45 +11,156 @@
   --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--border:#30363d;
   --text:#e2e8f0;--text2:#c9d1d9;--text3:#8b949e;--text4:#484f58;
   --accent:#58a6ff;--green:#3fb950;--red:#f85149;
+  /* glow variables */
+  --glow:#58a6ff;--glow-dim:rgba(88,166,255,.18);--glow-strong:rgba(88,166,255,.45);
+  --glow-trace:rgba(63,185,80,.55);--sweep-col:rgba(88,166,255,.7);
 }
 body.light{
-  --bg:#ffffff;--bg2:#f6f8fa;--bg3:#eaeef2;--border:#d0d7de;
+  --bg:#f0f4f8;--bg2:#ffffff;--bg3:#e8edf2;--border:#c8d0da;
   --text:#1f2328;--text2:#24292f;--text3:#57606a;--text4:#8c959f;
   --accent:#0969da;--green:#1a7f37;--red:#cf222e;
+  --glow:#0969da;--glow-dim:rgba(9,105,218,.12);--glow-strong:rgba(9,105,218,.3);
+  --glow-trace:rgba(26,127,55,.4);--sweep-col:rgba(9,105,218,.6);
 }
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);transition:background .2s,color .2s}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  transition:background .25s,color .25s}
 
-/* pages */
-.page{display:none;flex-direction:column;height:100vh}
+/* ── pages ──────────────────────────────────────────────────────────────── */
+.page{display:none;flex-direction:column;height:100vh;
+  transition:opacity .45s ease,transform .45s ease,filter .45s ease}
 .page.active{display:flex}
-#page-landing{align-items:center;justify-content:center;gap:32px}
+/* transition states */
+.page.leaving{opacity:0;transform:scale(1.06);filter:blur(4px);pointer-events:none}
+.page.entering{opacity:0;transform:scale(.96);filter:blur(2px)}
+.page.entered{opacity:1;transform:scale(1);filter:none;transition:opacity .4s ease,transform .4s ease,filter .4s ease}
 
-/* landing */
-.landing-title{font-size:1.9rem;font-weight:700;color:var(--accent);letter-spacing:-.5px}
-.landing-sub{font-size:.9rem;color:var(--text3);margin-top:-22px}
-.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:42px 70px;text-align:center;
-  cursor:pointer;background:var(--bg2);transition:all .18s;max-width:520px;width:100%}
-.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);
-  background:color-mix(in srgb,var(--accent) 4%,var(--bg2))}
-.dz-title{font-size:.95rem;font-weight:500;margin-bottom:6px}
+/* ── landing page layout ─────────────────────────────────────────────────── */
+#page-landing{align-items:center;justify-content:center;gap:28px;
+  position:relative;overflow:hidden}
+
+/* animated VNA canvas background */
+#vna-bg{position:absolute;inset:0;width:100%;height:100%;z-index:0;
+  opacity:.9;pointer-events:none}
+body.light #vna-bg{opacity:.55}
+
+/* landing content sits above canvas */
+.landing-content{
+  position:relative;z-index:1;display:flex;flex-direction:column;
+  align-items:center;gap:28px;width:100%}
+
+.landing-badge{
+  font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
+  background:color-mix(in srgb,var(--accent) 8%,transparent);
+  padding:4px 14px;border-radius:99px;
+  box-shadow:0 0 12px var(--glow-dim)}
+
+.landing-title{
+  font-size:2.5rem;font-weight:800;letter-spacing:-.8px;text-align:center;
+  background:linear-gradient(135deg,var(--accent) 0%,#a5d8ff 60%,var(--accent) 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:titleShimmer 4s linear infinite}
+body.light .landing-title{
+  background:linear-gradient(135deg,#0550ae 0%,#0969da 50%,#0550ae 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+@keyframes titleShimmer{0%{background-position:0% center}100%{background-position:200% center}}
+
+.landing-sub{font-size:.88rem;color:var(--text3);margin-top:-18px;letter-spacing:.02em}
+
+/* ── drop zone ───────────────────────────────────────────────────────────── */
+.drop-zone{
+  border:1.5px solid color-mix(in srgb,var(--accent) 35%,var(--border));
+  border-radius:16px;padding:44px 72px;text-align:center;cursor:pointer;
+  background:color-mix(in srgb,var(--accent) 4%,var(--bg2));
+  transition:all .22s ease;max-width:520px;width:100%;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 12%,transparent),
+             0 8px 40px rgba(0,0,0,.35),
+             inset 0 1px 0 rgba(255,255,255,.04);
+  position:relative;overflow:hidden}
+
+/* sweeping highlight inside drop zone */
+.drop-zone::before{
+  content:'';position:absolute;inset:0;border-radius:14px;
+  background:linear-gradient(90deg,transparent 0%,var(--glow-dim) 50%,transparent 100%);
+  background-size:200% 100%;opacity:0;
+  animation:dzSweep 2.8s ease-in-out infinite;transition:opacity .3s}
+.drop-zone:hover::before,.drop-zone.drag-over::before{opacity:1}
+@keyframes dzSweep{0%{background-position:200% center}100%{background-position:-200% center}}
+
+/* outer glow ring on hover */
+.drop-zone:hover,.drop-zone.drag-over{
+  border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 7%,var(--bg2));
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent),
+             0 0 32px var(--glow-strong),
+             0 8px 40px rgba(0,0,0,.4),
+             inset 0 1px 0 rgba(255,255,255,.06)}
+.drop-zone.drag-over{
+  box-shadow:0 0 0 2px var(--accent),
+             0 0 48px var(--glow-strong),
+             0 8px 40px rgba(0,0,0,.4);
+  transform:scale(1.015)}
+
+/* pulse ring around drop zone when dragging */
+.drop-zone.drag-over::after{
+  content:'';position:absolute;inset:-6px;border-radius:20px;
+  border:2px solid color-mix(in srgb,var(--accent) 50%,transparent);
+  animation:pulseRing .9s ease-out infinite}
+@keyframes pulseRing{
+  0%{opacity:.8;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.04)}}
+
+.dz-icon{font-size:2rem;margin-bottom:10px;opacity:.75;
+  filter:drop-shadow(0 0 8px var(--glow-dim))}
+.dz-title{font-size:.96rem;font-weight:600;margin-bottom:6px;color:var(--text2)}
 .dz-hint{font-size:.78rem;color:var(--text3)}
+.dz-privacy{font-size:.72rem;color:var(--text4);margin-top:10px;
+  display:flex;align-items:center;justify-content:center;gap:5px}
+.dz-privacy::before{content:'🔒';font-size:.68rem}
 .drop-zone input{display:none}
 
-/* header */
-.pg-header{background:var(--bg2);border-bottom:1px solid var(--border);
-  padding:8px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:48px}
+/* ── loading overlay ─────────────────────────────────────────────────────── */
+#loading-overlay{
+  position:fixed;inset:0;z-index:500;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:18px;background:var(--bg);
+  opacity:0;pointer-events:none;transition:opacity .22s ease}
+#loading-overlay.active{opacity:1;pointer-events:auto}
 
-/* tab bar */
+.loading-scanner{
+  width:220px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.loading-scanner::after{
+  content:'';display:block;height:100%;width:60%;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  animation:scan .9s ease-in-out infinite}
+@keyframes scan{0%{transform:translateX(-100%)}100%{transform:translateX(280%)}}
+
+.loading-text{font-size:.8rem;color:var(--text3);letter-spacing:.1em;
+  text-transform:uppercase;font-weight:500}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.pg-header{
+  background:color-mix(in srgb,var(--bg2) 95%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:8px 14px;display:flex;align-items:center;gap:8px;
+  flex-shrink:0;min-height:48px;position:sticky;top:0;z-index:10}
+
+/* ── tab bar ─────────────────────────────────────────────────────────────── */
 .tab-bar{display:flex;gap:4px;flex:1;overflow-x:auto;align-items:center;min-width:0}
 .tab-bar::-webkit-scrollbar{height:3px}
 .tab-bar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 .tab{display:flex;align-items:center;gap:5px;padding:4px 10px 4px 12px;
   background:var(--bg3);border:1px solid var(--border);border-radius:5px;
   cursor:pointer;font-size:.78rem;color:var(--text3);
-  transition:all .12s;white-space:nowrap;max-width:200px;flex-shrink:0}
-.tab:hover:not(.active){border-color:var(--text4);color:var(--text2)}
+  transition:all .15s ease;white-space:nowrap;max-width:200px;flex-shrink:0}
+.tab:hover:not(.active){border-color:var(--text4);color:var(--text2);
+  transform:translateY(-1px)}
 .tab.active{background:color-mix(in srgb,var(--accent) 11%,var(--bg3));
-  border-color:var(--accent);color:var(--text2)}
+  border-color:var(--accent);color:var(--text2);
+  box-shadow:0 0 8px color-mix(in srgb,var(--accent) 20%,transparent)}
 .tab-name{overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;max-width:130px}
 .tab-badge{font-size:.62rem;background:var(--bg);border:1px solid var(--border);
   color:var(--text4);padding:1px 5px;border-radius:3px;flex-shrink:0}
@@ -60,48 +171,65 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
   transition:all .12s;margin-left:2px}
 .tab-close:hover{color:var(--red);background:color-mix(in srgb,var(--red) 15%,transparent)}
 
-/* tab panels */
+/* ── tab panels ──────────────────────────────────────────────────────────── */
 #tab-panels{flex:1;min-height:0;display:flex}
 .tab-panel{display:none;flex:1;min-height:0;padding:16px;
   flex-direction:column;gap:12px;overflow-y:auto}
 .tab-panel.active{display:flex}
 
-/* add-file label */
+/* ── add-file label ──────────────────────────────────────────────────────── */
 .btn-add{background:var(--bg3);border:1px dashed var(--border);border-radius:5px;
   color:var(--text3);cursor:pointer;font-size:.78rem;padding:4px 10px;
   transition:all .12s;white-space:nowrap;flex-shrink:0}
 .btn-add:hover{border-color:var(--accent);color:var(--accent)}
 
-/* error */
+/* ── error ───────────────────────────────────────────────────────────────── */
 .err-box{display:none;background:color-mix(in srgb,var(--red) 12%,transparent);
   border:1px solid color-mix(in srgb,var(--red) 40%,transparent);
   border-radius:6px;padding:8px 14px;color:var(--red);font-size:.84rem}
 .err-box.on{display:block}
 
-/* info bar */
+/* ── info bar ────────────────────────────────────────────────────────────── */
 .info-bar{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
   padding:10px 18px;flex-wrap:wrap;gap:22px;font-size:.82rem;align-items:center}
 .ii{display:flex;flex-direction:column;gap:1px}
 .ii .lbl{font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
 .ii .val{color:var(--accent);font-weight:600}
 
-/* plots grid */
+/* ── plots grid ──────────────────────────────────────────────────────────── */
 .plots-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.plot-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  display:flex;flex-direction:column;overflow:hidden}
+
+/* plot card with glassmorphism glow */
+.plot-card{
+  background:color-mix(in srgb,var(--bg2) 92%,var(--accent) 3%);
+  border:1px solid color-mix(in srgb,var(--accent) 18%,var(--border));
+  border-radius:10px;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 0 0 1px transparent,0 4px 24px rgba(0,0,0,.25);
+  transition:box-shadow .25s ease,border-color .25s ease;
+  /* entrance animation */
+  opacity:0;transform:translateY(10px);
+  animation:cardEntrance .4s ease forwards}
+.plot-card:nth-child(2){animation-delay:.07s}
+@keyframes cardEntrance{to{opacity:1;transform:translateY(0)}}
+
+.plot-card:hover{
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent),
+             0 6px 32px rgba(0,0,0,.3),
+             0 0 20px color-mix(in srgb,var(--accent) 8%,transparent)}
+
 .plot-card-hdr{padding:9px 14px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;gap:8px;flex-shrink:0}
 .pch-title{font-size:.85rem;font-weight:500;flex:1;color:var(--text2)}
 .plot-div{height:400px}
 
-/* smith selector */
+/* ── smith selector ──────────────────────────────────────────────────────── */
 .s-sel{display:flex;gap:3px}
 .s-sel button{padding:2px 9px;font-size:.74rem;background:var(--bg3);border:1px solid var(--border);
   border-radius:4px;color:var(--text3);cursor:pointer;transition:all .12s}
 .s-sel button.on,.s-sel button:hover{background:color-mix(in srgb,var(--accent) 15%,transparent);
   border-color:var(--accent);color:var(--accent)}
 
-/* controls */
+/* ── controls ────────────────────────────────────────────────────────────── */
 .ctrl-panel{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
   padding:14px 18px;flex-wrap:wrap;gap:18px;align-items:flex-start}
 .cg{display:flex;flex-direction:column;gap:6px}
@@ -115,7 +243,7 @@ select.cg-sel{cursor:pointer;width:auto}
 input[type=number]:focus{border-color:var(--accent)}
 input[type=number]::placeholder{color:var(--text4)}
 
-/* buttons */
+/* ── buttons ─────────────────────────────────────────────────────────────── */
 .btn{padding:5px 13px;border-radius:5px;font-size:.82rem;cursor:pointer;
   border:1px solid transparent;transition:all .14s;white-space:nowrap}
 .btn-pri{background:color-mix(in srgb,var(--accent) 14%,transparent);border-color:var(--accent);color:var(--accent)}
@@ -132,9 +260,9 @@ input[type=number]::placeholder{color:var(--text4)}
   padding:4px 11px;font-size:.78rem;flex-shrink:0}
 .btn-theme:hover{border-color:var(--accent);color:var(--accent)}
 
-/* preview modal */
+/* ── preview modal ───────────────────────────────────────────────────────── */
 #preview-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);
-  z-index:999;align-items:center;justify-content:center}
+  z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 #preview-modal.open{display:flex}
 .preview-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
   padding:16px;display:flex;flex-direction:column;gap:10px;
@@ -144,7 +272,7 @@ input[type=number]::placeholder{color:var(--text4)}
 .preview-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .preview-title{font-size:.9rem;font-weight:600;color:var(--text2)}
 
-/* y sliders */
+/* ── y sliders ───────────────────────────────────────────────────────────── */
 .y-sliders{display:flex;flex-direction:column;gap:7px;min-width:220px}
 .ys-row{display:flex;align-items:center;gap:8px}
 .ys-lbl{font-size:.74rem;color:var(--text3);width:28px;text-align:right;flex-shrink:0}
@@ -160,7 +288,7 @@ input[type=range].ys-track:active::-webkit-slider-thumb{cursor:grabbing}
 input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radius:50%;
   background:var(--accent);border:2px solid var(--bg);cursor:grab}
 
-/* marker list */
+/* ── marker list ─────────────────────────────────────────────────────────── */
 .chart-hint{font-size:.73rem;color:var(--accent);padding:2px 0;font-style:italic}
 .mkr-list{display:flex;flex-direction:column;gap:5px}
 .mkr-row{display:flex;align-items:center;gap:10px;background:var(--bg2);
@@ -209,16 +337,24 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
 
 <!-- ════════ LANDING -->
 <div id="page-landing" class="page active">
-  <div style="position:absolute;top:16px;right:20px">
+  <!-- VNA background canvas -->
+  <canvas id="vna-bg"></canvas>
+
+  <div style="position:absolute;top:16px;right:20px;z-index:2">
     <button class="btn btn-theme" onclick="toggleTheme()" id="tbtn-landing">Light mode</button>
   </div>
-  <div class="landing-title">S-Parameter Viewer</div>
-  <div class="landing-sub">Touchstone file reader &amp; plotter for RF engineering</div>
-  <div class="drop-zone" id="dz-landing">
-    <p class="dz-title">Drop .s1p / .s2p files here</p>
-    <p class="dz-hint">or click to browse &nbsp;&middot;&nbsp; multiple files supported</p>
-    <p class="dz-hint" style="margin-top:10px;color:var(--text4)">Files are processed locally in your browser and are not uploaded.</p>
-    <input type="file" id="fi-landing" accept=".s1p,.s2p,.S1P,.S2P" multiple>
+
+  <div class="landing-content">
+    <div class="landing-badge">RF · S-Parameter · Touchstone</div>
+    <div class="landing-title">S-Parameter Viewer</div>
+    <div class="landing-sub">Touchstone file reader &amp; plotter for RF engineering</div>
+    <div class="drop-zone" id="dz-landing">
+      <div class="dz-icon">📡</div>
+      <p class="dz-title">Drop .s1p / .s2p files here</p>
+      <p class="dz-hint">or click to browse &nbsp;·&nbsp; multiple files supported</p>
+      <p class="dz-privacy">Files are processed locally in your browser and are not uploaded.</p>
+      <input type="file" id="fi-landing" accept=".s1p,.s2p,.S1P,.S2P" multiple>
+    </div>
   </div>
 </div>
 
@@ -234,6 +370,12 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
     </div>
   </div>
   <div id="tab-panels"></div>
+</div>
+
+<!-- ════════ LOADING OVERLAY -->
+<div id="loading-overlay">
+  <div class="loading-scanner"></div>
+  <div class="loading-text" id="loading-text">Analyzing Touchstone file…</div>
 </div>
 
 <script>
@@ -276,19 +418,58 @@ function toggleTheme(){
     fs.mkrs.forEach((mk,i)=>{mk.color=mc[i%6];});
     renderAll(fs.id); renderMkrList(fs.id);
   });
+  // restart background with new palette
+  initVnaBg();
 }
 
-// ── navigation ────────────────────────────────────────────────────────────────
+// ── navigation (animated transitions) ─────────────────────────────────────────
 function goTo(page){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
-  if(page==='viewer'){
-    const f=S.files[S.active];
-    if(f&&f.data) setTimeout(()=>{
-      Plotly.Plots.resize(document.getElementById('md-'+f.id));
-      Plotly.Plots.resize(document.getElementById('sc-'+f.id));
-    },30);
-  }
+  const current=document.querySelector('.page.active');
+  const next=document.getElementById('page-'+page);
+  if(!current||current===next)return;
+
+  // show next immediately (but invisible) so layout exists
+  next.style.display='flex';
+  next.classList.remove('leaving');
+  next.classList.add('entering');
+
+  // force reflow so animation triggers
+  void next.offsetWidth;
+
+  // animate current out
+  current.classList.add('leaving');
+  current.classList.remove('active');
+
+  // animate next in
+  next.classList.add('active');
+  requestAnimationFrame(()=>{
+    next.classList.remove('entering');
+    next.classList.add('entered');
+  });
+
+  // cleanup after transition
+  setTimeout(()=>{
+    current.classList.remove('leaving','entered');
+    current.style.display='';
+    next.classList.remove('entered');
+    if(page==='viewer'){
+      const f=S.files[S.active];
+      if(f&&f.data){
+        Plotly.Plots.resize(document.getElementById('md-'+f.id));
+        Plotly.Plots.resize(document.getElementById('sc-'+f.id));
+      }
+    }
+  },480);
+}
+
+// ── loading overlay helpers ────────────────────────────────────────────────────
+function showLoading(msg){
+  const ol=document.getElementById('loading-overlay');
+  document.getElementById('loading-text').textContent=msg||'Analyzing Touchstone file…';
+  ol.classList.add('active');
+}
+function hideLoading(){
+  document.getElementById('loading-overlay').classList.remove('active');
 }
 
 // ── tabs ──────────────────────────────────────────────────────────────────────
@@ -468,7 +649,7 @@ function renderMag(divId,data,mkrs,xr,yr){
       text:readoutLines.join('<br>'),showarrow:false,
       font:{size:10,color:th.text},
       bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left',
-      width:105,
+      width:115,
     });
   }
   const axFont=fs?.axisFont||'';
@@ -881,58 +1062,67 @@ function createPanel(fs){
 
 // ── load file ─────────────────────────────────────────────────────────────────
 function loadFiles(fileList){
-  Array.from(fileList).forEach(file=>{
-    const ext=file.name.split('.').pop().toLowerCase();
-    if(!['s1p','s2p'].includes(ext))return;
-    const fs={
-      id:'f'+(_fid++),name:file.name,type:ext,
-      data:null,mkrs:[],activeMkr:0,xr:[null,null],yr:[null,null],
-      _ev:false,_click:false,sp:'S11',axisFont:'Helvetica',axisFontSize:null,
-    };
-    const r=new FileReader();
-    r.onload=ev=>{
-      try{
-        const d=parse(ev.target.result,file.name);
-        fs.data=d;
-        const panel=createPanel(fs);
-        document.getElementById('tab-panels').appendChild(panel);
-        const idx=S.files.length;
-        S.files.push(fs);
-        // fill info bar
-        document.getElementById('iifmt-'+fs.id).textContent=d.fmt;
-        document.getElementById('iin-'+fs.id).textContent=d.n;
-        document.getElementById('iiz-'+fs.id).textContent=d.z0+' Ω';
-        document.getElementById('iifr-'+fs.id).textContent=
-          fmtF(Math.min(...d.freqs))+' – '+fmtF(Math.max(...d.freqs));
-        // setup
-        initSliders(fs.id); setupSliders(fs.id);
-        renderAll(fs.id);
-        // x-range tracking
-        if(!fs._ev){
-          fs._ev=true;
-          document.getElementById('md-'+fs.id).on('plotly_relayout',e=>{
-            if('xaxis.range[0]'in e)fs.xr=[e['xaxis.range[0]'],e['xaxis.range[1]']];
-            else if(e['xaxis.autorange'])fs.xr=[null,null];
+  const validFiles=Array.from(fileList).filter(f=>['s1p','s2p'].includes(f.name.split('.').pop().toLowerCase()));
+  if(!validFiles.length)return;
+
+  showLoading('Analyzing Touchstone file…');
+
+  // small delay so the loading overlay is visible before heavy parse/render work
+  setTimeout(()=>{
+    validFiles.forEach(file=>{
+      const ext=file.name.split('.').pop().toLowerCase();
+      const fs={
+        id:'f'+(_fid++),name:file.name,type:ext,
+        data:null,mkrs:[],activeMkr:0,xr:[null,null],yr:[null,null],
+        _ev:false,_click:false,sp:'S11',axisFont:'Helvetica',axisFontSize:null,
+      };
+      const r=new FileReader();
+      r.onload=ev=>{
+        try{
+          const d=parse(ev.target.result,file.name);
+          fs.data=d;
+          const panel=createPanel(fs);
+          document.getElementById('tab-panels').appendChild(panel);
+          const idx=S.files.length;
+          S.files.push(fs);
+          // fill info bar
+          document.getElementById('iifmt-'+fs.id).textContent=d.fmt;
+          document.getElementById('iin-'+fs.id).textContent=d.n;
+          document.getElementById('iiz-'+fs.id).textContent=d.z0+' Ω';
+          document.getElementById('iifr-'+fs.id).textContent=
+            fmtF(Math.min(...d.freqs))+' – '+fmtF(Math.max(...d.freqs));
+          // setup
+          initSliders(fs.id); setupSliders(fs.id);
+          renderAll(fs.id);
+          // x-range tracking
+          if(!fs._ev){
+            fs._ev=true;
+            document.getElementById('md-'+fs.id).on('plotly_relayout',e=>{
+              if('xaxis.range[0]'in e)fs.xr=[e['xaxis.range[0]'],e['xaxis.range[1]']];
+              else if(e['xaxis.autorange'])fs.xr=[null,null];
+            });
+          }
+          attachDragListener(fs.id);
+          document.getElementById('mk-inp-'+fs.id).addEventListener('keydown',e=>{
+            if(e.key==='Enter')addMkr(fs.id);
           });
+          // default marker
+          fs.mkrs=[{freq:127.74,color:MC()[0],name:'M1',showLine:true}];
+          renderAll(fs.id); renderMkrList(fs.id);
+          // navigate & activate
+          setActiveTab(idx);
+          renderTabs();
+          hideLoading();
+          goTo('viewer');
+        }catch(err){
+          hideLoading();
+          const eb=document.getElementById('eb-'+fs.id);
+          if(eb){eb.textContent='Parse error: '+err.message;eb.classList.add('on');}
         }
-        attachDragListener(fs.id);
-        document.getElementById('mk-inp-'+fs.id).addEventListener('keydown',e=>{
-          if(e.key==='Enter')addMkr(fs.id);
-        });
-        // default marker
-        fs.mkrs=[{freq:127.74,color:MC()[0],name:'M1',showLine:true}];
-        renderAll(fs.id); renderMkrList(fs.id);
-        // navigate & activate
-        setActiveTab(idx);
-        goTo('viewer');
-        renderTabs();
-      }catch(err){
-        const eb=document.getElementById('eb-'+fs.id);
-        if(eb){eb.textContent='Parse error: '+err.message;eb.classList.add('on');}
-      }
-    };
-    r.readAsText(file);
-  });
+      };
+      r.readAsText(file);
+    });
+  },120);
 }
 
 // ── wire up ───────────────────────────────────────────────────────────────────
@@ -964,13 +1154,171 @@ function loadFiles(fileList){
   });
 })();
 
-// restore theme
+// ── restore theme ──────────────────────────────────────────────────────────────
 if(localStorage.getItem('spv-theme')==='light'){
   document.body.classList.add('light');
   document.querySelectorAll('[id^=tbtn-]').forEach(b=>b.textContent='Dark mode');
 }
+
+// ── VNA background canvas animation ──────────────────────────────────────────
+// Draws a futuristic RF/VNA-style background: grid, S-parameter traces,
+// Smith chart rings, and a sweeping frequency line.
+let _vnaBgRaf=null;
+function initVnaBg(){
+  const canvas=document.getElementById('vna-bg');
+  if(!canvas)return;
+  if(_vnaBgRaf){cancelAnimationFrame(_vnaBgRaf);_vnaBgRaf=null;}
+
+  const ctx=canvas.getContext('2d');
+  const light=isLight();
+
+  // color palette
+  const col={
+    grid:    light?'rgba(9,105,218,.07)' :'rgba(88,166,255,.07)',
+    gridHi:  light?'rgba(9,105,218,.13)' :'rgba(88,166,255,.14)',
+    sweep:   light?'rgba(9,105,218,.55)' :'rgba(88,166,255,.6)',
+    trace1:  light?'rgba(9,105,218,.22)' :'rgba(88,166,255,.22)',
+    trace2:  light?'rgba(26,127,55,.18)' :'rgba(63,185,80,.18)',
+    trace3:  light?'rgba(188,76,0,.14)'  :'rgba(247,129,102,.14)',
+    smith:   light?'rgba(9,105,218,.06)' :'rgba(88,166,255,.07)',
+    smithHi: light?'rgba(9,105,218,.12)' :'rgba(88,166,255,.13)',
+  };
+
+  // build a few S-parameter-like waveforms as static paths
+  // Each is a function of x (0..1) returning y (0..1, centred at 0.5)
+  function sTrace(x, fc, bw, depth){
+    // bandpass-like response centred at fc, bandwidth bw
+    const norm=(x-fc)/bw;
+    return 0.5 + depth*(1/(1+norm*norm*4)-0.08);
+  }
+  function s21Trace(x){
+    const flat=0.5+0.06*Math.sin(x*Math.PI*1.4+0.3);
+    const notch1=0.09/(0.01+(x-0.38)*(x-0.38)*60);
+    const notch2=0.06/(0.01+(x-0.65)*(x-0.65)*60);
+    return flat - notch1 - notch2 + 0.02*Math.sin(x*Math.PI*5);
+  }
+
+  let sweepX=0; // 0..1, position of the frequency sweep line
+  let lastTime=0;
+
+  function resize(){
+    canvas.width=canvas.offsetWidth;
+    canvas.height=canvas.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize',resize);
+
+  function drawSmithRings(cx,cy,r){
+    ctx.strokeStyle=col.smith;
+    ctx.lineWidth=0.8;
+    // outer unit circle
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+    // constant R circles
+    for(const R of[0.2,0.5,1,2,5]){
+      const rr=r/(1+R), ccx=cx+r-rr;
+      ctx.beginPath();ctx.arc(ccx,cy,rr,0,Math.PI*2);ctx.stroke();
+    }
+    // horizontal axis
+    ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.stroke();
+    // constant X arcs (just sketch 4)
+    ctx.strokeStyle=col.smithHi;
+    for(const X of[0.5,1,2])for(const s of[1,-1]){
+      const ry=r/X;
+      ctx.beginPath();
+      ctx.arc(cx+r, cy-s*ry, ry, 0, Math.PI*2);
+      ctx.save();
+      // clip to unit circle
+      ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.clip();
+      ctx.beginPath();ctx.arc(cx+r,cy-s*ry,ry,0,Math.PI*2);ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function frame(ts){
+    const W=canvas.width,H=canvas.height;
+    if(!W||!H){_vnaBgRaf=requestAnimationFrame(frame);return;}
+    const dt=Math.min((ts-lastTime)/1000,.05);
+    lastTime=ts;
+    sweepX=(sweepX+dt*0.12)%1;
+
+    ctx.clearRect(0,0,W,H);
+
+    // ── grid ──────────────────────────────────────────────────────────────
+    const COLS=18,ROWS=10;
+    const gw=W/COLS,gh=H/ROWS;
+    for(let c=0;c<=COLS;c++){
+      ctx.strokeStyle=(c%3===0)?col.gridHi:col.grid;
+      ctx.lineWidth=(c%3===0)?0.7:0.4;
+      ctx.beginPath();ctx.moveTo(c*gw,0);ctx.lineTo(c*gw,H);ctx.stroke();
+    }
+    for(let r=0;r<=ROWS;r++){
+      ctx.strokeStyle=(r%2===0)?col.gridHi:col.grid;
+      ctx.lineWidth=(r%2===0)?0.7:0.4;
+      ctx.beginPath();ctx.moveTo(0,r*gh);ctx.lineTo(W,r*gh);ctx.stroke();
+    }
+
+    // ── S-parameter trace 1 (S11 reflection, top half) ───────────────────
+    const traceH=H*0.38; // height of trace area
+    const traceTop=H*0.08;
+    ctx.strokeStyle=col.trace1;
+    ctx.lineWidth=1.2;
+    ctx.beginPath();
+    for(let px=0;px<W;px++){
+      const xn=px/W;
+      const yn=sTrace(xn,0.35,0.18,0.28)+0.05*Math.sin(xn*Math.PI*3.2);
+      const py=traceTop+traceH*(1-Math.min(Math.max(yn,0),1));
+      px===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    // ── S-parameter trace 2 (S21 transmission) ───────────────────────────
+    ctx.strokeStyle=col.trace2;
+    ctx.lineWidth=1.1;
+    ctx.beginPath();
+    for(let px=0;px<W;px++){
+      const xn=px/W;
+      const yn=s21Trace(xn);
+      const py=traceTop+traceH*(1-Math.min(Math.max(yn,0),1));
+      px===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    // ── Smith chart ghost (bottom-right corner) ────────────────────────
+    const smR=Math.min(W,H)*0.14;
+    const smCx=W-smR-W*0.04, smCy=H-smR-H*0.04;
+    drawSmithRings(smCx,smCy,smR);
+
+    // ── Smith chart ghost (top-left, smaller) ─────────────────────────
+    const sm2R=Math.min(W,H)*0.085;
+    drawSmithRings(W*0.055+sm2R, H*0.06+sm2R, sm2R);
+
+    // ── frequency sweep line ───────────────────────────────────────────
+    const sx=sweepX*W;
+    const grad=ctx.createLinearGradient(sx-18,0,sx+6,0);
+    grad.addColorStop(0,'transparent');
+    grad.addColorStop(0.6,col.sweep);
+    grad.addColorStop(1,'transparent');
+    ctx.strokeStyle=grad;
+    ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,H);ctx.stroke();
+
+    // glow dot on trace1 at sweep position
+    const xn=sweepX;
+    const yn1=sTrace(xn,0.35,0.18,0.28)+0.05*Math.sin(xn*Math.PI*3.2);
+    const dotY=traceTop+traceH*(1-Math.min(Math.max(yn1,0),1));
+    ctx.beginPath();ctx.arc(sx,dotY,3,0,Math.PI*2);
+    ctx.fillStyle=col.sweep;ctx.fill();
+
+    _vnaBgRaf=requestAnimationFrame(frame);
+  }
+  _vnaBgRaf=requestAnimationFrame(frame);
+}
+
+// start background once DOM is ready
+initVnaBg();
 </script>
 
+<!-- ════════ PREVIEW MODAL -->
 <div id="preview-modal" onclick="closePreview()">
   <div class="preview-box" onclick="event.stopPropagation()">
     <div class="preview-hdr">
