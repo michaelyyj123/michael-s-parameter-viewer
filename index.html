@@ -374,6 +374,27 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 .resume-sub{font-size:.74rem;color:var(--text3);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
 .resume-arrow{font-size:1.1rem;color:var(--accent);flex-shrink:0;opacity:.65}
+
+/* ── report modal ─────────────────────────────────────────────────────────── */
+#report-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);
+  z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#report-modal.open{display:flex}
+.report-modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  width:480px;max-width:95vw;max-height:91vh;display:flex;flex-direction:column;overflow:hidden}
+.report-modal-hdr{padding:13px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.report-modal-title{font-size:.95rem;font-weight:700;color:var(--text)}
+.report-modal-file{padding:8px 16px;background:var(--bg3);border-bottom:1px solid var(--border);
+  font-size:.77rem;color:var(--text3);flex-shrink:0;line-height:1.5}
+.report-modal-form{padding:14px 16px;display:flex;flex-direction:column;gap:9px;overflow-y:auto;flex:1}
+.rpt-lbl{font-size:.69rem;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.07em}
+.rpt-inp,.rpt-ta{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  color:var(--text);font-size:.84rem;padding:6px 10px;outline:none;
+  transition:border-color .12s;font-family:inherit;width:100%}
+.rpt-ta{resize:vertical}
+.rpt-inp:focus,.rpt-ta:focus{border-color:var(--accent)}
+.report-modal-footer{padding:11px 16px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -427,6 +448,8 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
     <div class="tab-bar" id="tab-bar"></div>
     <label class="btn-add" for="fi-add">&#43; Add file</label>
     <input type="file" id="fi-add" accept=".s1p,.s2p,.S1P,.S2P,.csv,.CSV" multiple style="display:none">
+    <button class="btn btn-ghost" onclick="openReportModal()"
+      style="padding:4px 11px;font-size:.8rem;flex-shrink:0;margin-left:6px">Report</button>
     <div style="margin-left:6px;flex-shrink:0">
       <button class="btn btn-theme" onclick="toggleTheme()" id="tbtn-viewer">Light mode</button>
     </div>
@@ -1908,7 +1931,223 @@ function initVnaBg(){
   _vnaBgRaf=requestAnimationFrame(frame);
 }
 initVnaBg();
+
+// ── lab report ────────────────────────────────────────────────────────────────
+function htmlEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function openReportModal(){
+  const fs=S.files[S.active];
+  if(!fs||!fs.data)return;
+  const info=document.getElementById('rpt-file-info');
+  if(info){
+    const isSP=fs.kind==='sparameter';
+    const freqs=fsFreqs(fs);
+    const fr=fmtF(Math.min(...freqs))+' – '+fmtF(Math.max(...freqs));
+    info.innerHTML=`<b>${htmlEsc(fs.name)}</b>&ensp;·&ensp;${isSP?fs.type.toUpperCase()+' S-Parameter':'Spectrum Analyzer'}&ensp;·&ensp;${fs.data.n} pts&ensp;·&ensp;${fr}`;
+  }
+  document.getElementById('report-modal').classList.add('open');
+}
+function closeReportModal(){document.getElementById('report-modal').classList.remove('open');}
+
+function _rptMagTable(fs){
+  if(!fs.mkrs.length)return '<p class="rno-mkr">No markers set.</p>';
+  const names=Object.keys(fs.data.sp);
+  const vis=fs.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
+  const vn=names.filter(n=>vis[n]);
+  if(!vn.length)return '<p class="rno-mkr">All traces hidden.</p>';
+  let h=`<table class="rpt-tbl"><thead><tr><th>Marker</th><th>Frequency</th>${vn.map(n=>`<th>${n} (dB)</th>`).join('')}</tr></thead><tbody>`;
+  fs.mkrs.forEach((mk,i)=>{
+    const idx=nearest(fs.data.freqs,mk.freq);
+    h+=`<tr><td style="color:${mk.color};font-weight:700">${htmlEsc(mk.name||'M'+(i+1))}</td><td>${htmlEsc(fmtF(fs.data.freqs[idx]))}</td>`;
+    vn.forEach(n=>{h+=`<td>${fs.data.sp[n].db[idx].toFixed(2)} dB</td>`;});
+    h+='</tr>';
+  });
+  return h+'</tbody></table>';
+}
+function _rptSmithTable(fs){
+  const tn=fs.sp||'S11',s=fs.data.sp[tn];
+  if(!fs.mkrs.length||!s)return '';
+  let h=`<table class="rpt-tbl"><thead><tr><th>Marker</th><th>Frequency</th><th>Trace</th><th>Mag (dB)</th><th>Re(Γ)</th><th>Im(Γ)</th><th>|Γ|</th><th>∠ (°)</th></tr></thead><tbody>`;
+  fs.mkrs.forEach((mk,i)=>{
+    const idx=nearest(fs.data.freqs,mk.freq);
+    const re=s.re[idx],im=s.im[idx];
+    const gm=Math.sqrt(re*re+im*im),ang=Math.atan2(im,re)*180/Math.PI;
+    h+=`<tr><td style="color:${mk.color};font-weight:700">${htmlEsc(mk.name||'M'+(i+1))}</td><td>${htmlEsc(fmtF(fs.data.freqs[idx]))}</td><td>${tn}</td><td>${s.db[idx].toFixed(2)}</td><td>${re.toFixed(4)}</td><td>${im.toFixed(4)}</td><td>${gm.toFixed(4)}</td><td>${ang.toFixed(1)}</td></tr>`;
+  });
+  return h+'</tbody></table>';
+}
+function _rptSpecTable(fs){
+  if(!fs.mkrs.length)return '<p class="rno-mkr">No markers set.</p>';
+  let h='<table class="rpt-tbl"><thead><tr><th>Marker</th><th>Frequency</th><th>Power (dBm)</th></tr></thead><tbody>';
+  fs.mkrs.forEach((mk,i)=>{
+    const idx=nearest(fs.data.freqsMHz,mk.freq);
+    h+=`<tr><td style="color:${mk.color};font-weight:700">${htmlEsc(mk.name||'M'+(i+1))}</td><td>${htmlEsc(fmtF(fs.data.freqsMHz[idx]))}</td><td>${fs.data.dbm[idx].toFixed(2)} dBm</td></tr>`;
+  });
+  return h+'</tbody></table>';
+}
+
+function _buildReportHTML(fs,opts){
+  const{dut,operator,setup,notes,magImg,smithImg,specImg}=opts;
+  const now=new Date().toLocaleString();
+  const isSP=fs.kind==='sparameter';
+  const freqs=fsFreqs(fs);
+  const fMin=fmtF(Math.min(...freqs)),fMax=fmtF(Math.max(...freqs));
+
+  let meta=`<tr><td>DUT Name</td><td>${htmlEsc(dut||'—')}</td></tr>
+<tr><td>Operator</td><td>${htmlEsc(operator||'—')}</td></tr>
+<tr><td>File</td><td>${htmlEsc(fs.name)}</td></tr>
+<tr><td>Type</td><td>${isSP?fs.type.toUpperCase()+' S-Parameter':'Spectrum Analyzer CSV'}</td></tr>
+<tr><td>Generated</td><td>${now}</td></tr>
+<tr><td>Freq Range</td><td>${fMin} – ${fMax}</td></tr>
+<tr><td>Points</td><td>${fs.data.n}</td></tr>`;
+  if(isSP){
+    meta+=`<tr><td>Format</td><td>${fs.data.fmt}</td></tr><tr><td>Z₀</td><td>${fs.data.z0} Ω</td></tr>`;
+  } else {
+    const m=fs.data.meta||{};
+    ['Instrument','Center Frequency','Span','RBW','VBW','Ref Level'].forEach(k=>{
+      if(m[k])meta+=`<tr><td>${k}</td><td>${htmlEsc(fmtSpecMeta(m,k))}</td></tr>`;
+    });
+  }
+
+  let plots='';
+  if(magImg)plots+=`<figure><img src="${magImg}" style="max-width:100%;border:1px solid #dde4ee;border-radius:4px"><figcaption>Figure 1 – Magnitude Response (dB)</figcaption></figure>`;
+  if(smithImg)plots+=`<figure style="text-align:center"><img src="${smithImg}" style="max-width:480px;width:100%;border:1px solid #dde4ee;border-radius:4px"><figcaption>Figure 2 – Smith Chart (${htmlEsc(fs.sp||'S11')})</figcaption></figure>`;
+  if(specImg)plots+=`<figure><img src="${specImg}" style="max-width:100%;border:1px solid #dde4ee;border-radius:4px"><figcaption>Figure 1 – Spectrum Analyzer Trace</figcaption></figure>`;
+
+  let mkrs=isSP?_rptMagTable(fs):_rptSpecTable(fs);
+  const smithTbl=isSP?_rptSmithTable(fs):'';
+  if(smithTbl)mkrs+=`<h3 class="rpt-h3">Smith Chart Values (${htmlEsc(fs.sp||'S11')})</h3>${smithTbl}`;
+
+  return`<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>RF Report – ${htmlEsc(fs.name)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;color:#111;background:#fff;
+  padding:32px 42px;max-width:980px;margin:0 auto;line-height:1.55}
+.rpt-top{display:flex;justify-content:space-between;align-items:flex-start;
+  border-bottom:2.5px solid #0d1b2a;padding-bottom:12px;margin-bottom:20px;gap:20px}
+.rpt-title{font-size:1.55rem;font-weight:800;color:#0d1b2a;line-height:1.2}
+.rpt-sub{font-size:.74rem;color:#999;margin-top:4px}
+.rpt-stamp{font-size:.71rem;color:#bbb;text-align:right;line-height:1.8;padding-top:4px;flex-shrink:0}
+h2{font-size:1rem;font-weight:700;color:#0d1b2a;margin:22px 0 9px;
+  border-bottom:1px solid #cdd4de;padding-bottom:5px}
+.rpt-h3{font-size:.9rem;font-weight:700;color:#334;margin:18px 0 7px}
+.meta-tbl{border-collapse:collapse;font-size:.86rem;width:100%}
+.meta-tbl td{padding:3.5px 10px 3.5px 0;vertical-align:top}
+.meta-tbl td:first-child{font-weight:700;color:#556;white-space:nowrap;width:140px}
+.rbox{background:#f6f8fa;border:1px solid #dde4ee;border-radius:5px;
+  padding:10px 14px;font-size:.87rem;white-space:pre-wrap;line-height:1.65;color:#222}
+figure{margin:12px 0 20px;text-align:center}
+figcaption{font-size:.76rem;color:#777;margin-top:7px;font-style:italic}
+.rpt-tbl{border-collapse:collapse;width:100%;font-size:.84rem;margin-top:4px}
+.rpt-tbl th{background:#0d1b2a;color:#fff;padding:6px 11px;text-align:left;
+  font-weight:600;font-size:.78rem;letter-spacing:.03em}
+.rpt-tbl td{padding:5px 11px;border-bottom:1px solid #eaecf0;vertical-align:middle}
+.rpt-tbl tr:nth-child(even) td{background:#f7f9fc}
+.rno-mkr{color:#aaa;font-size:.85rem;font-style:italic;padding:5px 0}
+.pbar{margin:28px 0 6px;padding-top:16px;border-top:1px solid #ddd;
+  display:flex;gap:10px;align-items:center}
+.pbar button{padding:8px 22px;border-radius:5px;font-size:.88rem;cursor:pointer;
+  border:1.5px solid transparent;font-weight:700}
+.pbtn{background:#0d1b2a;color:#fff;border-color:#0d1b2a}
+.pbtn:hover{opacity:.85}
+.cbtn{background:#fff;color:#333;border-color:#ccc}
+.cbtn:hover{background:#f0f0f0}
+.ptip{font-size:.72rem;color:#bbb;margin-left:6px}
+@media print{
+  .pbar{display:none!important}
+  body{padding:0;max-width:none}
+  h2{margin-top:16px}
+  figure img{max-width:100%!important;width:auto}
+  @page{margin:14mm 18mm}
+}
+</style></head>
+<body>
+<div class="rpt-top">
+  <div>
+    <div class="rpt-title">RF Measurement Report</div>
+    <div class="rpt-sub">S-Parameter Viewer &nbsp;·&nbsp; Local browser export</div>
+  </div>
+  <div class="rpt-stamp">Generated<br>${now}</div>
+</div>
+<h2>File &amp; Measurement Info</h2>
+<table class="meta-tbl">${meta}</table>
+${setup?`<h2>Measurement Setup</h2><div class="rbox">${htmlEsc(setup)}</div>`:''}
+<h2>Plots</h2>
+${plots||'<p class="rno-mkr">No plots captured.</p>'}
+<h2>Marker Data</h2>
+${mkrs}
+${notes?`<h2>Notes / Conclusion</h2><div class="rbox">${htmlEsc(notes)}</div>`:''}
+<div class="pbar">
+  <button class="pbtn" onclick="window.print()">Print / Save as PDF</button>
+  <button class="cbtn" onclick="window.close()">Close</button>
+  <span class="ptip">Tip: choose &ldquo;Save as PDF&rdquo; in the print dialog to export.</span>
+</div>
+</body></html>`;
+}
+
+async function generateReport(){
+  const fs=S.files[S.active];
+  if(!fs||!fs.data)return;
+  const dut=document.getElementById('rpt-dut').value.trim();
+  const operator=document.getElementById('rpt-op').value.trim();
+  const setup=document.getElementById('rpt-setup').value.trim();
+  const notes=document.getElementById('rpt-notes').value.trim();
+
+  // Open popup synchronously before any await to avoid popup blockers
+  const win=window.open('','_blank');
+  if(!win){alert('Please allow pop-ups for this page to generate the report.');return;}
+  win.document.write('<!DOCTYPE html><html><head><title>Generating…</title></head><body style="font-family:sans-serif;padding:60px;color:#888;text-align:center"><p>Capturing plots, please wait…</p></body></html>');
+
+  const btn=document.getElementById('rpt-gen-btn');
+  btn.textContent='Capturing…';btn.disabled=true;
+  try{
+    let magImg=null,smithImg=null,specImg=null;
+    if(fs.kind==='sparameter'){
+      magImg=await _plotImage('md-'+fs.id);
+      smithImg=await _plotImage('sc-'+fs.id);
+    } else {
+      specImg=await _plotImage('sp-'+fs.id);
+    }
+    const html=_buildReportHTML(fs,{dut,operator,setup,notes,magImg,smithImg,specImg});
+    win.document.open();win.document.write(html);win.document.close();
+    closeReportModal();
+  }catch(e){
+    console.error(e);
+    win.document.open();
+    win.document.write(`<!DOCTYPE html><html><body style="font-family:sans-serif;padding:60px;color:#c00"><h2>Report generation failed</h2><p>${htmlEsc(e.message)}</p></body></html>`);
+    win.document.close();
+  }finally{
+    btn.textContent='Generate Report';btn.disabled=false;
+  }
+}
 </script>
+
+<!-- ════════ REPORT MODAL -->
+<div id="report-modal" onclick="closeReportModal()">
+  <div class="report-modal-box" onclick="event.stopPropagation()">
+    <div class="report-modal-hdr">
+      <span class="report-modal-title">Generate Lab Report</span>
+      <button class="btn btn-ghost" style="padding:2px 8px;font-size:.82rem" onclick="closeReportModal()">&#x2715;</button>
+    </div>
+    <div class="report-modal-file" id="rpt-file-info"></div>
+    <div class="report-modal-form">
+      <label class="rpt-lbl">DUT Name</label>
+      <input type="text" id="rpt-dut" class="rpt-inp" placeholder="e.g. 2.4 GHz LNA, Band-pass filter">
+      <label class="rpt-lbl">Operator</label>
+      <input type="text" id="rpt-op" class="rpt-inp" placeholder="e.g. J. Smith">
+      <label class="rpt-lbl">Measurement Setup</label>
+      <textarea id="rpt-setup" class="rpt-ta" rows="3" placeholder="Describe test conditions, equipment, cable setup…"></textarea>
+      <label class="rpt-lbl">Notes / Conclusion</label>
+      <textarea id="rpt-notes" class="rpt-ta" rows="4" placeholder="Observations, pass/fail criteria, conclusions…"></textarea>
+    </div>
+    <div class="report-modal-footer">
+      <button class="btn btn-ghost" onclick="closeReportModal()">Cancel</button>
+      <button class="btn btn-pri" id="rpt-gen-btn" onclick="generateReport()">Generate Report</button>
+    </div>
+  </div>
+</div>
 
 <!-- ════════ PREVIEW MODAL -->
 <div id="preview-modal" onclick="closePreview()">
