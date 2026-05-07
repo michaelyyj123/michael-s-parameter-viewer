@@ -205,18 +205,85 @@ body.light .upload-card.spectrum{--card-glow:rgba(26,127,55,.26)}
 .s-sel button.on,.s-sel button:hover{background:color-mix(in srgb,var(--accent) 15%,transparent);
   border-color:var(--accent);color:var(--accent)}
 
-/* ── controls ────────────────────────────────────────────────────────────── */
-.ctrl-panel{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  padding:14px 18px;flex-wrap:wrap;gap:18px;align-items:flex-start}
-.cg{display:flex;flex-direction:column;gap:6px}
-.cg-lbl{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
-.cg-row{display:flex;gap:6px;align-items:center}
-input[type=number],select.cg-sel{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
-  padding:5px 9px;color:var(--text);font-size:.83rem;outline:none;transition:border-color .12s}
-input[type=number]{width:96px}
-select.cg-sel{cursor:pointer;width:auto}
+/* ── controls / control dock ─────────────────────────────────────────────── */
+input[type=number],select.cg-sel{background:var(--bg3);border:1px solid var(--border);
+  border-radius:5px;padding:4px 8px;color:var(--text);font-size:.81rem;outline:none;
+  transition:border-color .12s}
+select.cg-sel{cursor:pointer}
 input[type=number]:focus{border-color:var(--accent)}
 input[type=number]::placeholder{color:var(--text4)}
+.control-dock{display:flex;gap:12px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:8px;padding:10px 14px;align-items:flex-start;flex-wrap:wrap}
+.dock-left{display:flex;flex-direction:column;gap:7px;flex:1;min-width:240px}
+.dock-right{display:flex;flex-direction:column;gap:5px;width:216px;flex-shrink:0}
+.dock-add-row{display:flex;align-items:center;gap:6px}
+.dock-add-row input[type=number]{width:82px}
+.chart-hint{font-size:.7rem;color:var(--accent);font-style:italic;margin-left:2px}
+
+/* ── marker chips ─────────────────────────────────────────────────────────── */
+.marker-chip-list{display:flex;flex-direction:column;gap:3px}
+.marker-chip{display:flex;align-items:center;gap:5px;
+  background:var(--bg3);border:1px solid var(--border);border-left-width:3px;
+  border-radius:5px;padding:4px 8px;cursor:pointer;transition:background .1s}
+.marker-chip:hover{background:color-mix(in srgb,var(--bg2) 50%,var(--bg3))}
+.marker-chip.active{background:color-mix(in srgb,var(--accent) 6%,var(--bg2));
+  border-top-color:color-mix(in srgb,var(--accent) 22%,var(--border));
+  border-right-color:color-mix(in srgb,var(--accent) 22%,var(--border));
+  border-bottom-color:color-mix(in srgb,var(--accent) 22%,var(--border))}
+.mkr-dot{width:18px;height:18px;padding:1px;border:1px solid var(--border);
+  border-radius:3px;cursor:pointer;background:none;flex-shrink:0;outline:none}
+.mkr-dot:hover{border-color:var(--text3)}
+.chip-name{background:transparent;border:1px solid transparent;border-radius:3px;
+  color:var(--text2);font-size:.77rem;font-weight:600;width:40px;padding:1px 4px;
+  outline:none;transition:all .12s;flex-shrink:0}
+.chip-name:hover{border-color:var(--border)}
+.chip-name:focus{border-color:var(--accent);background:var(--bg3)}
+.chip-freq{background:transparent;border:1px solid transparent;border-radius:3px;
+  color:var(--text2);font-family:'Courier New',monospace;font-size:.75rem;
+  width:76px;padding:1px 4px;outline:none;transition:all .12s;flex-shrink:0}
+.chip-freq:hover{border-color:var(--border)}
+.chip-freq:focus{border-color:var(--accent);background:var(--bg3)}
+.chip-unit{font-size:.66rem;color:var(--text4);flex-shrink:0}
+.chip-snap{font-size:.68rem;color:var(--text3);flex-shrink:0;
+  font-family:'Courier New',monospace;white-space:nowrap}
+.chip-trace{background:var(--bg2);border:1px solid var(--border);border-radius:3px;
+  color:var(--text3);font-size:.68rem;padding:1px 3px;cursor:pointer;flex-shrink:0;
+  outline:none;max-width:52px;transition:border-color .12s}
+.chip-trace:focus{border-color:var(--accent)}
+.chip-cur{background:transparent;border:1px solid var(--border);border-radius:3px;
+  color:var(--text4);cursor:pointer;font-size:.68rem;padding:1px 5px;
+  transition:all .12s;flex-shrink:0}
+.chip-cur:hover{border-color:var(--text3);color:var(--text2)}
+.chip-cur.on{border-color:var(--accent);color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.chip-del{background:transparent;border:none;color:var(--text4);cursor:pointer;
+  font-size:.95rem;line-height:1;padding:0 2px;transition:color .12s;flex-shrink:0;margin-left:auto}
+.chip-del:hover{color:var(--red)}
+
+/* ── settings panel ───────────────────────────────────────────────────────── */
+.settings-toggle{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  color:var(--text3);cursor:pointer;font-size:.76rem;padding:5px 10px;
+  text-align:left;transition:all .12s;width:100%}
+.settings-toggle:hover{border-color:var(--text3);color:var(--text2)}
+.settings-panel{display:none;flex-direction:column;gap:9px}
+.settings-panel.open{display:flex}
+.sp-section{display:flex;flex-direction:column;gap:5px}
+.sp-lbl{font-size:.66rem;color:var(--text4);text-transform:uppercase;letter-spacing:.06em}
+.sp-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.compact-y-range{display:flex;flex-direction:column;gap:4px}
+.cyr-row{display:flex;align-items:center;gap:6px}
+.cyr-lbl{font-size:.69rem;color:var(--text3);width:26px;text-align:right;flex-shrink:0}
+.cyr-val{font-size:.7rem;color:var(--accent);font-family:'Courier New',monospace;
+  width:38px;text-align:right;flex-shrink:0}
+.cyr-unit{font-size:.65rem;color:var(--text4);flex-shrink:0}
+input[type=range].ys-track{flex:1;height:4px;-webkit-appearance:none;appearance:none;
+  background:var(--bg3);border-radius:2px;outline:none;cursor:pointer}
+input[type=range].ys-track::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;
+  border-radius:50%;background:var(--accent);border:2px solid var(--bg);cursor:grab;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
+input[type=range].ys-track:active::-webkit-slider-thumb{cursor:grabbing}
+input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+  background:var(--accent);border:2px solid var(--bg);cursor:grab}
 
 /* ── buttons ─────────────────────────────────────────────────────────────── */
 .btn{padding:5px 13px;border-radius:5px;font-size:.82rem;cursor:pointer;
@@ -246,68 +313,13 @@ input[type=number]::placeholder{color:var(--text4)}
 .preview-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .preview-title{font-size:.9rem;font-weight:600;color:var(--text2)}
 
-/* ── y sliders ───────────────────────────────────────────────────────────── */
-.y-sliders{display:flex;flex-direction:column;gap:7px;min-width:220px}
-.ys-row{display:flex;align-items:center;gap:8px}
-.ys-lbl{font-size:.74rem;color:var(--text3);width:28px;text-align:right;flex-shrink:0}
-.ys-val{font-size:.76rem;color:var(--accent);font-family:'Courier New',monospace;width:46px;
-  text-align:right;flex-shrink:0}
-.ys-unit{font-size:.7rem;color:var(--text4);flex-shrink:0}
-input[type=range].ys-track{flex:1;height:4px;-webkit-appearance:none;appearance:none;
-  background:var(--bg3);border-radius:2px;outline:none;cursor:pointer}
-input[type=range].ys-track::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;
-  border-radius:50%;background:var(--accent);border:2px solid var(--bg);cursor:grab;
-  box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
-input[type=range].ys-track:active::-webkit-slider-thumb{cursor:grabbing}
-input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radius:50%;
-  background:var(--accent);border:2px solid var(--bg);cursor:grab}
-
-/* ── marker list ─────────────────────────────────────────────────────────── */
-.chart-hint{font-size:.73rem;color:var(--accent);padding:2px 0;font-style:italic}
-.mkr-list{display:flex;flex-direction:column;gap:5px}
-.mkr-row{display:flex;align-items:center;gap:10px;background:var(--bg2);
-  border:1px solid var(--border);border-left-width:3px;border-radius:6px;
-  padding:6px 10px;font-size:.81rem;cursor:pointer;transition:background .12s}
-.mkr-row:hover{background:var(--bg3)}
-.mkr-row.active{background:color-mix(in srgb,var(--accent) 7%,var(--bg2));
-  border-top-color:color-mix(in srgb,var(--accent) 25%,var(--border));
-  border-right-color:color-mix(in srgb,var(--accent) 25%,var(--border));
-  border-bottom-color:color-mix(in srgb,var(--accent) 25%,var(--border))}
-.mkr-color-inp{width:22px;height:22px;padding:1px;border:1px solid var(--border);
-  border-radius:4px;cursor:pointer;background:none;flex-shrink:0;outline:none;transition:border-color .12s}
-.mkr-color-inp:hover{border-color:var(--text3)}
-.mkr-name-inp{background:transparent;border:1px solid transparent;border-radius:4px;
-  color:var(--text2);font-size:.81rem;font-weight:600;
-  width:58px;padding:2px 5px;outline:none;transition:all .12s;flex-shrink:0}
-.mkr-name-inp:hover{border-color:var(--border)}
-.mkr-name-inp:focus{border-color:var(--accent);background:var(--bg3)}
-.mkr-freq-inp{background:transparent;border:1px solid transparent;border-radius:4px;
-  color:var(--text2);font-family:'Courier New',monospace;font-size:.81rem;
-  width:86px;padding:2px 5px;outline:none;transition:all .12s;flex-shrink:0}
-.mkr-freq-inp:hover{border-color:var(--border)}
-.mkr-freq-inp:focus{border-color:var(--accent);background:var(--bg3)}
-.mkr-unit{font-size:.7rem;color:var(--text4);flex-shrink:0}
-.mkr-snap{font-size:.73rem;color:var(--text3);flex-shrink:0;font-family:'Courier New',monospace}
-.mkr-cursor-btn{background:transparent;border:1px solid var(--border);border-radius:4px;
-  color:var(--text4);cursor:pointer;font-size:.72rem;padding:1px 6px;letter-spacing:.05em;
-  transition:all .12s;flex-shrink:0}
-.mkr-cursor-btn:hover{border-color:var(--text3);color:var(--text2)}
-.mkr-cursor-btn.on{border-color:var(--accent);color:var(--accent);
-  background:color-mix(in srgb,var(--accent) 12%,transparent)}
-.mkr-trace-sel{background:var(--bg2);border:1px solid var(--border);border-radius:4px;
-  color:var(--text3);font-size:.72rem;padding:1px 4px;cursor:pointer;flex-shrink:0;
-  transition:all .12s;outline:none;max-width:70px}
-.mkr-trace-sel:hover{border-color:var(--text3);color:var(--text2)}
-.mkr-trace-sel:focus{border-color:var(--accent)}
-.mkr-del{background:transparent;border:none;color:var(--text4);cursor:pointer;
-  font-size:1.1rem;line-height:1;padding:0 3px;transition:color .12s;flex-shrink:0}
-.mkr-del:hover{color:var(--red)}
-
 @media(max-width:860px){
   .plots-grid{grid-template-columns:1fr}
   .plot-shell{flex-direction:column}
   .plot-side{width:100%;border-left:none;border-top:1px solid var(--border);
     flex-direction:row;flex-wrap:wrap;gap:12px;padding:8px 10px}
+  .control-dock{flex-direction:column}
+  .dock-right{width:100%}
 }
 
 /* ── plot shell (chart + side panel) ─────────────────────────────────────── */
@@ -1043,14 +1055,12 @@ function renderMkrList(id){
     const mkName=mk.name||`M${i+1}`;
     const lineOn=mk.showLine!==false;
 
-    // snap label: for spectrum also show dBm
     const snapLabel=fs.kind==='spectrum'
-      ?`&#8594;&nbsp;${fmtF(mf)}&nbsp;<span style="color:var(--text4)">${fs.data.dbm[idx].toFixed(1)} dBm</span>`
-      :`&#8594;&nbsp;${fmtF(mf)}`;
+      ?`&#8594;&thinsp;${fmtF(mf)}&thinsp;<span style="color:var(--text4)">${fs.data.dbm[idx].toFixed(1)} dBm</span>`
+      :`&#8594;&thinsp;${fmtF(mf)}`;
 
-    // trace selector only for s-parameter
     const traceSelHtml=fs.kind==='sparameter'
-      ?`<select class="mkr-trace-sel" title="Assign to trace"
+      ?`<select class="chip-trace" title="Assign to trace"
           onclick="event.stopPropagation()"
           onchange="setMkrTrace('${id}',${i},this.value)">
           <option value="">All</option>
@@ -1058,27 +1068,27 @@ function renderMkrList(id){
         </select>`
       :'';
 
-    return `<div class="mkr-row${isAct?' active':''}" style="border-left-color:${mk.color}"
+    return `<div class="marker-chip${isAct?' active':''}" style="border-left-color:${mk.color}"
       onclick="setActiveMkr('${id}',${i})">
-      <input type="color" class="mkr-color-inp" value="${mk.color}"
+      <input type="color" class="mkr-dot" value="${mk.color}"
         onclick="event.stopPropagation()"
         onchange="changeMkrColor('${id}',${i},this.value)">
-      <input type="text" class="mkr-name-inp" value="${mkName}"
+      <input type="text" class="chip-name" value="${mkName}"
         onclick="event.stopPropagation()"
         onkeydown="if(event.key==='Enter')this.blur()"
         onblur="changeMkrName('${id}',${i},this.value)">
-      <input type="number" class="mkr-freq-inp" value="${mk.freq}" step="0.01"
-        title="Edit and press Enter or click away to move"
+      <input type="number" class="chip-freq" value="${mk.freq}" step="0.01"
+        title="Enter freq in MHz then press Enter"
         onkeydown="if(event.key==='Enter')this.blur()"
         onblur="moveMkr('${id}',${i},this.value)"
         onclick="event.stopPropagation()">
-      <span class="mkr-unit">MHz</span>
-      <span class="mkr-snap">${snapLabel}</span>
+      <span class="chip-unit">MHz</span>
+      <span class="chip-snap">${snapLabel}</span>
       ${traceSelHtml}
-      <button class="mkr-cursor-btn${lineOn?' on':''}"
+      <button class="chip-cur${lineOn?' on':''}"
         onclick="event.stopPropagation();toggleMkrLine('${id}',${i})"
-        title="Toggle cursor line">cursor</button>
-      <button class="mkr-del" onclick="event.stopPropagation();removeMkr('${id}',${i})" title="Remove">&#x00D7;</button>
+        title="Toggle cursor line">≡</button>
+      <button class="chip-del" onclick="event.stopPropagation();removeMkr('${id}',${i})" title="Remove">&#x00D7;</button>
     </div>`;
   }).join('');
   updateHint(id);
@@ -1149,7 +1159,7 @@ function attachDragListener(id){
     const freq=pxToFreq(px,xa);
     const fs=fileById(id); if(!fs)return;
     fs.mkrs[drag.idx].freq=freq;
-    const inputs=document.querySelectorAll('#ml-'+id+' .mkr-freq-inp');
+    const inputs=document.querySelectorAll('#ml-'+id+' .chip-freq');
     if(inputs[drag.idx])inputs[drag.idx].value=freq.toFixed(4);
     if(rafId)cancelAnimationFrame(rafId);
     rafId=requestAnimationFrame(()=>{renderAll(id);rafId=null;});
@@ -1308,6 +1318,15 @@ function closePreview(){
   document.getElementById('preview-img').src='';
 }
 
+// ── settings panel toggle ─────────────────────────────────────────────────────
+function toggleSettings(id){
+  const p=document.getElementById('settings-'+id);
+  const btn=document.getElementById('stoggle-'+id);
+  if(!p)return;
+  const open=p.classList.toggle('open');
+  if(btn)btn.textContent=open?'⚙ Plot Settings ▲':'⚙ Plot Settings ▾';
+}
+
 // ── font controls shared HTML fragment ────────────────────────────────────────
 function fontCtrlHtml(id){
   return `<div class="cg">
@@ -1371,38 +1390,56 @@ function createPanel(fs){
         <div id="sc-${id}" class="plot-div"></div>
       </div>
     </div>
-    <div class="ctrl-panel">
-      <div class="cg">
-        <div class="cg-lbl">Add Marker (MHz) <span style="font-size:.65rem;color:var(--text4);text-transform:none;letter-spacing:0">max 6</span></div>
-        <div class="cg-row">
-          <input type="number" id="mk-inp-${id}" placeholder="127.74" step="0.01">
-          <button class="btn btn-pri" onclick="addMkr('${id}')">Add</button>
+    <div class="control-dock">
+      <div class="dock-left">
+        <div class="dock-add-row">
+          <input type="number" id="mk-inp-${id}" placeholder="freq MHz" step="0.01">
+          <button class="btn btn-pri" onclick="addMkr('${id}')">+ Marker</button>
+          <span id="hint-${id}" class="chart-hint"></span>
         </div>
-        <div id="hint-${id}" class="chart-hint"></div>
+        <div class="marker-chip-list" id="ml-${id}"></div>
       </div>
-      <div class="cg" style="flex:1;min-width:220px">
-        <div class="cg-lbl">Y Range (dB)</div>
-        <div class="y-sliders">
-          <div class="ys-row">
-            <span class="ys-lbl">Max</span>
-            <input type="range" id="yr-hi-${id}" class="ys-track">
-            <span class="ys-val" id="yrv-hi-${id}">0</span>
-            <span class="ys-unit">dB</span>
+      <div class="dock-right">
+        <button class="settings-toggle" id="stoggle-${id}" onclick="toggleSettings('${id}')">⚙ Plot Settings ▾</button>
+        <div class="settings-panel" id="settings-${id}">
+          <div class="sp-section">
+            <div class="sp-lbl">Y Range (dB)</div>
+            <div class="compact-y-range">
+              <div class="cyr-row">
+                <span class="cyr-lbl">Max</span>
+                <input type="range" id="yr-hi-${id}" class="ys-track">
+                <span class="cyr-val" id="yrv-hi-${id}">0</span>
+                <span class="cyr-unit">dB</span>
+              </div>
+              <div class="cyr-row">
+                <span class="cyr-lbl">Min</span>
+                <input type="range" id="yr-lo-${id}" class="ys-track">
+                <span class="cyr-val" id="yrv-lo-${id}">−60</span>
+                <span class="cyr-unit">dB</span>
+              </div>
+            </div>
+            <button class="btn btn-ghost" style="font-size:.74rem;padding:3px 8px;margin-top:4px;width:100%" onclick="resetY('${id}')">Reset Y</button>
           </div>
-          <div class="ys-row">
-            <span class="ys-lbl">Min</span>
-            <input type="range" id="yr-lo-${id}" class="ys-track">
-            <span class="ys-val" id="yrv-lo-${id}">-60</span>
-            <span class="ys-unit">dB</span>
+          <div class="sp-section">
+            <div class="sp-lbl">Axis Font</div>
+            <div class="sp-row">
+              <select class="cg-sel" id="font-sel-${id}" onchange="setAxisFont('${id}',this.value)">
+                <option value="">Default</option>
+                <option value="Arial">Arial</option>
+                <option value="Helvetica" selected>Helvetica</option>
+                <option value="Times New Roman">Times NR</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier</option>
+              </select>
+              <input type="number" id="fontsize-${id}" placeholder="pt" min="6" max="32" step="1"
+                style="width:50px" title="Font size (pt)"
+                onchange="setAxisFontSize('${id}',this.value)"
+                oninput="setAxisFontSize('${id}',this.value)">
+            </div>
           </div>
         </div>
       </div>
-      <div class="cg"><div style="height:20px"></div>
-        <button class="btn btn-ghost" onclick="resetY('${id}')">Reset Y</button>
-      </div>
-      ${fontCtrlHtml(id)}
-    </div>
-    <div class="mkr-list" id="ml-${id}"></div>`;
+    </div>`;
   return el;
 }
 
@@ -1436,38 +1473,56 @@ function createSpectrumPanel(fs){
         </div>
       </div>
     </div>
-    <div class="ctrl-panel">
-      <div class="cg">
-        <div class="cg-lbl">Add Marker (MHz) <span style="font-size:.65rem;color:var(--text4);text-transform:none;letter-spacing:0">max 6</span></div>
-        <div class="cg-row">
-          <input type="number" id="mk-inp-${id}" placeholder="127.74" step="0.01">
-          <button class="btn btn-pri" onclick="addMkr('${id}')">Add</button>
+    <div class="control-dock">
+      <div class="dock-left">
+        <div class="dock-add-row">
+          <input type="number" id="mk-inp-${id}" placeholder="freq MHz" step="0.01">
+          <button class="btn btn-pri" onclick="addMkr('${id}')">+ Marker</button>
+          <span id="hint-${id}" class="chart-hint"></span>
         </div>
-        <div id="hint-${id}" class="chart-hint"></div>
+        <div class="marker-chip-list" id="ml-${id}"></div>
       </div>
-      <div class="cg" style="flex:1;min-width:220px">
-        <div class="cg-lbl">Y Range (dBm)</div>
-        <div class="y-sliders">
-          <div class="ys-row">
-            <span class="ys-lbl">Max</span>
-            <input type="range" id="yr-hi-${id}" class="ys-track">
-            <span class="ys-val" id="yrv-hi-${id}">0</span>
-            <span class="ys-unit">dBm</span>
+      <div class="dock-right">
+        <button class="settings-toggle" id="stoggle-${id}" onclick="toggleSettings('${id}')">⚙ Plot Settings ▾</button>
+        <div class="settings-panel" id="settings-${id}">
+          <div class="sp-section">
+            <div class="sp-lbl">Y Range (dBm)</div>
+            <div class="compact-y-range">
+              <div class="cyr-row">
+                <span class="cyr-lbl">Max</span>
+                <input type="range" id="yr-hi-${id}" class="ys-track">
+                <span class="cyr-val" id="yrv-hi-${id}">0</span>
+                <span class="cyr-unit">dBm</span>
+              </div>
+              <div class="cyr-row">
+                <span class="cyr-lbl">Min</span>
+                <input type="range" id="yr-lo-${id}" class="ys-track">
+                <span class="cyr-val" id="yrv-lo-${id}">−100</span>
+                <span class="cyr-unit">dBm</span>
+              </div>
+            </div>
+            <button class="btn btn-ghost" style="font-size:.74rem;padding:3px 8px;margin-top:4px;width:100%" onclick="resetY('${id}')">Reset Y</button>
           </div>
-          <div class="ys-row">
-            <span class="ys-lbl">Min</span>
-            <input type="range" id="yr-lo-${id}" class="ys-track">
-            <span class="ys-val" id="yrv-lo-${id}">-100</span>
-            <span class="ys-unit">dBm</span>
+          <div class="sp-section">
+            <div class="sp-lbl">Axis Font</div>
+            <div class="sp-row">
+              <select class="cg-sel" id="font-sel-${id}" onchange="setAxisFont('${id}',this.value)">
+                <option value="">Default</option>
+                <option value="Arial">Arial</option>
+                <option value="Helvetica" selected>Helvetica</option>
+                <option value="Times New Roman">Times NR</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier</option>
+              </select>
+              <input type="number" id="fontsize-${id}" placeholder="pt" min="6" max="32" step="1"
+                style="width:50px" title="Font size (pt)"
+                onchange="setAxisFontSize('${id}',this.value)"
+                oninput="setAxisFontSize('${id}',this.value)">
+            </div>
           </div>
         </div>
       </div>
-      <div class="cg"><div style="height:20px"></div>
-        <button class="btn btn-ghost" onclick="resetY('${id}')">Reset Y</button>
-      </div>
-      ${fontCtrlHtml(id)}
-    </div>
-    <div class="mkr-list" id="ml-${id}"></div>`;
+    </div>`;
   return el;
 }
 
