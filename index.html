@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>S-Parameter Viewer</title>
+<title>RF Lab Viewer</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -214,13 +214,20 @@ input[type=number]:focus{border-color:var(--accent)}
 input[type=number]::placeholder{color:var(--text4)}
 .control-dock{display:flex;gap:12px;background:var(--bg2);border:1px solid var(--border);
   border-radius:8px;padding:10px 14px;align-items:flex-start;flex-wrap:wrap}
-.dock-left{display:flex;flex-direction:column;gap:7px;flex:1;min-width:240px}
+.dock-left{display:flex;flex-direction:column;gap:6px;flex:1;min-width:240px}
 .dock-right{display:flex;flex-direction:column;gap:5px;width:216px;flex-shrink:0}
-.dock-add-row{display:flex;align-items:center;gap:6px}
+.dock-section{display:flex;flex-direction:column;gap:3px}
+.dock-sec-lbl{font-size:.62rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text4);padding-left:1px}
+.dock-add-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .dock-add-row input[type=number]{width:108px}
+.btn-preset{font-size:.72rem;padding:3px 8px;flex-shrink:0;color:var(--text3);border-color:var(--border)}
+.btn-preset:hover{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 50%,var(--border))}
 .chart-hint{font-size:.7rem;color:var(--accent);font-style:italic;margin-left:2px}
 .dock-find-row{display:flex;align-items:center;gap:6px}
 .auto-find-hint{font-size:.7rem;color:var(--red);font-style:italic;margin-left:2px}
+.rpt-progress{font-size:.78rem;color:var(--text3);display:flex;align-items:center;gap:6px;min-height:18px;margin-right:auto}
+.rpt-spinner{width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:rptSpin .7s linear infinite;flex-shrink:0}
+@keyframes rptSpin{to{transform:rotate(360deg)}}
 
 /* ── marker chips ─────────────────────────────────────────────────────────── */
 .marker-chip-list{display:flex;flex-direction:column;gap:3px}
@@ -405,8 +412,8 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
   </div>
   <div class="landing-content">
     <div class="landing-badge">RF · S-Parameter · Spectrum · Touchstone</div>
-    <div class="landing-title">S-Parameter Viewer</div>
-    <div class="landing-sub">Touchstone file reader &amp; plotter for RF engineering</div>
+    <div class="landing-title">RF Lab Viewer</div>
+    <div class="landing-sub">Browser-based VNA &amp; Spectrum Analyzer data viewer</div>
     <div class="landing-upload-grid">
       <div class="upload-card vna" id="uc-vna">
         <div class="upload-card-icon">📡</div>
@@ -1457,6 +1464,19 @@ function findExtremeIndex(freqs,values,mode,range){
 }
 
 const _afhTimers={};
+function presetMri(id){
+  const fs=fileById(id); if(!fs)return;
+  const MRI_FREQ=127.74;
+  if(fs.mkrs.length){
+    const mk=fs.mkrs[fs.activeMkr]||fs.mkrs[0];
+    mk.freq=MRI_FREQ;
+    renderAll(id);renderMkrList(id);
+  } else {
+    const inp=document.getElementById('mk-inp-'+id);
+    if(inp){inp.value=MRI_FREQ;inp.focus();}
+  }
+}
+
 function showAutoFindHint(id,msg){
   const el=document.getElementById('afh-'+id); if(!el)return;
   el.textContent=msg;
@@ -1534,15 +1554,22 @@ function createPanel(fs){
     </div>
     <div class="control-dock">
       <div class="dock-left">
-        <div class="dock-add-row">
-          <input type="number" id="mk-inp-${id}" placeholder="freq MHz" step="0.01">
-          <button class="btn btn-pri" onclick="addMkr('${id}')">+ Marker</button>
-          <span id="hint-${id}" class="chart-hint"></span>
+        <div class="dock-section">
+          <div class="dock-sec-lbl">Marker</div>
+          <div class="dock-add-row">
+            <input type="number" id="mk-inp-${id}" placeholder="freq MHz" step="0.01">
+            <button class="btn btn-pri" onclick="addMkr('${id}')">+ Marker</button>
+            <button class="btn btn-ghost btn-preset" onclick="presetMri('${id}')">MRI 3T · 127.74 MHz</button>
+            <span id="hint-${id}" class="chart-hint"></span>
+          </div>
         </div>
-        <div class="dock-find-row">
-          <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','max')">Find Max</button>
-          <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','min')">Find Min</button>
-          <span id="afh-${id}" class="auto-find-hint"></span>
+        <div class="dock-section">
+          <div class="dock-sec-lbl">Analysis</div>
+          <div class="dock-find-row">
+            <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','max')">Find Max</button>
+            <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','min')">Find Min</button>
+            <span id="afh-${id}" class="auto-find-hint"></span>
+          </div>
         </div>
         <div class="marker-chip-list" id="ml-${id}"></div>
       </div>
@@ -1622,15 +1649,22 @@ function createSpectrumPanel(fs){
     </div>
     <div class="control-dock">
       <div class="dock-left">
-        <div class="dock-add-row">
-          <input type="number" id="mk-inp-${id}" placeholder="freq MHz" step="0.01">
-          <button class="btn btn-pri" onclick="addMkr('${id}')">+ Marker</button>
-          <span id="hint-${id}" class="chart-hint"></span>
+        <div class="dock-section">
+          <div class="dock-sec-lbl">Marker</div>
+          <div class="dock-add-row">
+            <input type="number" id="mk-inp-${id}" placeholder="freq MHz" step="0.01">
+            <button class="btn btn-pri" onclick="addMkr('${id}')">+ Marker</button>
+            <button class="btn btn-ghost btn-preset" onclick="presetMri('${id}')">MRI 3T · 127.74 MHz</button>
+            <span id="hint-${id}" class="chart-hint"></span>
+          </div>
         </div>
-        <div class="dock-find-row">
-          <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','max')">Find Max</button>
-          <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','min')">Find Min</button>
-          <span id="afh-${id}" class="auto-find-hint"></span>
+        <div class="dock-section">
+          <div class="dock-sec-lbl">Analysis</div>
+          <div class="dock-find-row">
+            <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','max')">Find Max</button>
+            <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','min')">Find Min</button>
+            <span id="afh-${id}" class="auto-find-hint"></span>
+          </div>
         </div>
         <div class="marker-chip-list" id="ml-${id}"></div>
       </div>
@@ -2052,7 +2086,7 @@ figcaption{font-size:.76rem;color:#777;margin-top:7px;font-style:italic}
 <div class="rpt-top">
   <div>
     <div class="rpt-title">RF Measurement Report</div>
-    <div class="rpt-sub">S-Parameter Viewer &nbsp;·&nbsp; Local browser export</div>
+    <div class="rpt-sub">RF Lab Viewer &nbsp;·&nbsp; Local browser export</div>
   </div>
   <div class="rpt-stamp">Generated<br>${now}</div>
 </div>
@@ -2086,7 +2120,9 @@ async function generateReport(){
   win.document.write('<!DOCTYPE html><html><head><title>Generating…</title></head><body style="font-family:sans-serif;padding:60px;color:#888;text-align:center"><p>Capturing plots, please wait…</p></body></html>');
 
   const btn=document.getElementById('rpt-gen-btn');
-  btn.textContent='Capturing…';btn.disabled=true;
+  const prog=document.getElementById('rpt-progress');
+  btn.textContent='Generate Report';btn.disabled=true;
+  if(prog)prog.innerHTML='<div class="rpt-spinner"></div>Capturing plots…';
   try{
     let magImg=null,smithImg=null,specImg=null;
     if(fs.kind==='sparameter'){
@@ -2104,7 +2140,8 @@ async function generateReport(){
     win.document.write(`<!DOCTYPE html><html><body style="font-family:sans-serif;padding:60px;color:#c00"><h2>Report generation failed</h2><p>${htmlEsc(e.message)}</p></body></html>`);
     win.document.close();
   }finally{
-    btn.textContent='Generate Report';btn.disabled=false;
+    btn.disabled=false;
+    if(prog)prog.innerHTML='';
   }
 }
 </script>
@@ -2128,6 +2165,7 @@ async function generateReport(){
       <textarea id="rpt-notes" class="rpt-ta" rows="4" placeholder="Observations, pass/fail criteria, conclusions…"></textarea>
     </div>
     <div class="report-modal-footer">
+      <div class="rpt-progress" id="rpt-progress"></div>
       <button class="btn btn-ghost" onclick="closeReportModal()">Cancel</button>
       <button class="btn btn-pri" id="rpt-gen-btn" onclick="generateReport()">Generate Report</button>
     </div>
