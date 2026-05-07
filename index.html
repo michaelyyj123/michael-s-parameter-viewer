@@ -217,7 +217,7 @@ input[type=number]::placeholder{color:var(--text4)}
 .dock-left{display:flex;flex-direction:column;gap:7px;flex:1;min-width:240px}
 .dock-right{display:flex;flex-direction:column;gap:5px;width:216px;flex-shrink:0}
 .dock-add-row{display:flex;align-items:center;gap:6px}
-.dock-add-row input[type=number]{width:82px}
+.dock-add-row input[type=number]{width:108px}
 .chart-hint{font-size:.7rem;color:var(--accent);font-style:italic;margin-left:2px}
 .dock-find-row{display:flex;align-items:center;gap:6px}
 .auto-find-hint{font-size:.7rem;color:var(--red);font-style:italic;margin-left:2px}
@@ -242,7 +242,7 @@ input[type=number]::placeholder{color:var(--text4)}
 .chip-name:focus{border-color:var(--accent);background:var(--bg3)}
 .chip-freq{background:transparent;border:1px solid transparent;border-radius:3px;
   color:var(--text2);font-family:'Courier New',monospace;font-size:.75rem;
-  width:76px;padding:1px 4px;outline:none;transition:all .12s;flex-shrink:0}
+  width:108px;padding:1px 4px;outline:none;transition:all .12s;flex-shrink:0}
 .chip-freq:hover{border-color:var(--border)}
 .chip-freq:focus{border-color:var(--accent);background:var(--bg3)}
 .chip-unit{font-size:.66rem;color:var(--text4);flex-shrink:0}
@@ -347,6 +347,13 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
   display:flex;align-items:center;gap:3px}
 .marker-muted{color:var(--text3);font-family:'Courier New',monospace}
 .trace-swatch-sm{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block}
+/* ── Smith marker readout strip ──────────────────────────────────────────────── */
+.smith-mkr-readout{display:flex;flex-wrap:wrap;gap:5px 14px;padding:6px 12px 8px;
+  border-top:1px solid var(--border);min-height:0}
+.smith-mkr-readout:empty{display:none}
+.smr-item{display:flex;flex-direction:column;gap:1px;min-width:110px}
+.smr-head{font-size:.69rem;font-weight:700}
+.smr-val{font-size:.67rem;color:var(--text3);font-family:'Courier New',monospace;line-height:1.5}
 
 /* ── resume session button ───────────────────────────────────────────────── */
 .resume-session{display:none;align-items:center;gap:14px;
@@ -889,7 +896,7 @@ function renderAll(id){
 function renderSidePanel(id){
   const fs=fileById(id); if(!fs||!fs.data)return;
   if(fs.kind==='spectrum') renderSpectrumSidePanel(id,fs);
-  else renderSParamSidePanel(id,fs);
+  else{renderSParamSidePanel(id,fs);renderSmithSidePanel(id,fs);}
 }
 
 function renderSParamSidePanel(id,fs){
@@ -955,6 +962,31 @@ function renderSpectrumSidePanel(id,fs){
   el.innerHTML=html;
 }
 
+function renderSmithSidePanel(id,fs){
+  const el=document.getElementById('side-sc-'+id); if(!el)return;
+  if(!fs.data||!fs.mkrs.length){el.innerHTML='';return;}
+  const traceName=fs.sp||'S11';
+  const s=fs.data.sp[traceName]; if(!s){el.innerHTML='';return;}
+  let html='';
+  fs.mkrs.forEach((mk,i)=>{
+    const idx=nearest(fs.data.freqs,mk.freq);
+    const mf=fs.data.freqs[idx];
+    const mkName=mk.name||`M${i+1}`;
+    const db=s.db[idx].toFixed(2);
+    const re=s.re[idx].toFixed(4);
+    const im=s.im[idx].toFixed(4);
+    const gamma=Math.sqrt(s.re[idx]*s.re[idx]+s.im[idx]*s.im[idx]).toFixed(4);
+    const ang=(Math.atan2(s.im[idx],s.re[idx])*180/Math.PI).toFixed(1);
+    html+=`<div class="smr-item">
+      <div class="smr-head" style="color:${mk.color}">${mkName} · ${fmtF(mf)}</div>
+      <div class="smr-val">${traceName} ${db} dB</div>
+      <div class="smr-val">Re ${re}  Im ${im}</div>
+      <div class="smr-val">|Γ| ${gamma} ∠${ang}°</div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
 // Toggle a trace's visibility from the HTML side panel
 function toggleTrace(id,nm){
   const fs=fileById(id); if(!fs||!fs.traceVisible||!(nm in fs.traceVisible))return;
@@ -996,6 +1028,31 @@ function buildExportAnnotations(fs,divId){
     font:{size:11,color:th.text},bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,
     align:'left',
   }];
+}
+
+// Build stable paper-coord marker annotations for Smith Chart PNG export
+function buildSmithExportAnnotations(fs){
+  const th=TH();
+  if(!fs||!fs.mkrs.length)return[];
+  const traceName=fs.sp||'S11';
+  const s=fs.data?.sp[traceName]; if(!s)return[];
+  const lines=[];
+  fs.mkrs.forEach((mk,i)=>{
+    const idx=nearest(fs.data.freqs,mk.freq);
+    const mf=fs.data.freqs[idx];
+    const mkName=mk.name||`M${i+1}`;
+    if(lines.length)lines.push('');
+    lines.push(`<b>${mkName}</b>  ${fmtF(mf)}`);
+    lines.push(`${traceName}: ${s.db[idx].toFixed(2)} dB`);
+    lines.push(`Re ${s.re[idx].toFixed(4)}  Im ${s.im[idx].toFixed(4)}`);
+    const gamma=Math.sqrt(s.re[idx]*s.re[idx]+s.im[idx]*s.im[idx]).toFixed(4);
+    const ang=(Math.atan2(s.im[idx],s.re[idx])*180/Math.PI).toFixed(1);
+    lines.push(`|Γ| ${gamma} ∠${ang}°`);
+  });
+  if(!lines.length)return[];
+  return[{x:0.98,y:0.97,xref:'paper',yref:'paper',xanchor:'right',yanchor:'top',
+    text:lines.join('<br>'),showarrow:false,
+    font:{size:11,color:th.text},bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left'}];
 }
 
 // ── markers ───────────────────────────────────────────────────────────────────
@@ -1231,7 +1288,7 @@ function setSmP(id,btn){
   btn.classList.add('on');
   const fs=fileById(id); if(!fs)return;
   fs.sp=btn.dataset.p;
-  if(fs.data)renderSmith('sc-'+id,fs.data,fs.sp,fs.mkrs);
+  if(fs.data){renderSmith('sc-'+id,fs.data,fs.sp,fs.mkrs);renderSmithSidePanel(id,fs);}
 }
 
 // ── axis font ─────────────────────────────────────────────────────────────────
@@ -1251,9 +1308,33 @@ async function _plotImage(divId){
   const W=isSmith?660:1050,H=isSmith?660:540;
   const div=document.getElementById(divId);
 
-  // Smith chart: export live div directly (single trace, no hidden-trace issue)
+  // Smith chart: use temp div so we can inject stable marker annotations
+  // without mutating the interactive plot
   if(isSmith){
-    return await Plotly.toImage(div,{format:'png',width:W,height:H,scale:4});
+    const id=divId.replace(/^sc-/,'');
+    const fs=fileById(id);
+    const dl=div.layout||{};
+    const smithExportAnnotations=[...(dl.annotations||[]),...buildSmithExportAnnotations(fs)];
+    const exportLayout={
+      paper_bgcolor:dl.paper_bgcolor,plot_bgcolor:dl.plot_bgcolor,
+      font:dl.font,margin:dl.margin,hovermode:false,
+      xaxis:{range:[-1.15,1.15],scaleanchor:'y',scaleratio:1,
+        gridcolor:'transparent',zerolinecolor:'transparent',
+        color:dl.xaxis?.color,linecolor:dl.xaxis?.linecolor,
+        tickfont:dl.xaxis?.tickfont,title:dl.xaxis?.title},
+      yaxis:{range:[-1.15,1.15],
+        gridcolor:'transparent',zerolinecolor:'transparent',
+        color:dl.yaxis?.color,linecolor:dl.yaxis?.linecolor,
+        tickfont:dl.yaxis?.tickfont,title:dl.yaxis?.title},
+      annotations:smithExportAnnotations,showlegend:false,
+    };
+    const tmp=document.createElement('div');
+    tmp.style.cssText=`position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;pointer-events:none`;
+    document.body.appendChild(tmp);
+    try{
+      await Plotly.newPlot(tmp,div.data||[],exportLayout,{staticPlot:true,responsive:false});
+      return await Plotly.toImage(tmp,{format:'png',width:W,height:H,scale:4});
+    }finally{Plotly.purge(tmp);tmp.remove();}
   }
 
   // For magnitude/spectrum: render into a temporary off-screen div so we never
@@ -1440,6 +1521,7 @@ function createPanel(fs){
           <button class="btn btn-save" onclick="previewPlot('sc-${id}','${fnSafe}_smith')">Preview / Save</button>
         </div>
         <div id="sc-${id}" class="plot-div"></div>
+        <div class="smith-mkr-readout" id="side-sc-${id}"></div>
       </div>
     </div>
     <div class="control-dock">
