@@ -228,25 +228,33 @@ input[type=number]::placeholder{color:var(--text4)}
 .rpt-progress{font-size:.78rem;color:var(--text3);display:flex;align-items:center;gap:6px;min-height:18px;margin-right:auto}
 .rpt-spinner{width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:rptSpin .7s linear infinite;flex-shrink:0}
 @keyframes rptSpin{to{transform:rotate(360deg)}}
-.ana-box{margin-top:2px;padding:6px 9px;background:color-mix(in srgb,var(--bg3) 60%,var(--bg2));
-  border:1px solid var(--border);border-radius:6px;font-size:.75rem;color:var(--text2)}
-.ana-title{font-size:.62rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
-  color:var(--text4);margin-bottom:5px}
-.ana-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
-  padding:2px 0;border-bottom:1px solid var(--border)}
-.ana-row:last-child{border-bottom:none}
-.ana-lbl{color:var(--text3);white-space:nowrap;flex-shrink:0}
-.ana-val{font-variant-numeric:tabular-nums;text-align:right;color:var(--text2)}
-.ana-val b{color:var(--accent);font-weight:600}
-.ana-muted{color:var(--text4);font-style:italic;font-size:.74rem;padding:1px 0}
-.ana-badge{font-size:.6rem;font-weight:700;
-  background:color-mix(in srgb,var(--accent) 14%,transparent);
-  color:var(--accent);border-radius:3px;padding:0 3px;margin-left:3px;vertical-align:middle}
-.ana-details{margin-top:3px;border-top:1px solid var(--border);padding-top:3px}
-.ana-details-toggle{font-size:.63rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+.ana-box{margin-top:2px;padding:5px 7px;background:color-mix(in srgb,var(--bg3) 60%,var(--bg2));
+  border:1px solid var(--border);border-radius:6px}
+.ana-title{font-size:.6rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--text4);margin-bottom:4px}
+.ana-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:4px;margin-bottom:1px}
+.ana-card{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
+  padding:5px 7px;display:flex;flex-direction:column;gap:0;min-width:0;overflow:hidden}
+.ana-card-title{font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--text4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
+.ana-card-trace{font-size:.62rem;font-weight:700;color:var(--accent);line-height:1.4}
+.ana-card-freq{font-size:.68rem;color:var(--text3);font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4}
+.ana-card-value{font-size:.8rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;
+  white-space:nowrap;line-height:1.5}
+.ana-card-muted{font-size:.8rem;font-weight:700;color:var(--text2);font-variant-numeric:tabular-nums;
+  white-space:nowrap;line-height:1.5}
+.ana-muted{color:var(--text4);font-style:italic;font-size:.73rem;padding:1px 0}
+.ana-details{margin-top:4px;border-top:1px solid var(--border);padding-top:3px}
+.ana-details-toggle{font-size:.6rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
   color:var(--text4);cursor:pointer;list-style:none;padding:2px 0;user-select:none;display:block}
 .ana-details-toggle::-webkit-details-marker{display:none}
 .ana-details[open]>.ana-details-toggle{color:var(--text3)}
+.ana-row{display:flex;justify-content:space-between;align-items:baseline;gap:6px;
+  padding:1px 0;border-bottom:1px solid var(--border)}
+.ana-row:last-child{border-bottom:none}
+.ana-lbl{color:var(--text3);white-space:nowrap;flex-shrink:0;font-size:.71rem}
+.ana-val{font-variant-numeric:tabular-nums;text-align:right;color:var(--text2);font-size:.71rem}
 
 /* ── marker chips ─────────────────────────────────────────────────────────── */
 .marker-chip-list{display:flex;flex-direction:column;gap:3px}
@@ -1632,18 +1640,22 @@ function renderAnalysisSummary(id){
   }
 
   if(r.kind==='spectrum'){
-    html+=`<div class="ana-row"><span class="ana-lbl">Peak</span><span class="ana-val"><b>${fmtF(r.peak.freq)}</b>&ensp;${r.peak.dbm.toFixed(2)} dBm</span></div>`;
-    html+=`<div class="ana-row"><span class="ana-lbl">Minimum</span><span class="ana-val"><b>${fmtF(r.min.freq)}</b>&ensp;${r.min.dbm.toFixed(2)} dBm</span></div>`;
-    html+=`<div class="ana-row"><span class="ana-lbl">Noise floor</span><span class="ana-val">${r.noiseFloor.toFixed(1)} dBm</span></div>`;
-    html+=`<div class="ana-row"><span class="ana-lbl">Dyn range</span><span class="ana-val">${r.dynamicRange.toFixed(1)} dB</span></div>`;
+    html+='<div class="ana-grid">';
+    html+=`<div class="ana-card"><div class="ana-card-title">Peak</div><div class="ana-card-freq">${fmtF(r.peak.freq)}</div><div class="ana-card-value">${r.peak.dbm.toFixed(2)} dBm</div></div>`;
+    html+=`<div class="ana-card"><div class="ana-card-title">Minimum</div><div class="ana-card-freq">${fmtF(r.min.freq)}</div><div class="ana-card-value">${r.min.dbm.toFixed(2)} dBm</div></div>`;
+    html+=`<div class="ana-card"><div class="ana-card-title">Noise Floor</div><div class="ana-card-muted">${r.noiseFloor.toFixed(1)} dBm</div></div>`;
+    html+=`<div class="ana-card"><div class="ana-card-title">Dyn Range</div><div class="ana-card-muted">${r.dynamicRange.toFixed(1)} dB</div></div>`;
+    html+='</div>';
   } else {
+    html+='<div class="ana-grid">';
     r.keyResults.forEach(kr=>{
-      html+=`<div class="ana-row"><span class="ana-lbl">${kr.label}<span class="ana-badge">${kr.trace}</span></span><span class="ana-val"><b>${fmtF(kr.freq)}</b>&ensp;${kr.db.toFixed(2)} dB</span></div>`;
+      html+=`<div class="ana-card"><div class="ana-card-title">${kr.label}</div><div class="ana-card-trace">${kr.trace}</div><div class="ana-card-freq">${fmtF(kr.freq)}</div><div class="ana-card-value">${kr.db.toFixed(2)} dB</div></div>`;
     });
+    html+='</div>';
     let detHtml='';
     r.traces.forEach(tr=>{
-      detHtml+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Min</span><span class="ana-val"><b>${fmtF(tr.minFreq)}</b>&ensp;${tr.minDb.toFixed(2)} dB</span></div>`;
-      detHtml+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Max</span><span class="ana-val"><b>${fmtF(tr.maxFreq)}</b>&ensp;${tr.maxDb.toFixed(2)} dB</span></div>`;
+      detHtml+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Min</span><span class="ana-val">${fmtF(tr.minFreq)}&ensp;${tr.minDb.toFixed(2)} dB</span></div>`;
+      detHtml+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Max</span><span class="ana-val">${fmtF(tr.maxFreq)}&ensp;${tr.maxDb.toFixed(2)} dB</span></div>`;
     });
     html+=`<details class="ana-details"><summary class="ana-details-toggle">Full min/max</summary>${detHtml}</details>`;
   }
