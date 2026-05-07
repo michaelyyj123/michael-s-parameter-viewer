@@ -333,6 +333,26 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
   display:flex;align-items:center;gap:3px}
 .marker-muted{color:var(--text3);font-family:'Courier New',monospace}
 .trace-swatch-sm{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block}
+
+/* ── resume session button ───────────────────────────────────────────────── */
+.resume-session{display:none;align-items:center;gap:14px;
+  background:color-mix(in srgb,var(--accent) 7%,var(--bg2));
+  border:1px solid color-mix(in srgb,var(--accent) 28%,var(--border));
+  border-radius:12px;padding:12px 20px;cursor:pointer;width:100%;max-width:680px;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease;
+  box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.resume-session.on{display:flex}
+.resume-session:hover{border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 12%,var(--bg2));
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 25%,transparent),
+    0 0 22px var(--glow-dim),0 6px 24px rgba(0,0,0,.28);
+  transform:translateY(-2px)}
+.resume-icon{font-size:1.4rem;flex-shrink:0;opacity:.85}
+.resume-text{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;text-align:left}
+.resume-title{font-size:.9rem;font-weight:700;color:var(--accent)}
+.resume-sub{font-size:.74rem;color:var(--text3);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.resume-arrow{font-size:1.1rem;color:var(--accent);flex-shrink:0;opacity:.65}
 </style>
 </head>
 <body>
@@ -366,6 +386,14 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
         <div class="upload-card-error" id="uce-spectrum"></div>
         <input type="file" id="fi-spectrum" accept=".csv,.CSV" multiple>
       </div>
+    </div>
+    <div class="resume-session" id="resume-session" onclick="resumeSession()">
+      <div class="resume-icon">⚡</div>
+      <div class="resume-text">
+        <div class="resume-title">Resume Current Session</div>
+        <div class="resume-sub" id="resume-sub"></div>
+      </div>
+      <div class="resume-arrow">→</div>
     </div>
     <div class="landing-privacy">Files are processed locally in your browser and are not uploaded.</div>
   </div>
@@ -444,6 +472,7 @@ function goTo(page){
   const current=document.querySelector('.page.active');
   const next=document.getElementById('page-'+page);
   if(!current||current===next)return;
+  if(page==='landing') updateLandingSessionState();
   next.style.display='flex';
   next.classList.remove('leaving');
   next.classList.add('entering');
@@ -483,6 +512,24 @@ function hideLoading(){
   document.getElementById('loading-overlay').classList.remove('active');
 }
 
+// ── resume session ─────────────────────────────────────────────────────────────
+function updateLandingSessionState(){
+  const btn=document.getElementById('resume-session');
+  const sub=document.getElementById('resume-sub');
+  if(!btn)return;
+  if(!S.files.length){btn.classList.remove('on');return;}
+  btn.classList.add('on');
+  const n=S.files.length;
+  const active=S.files[Math.min(S.active,n-1)];
+  sub.textContent=n===1
+    ?(active?active.name:'1 file loaded')
+    :(n+' files loaded'+(active?' · '+active.name:''));
+}
+function resumeSession(){
+  if(!S.files.length)return;
+  goTo('viewer');
+}
+
 // ── tabs ──────────────────────────────────────────────────────────────────────
 function renderTabs(){
   document.getElementById('tab-bar').innerHTML=S.files.map((f,i)=>{
@@ -495,6 +542,7 @@ function renderTabs(){
       <button class="tab-close" onclick="event.stopPropagation();closeTab(${i})" title="Close">&#x2715;</button>
     </div>`;
   }).join('');
+  updateLandingSessionState();
 }
 
 function setActiveTab(i){
