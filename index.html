@@ -303,6 +303,11 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 .btn-theme{background:var(--bg3);border-color:var(--border);color:var(--text3);
   padding:4px 11px;font-size:.78rem;flex-shrink:0}
 .btn-theme:hover{border-color:var(--accent);color:var(--accent)}
+.btn-report{background:color-mix(in srgb,var(--accent) 9%,var(--bg3));
+  border-color:color-mix(in srgb,var(--accent) 38%,var(--border));
+  color:var(--accent);padding:4px 11px;font-size:.8rem;flex-shrink:0;margin-left:6px}
+.btn-report:hover{background:color-mix(in srgb,var(--accent) 18%,var(--bg3));
+  border-color:var(--accent)}
 
 /* ── preview modal ───────────────────────────────────────────────────────── */
 #preview-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);
@@ -448,8 +453,7 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
     <div class="tab-bar" id="tab-bar"></div>
     <label class="btn-add" for="fi-add">&#43; Add file</label>
     <input type="file" id="fi-add" accept=".s1p,.s2p,.S1P,.S2P,.csv,.CSV" multiple style="display:none">
-    <button class="btn btn-ghost" onclick="openReportModal()"
-      style="padding:4px 11px;font-size:.8rem;flex-shrink:0;margin-left:6px">Report</button>
+    <button class="btn btn-report" onclick="openReportModal()">Generate Report</button>
     <div style="margin-left:6px;flex-shrink:0">
       <button class="btn btn-theme" onclick="toggleTheme()" id="tbtn-viewer">Light mode</button>
     </div>
@@ -756,16 +760,6 @@ function smithAnno(th){
   return a;
 }
 
-// ── visibility helper ─────────────────────────────────────────────────────────
-function getVis(divId,names){
-  const div=document.getElementById(divId);
-  const vis={};names.forEach(nm=>{vis[nm]=true;});
-  if(!div||!div.data)return vis;
-  names.forEach((nm,i)=>{
-    if(div.data[i]&&div.data[i].name===nm)vis[nm]=(div.data[i].visible!=='legendonly');
-  });
-  return vis;
-}
 
 // ── render magnitude (S-parameter) ───────────────────────────────────────────
 function renderMag(divId,data,mkrs,xr,yr){
@@ -1433,26 +1427,6 @@ function toggleSettings(id){
   if(btn)btn.textContent=open?'⚙ Plot Settings ▲':'⚙ Plot Settings ▾';
 }
 
-// ── font controls shared HTML fragment ────────────────────────────────────────
-function fontCtrlHtml(id){
-  return `<div class="cg">
-    <div class="cg-lbl">Axis Font</div>
-    <div class="cg-row">
-      <select class="cg-sel" id="font-sel-${id}" onchange="setAxisFont('${id}',this.value)">
-        <option value="">Default</option>
-        <option value="Arial">Arial</option>
-        <option value="Helvetica" selected>Helvetica</option>
-        <option value="Times New Roman">Times New Roman</option>
-        <option value="Georgia">Georgia</option>
-        <option value="Courier New">Courier New</option>
-      </select>
-      <input type="number" id="fontsize-${id}" placeholder="size" min="6" max="32" step="1"
-        style="width:68px" title="Font size (pt)"
-        onchange="setAxisFontSize('${id}',this.value)"
-        oninput="setAxisFontSize('${id}',this.value)">
-    </div>
-  </div>`;
-}
 
 // ── auto find max / min ───────────────────────────────────────────────────────
 function getSearchRange(id,fs){
