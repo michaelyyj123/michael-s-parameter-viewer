@@ -644,18 +644,19 @@ function getVis(divId,names){
   return vis;
 }
 
-// ── render magnitude (S-parameter, unchanged) ─────────────────────────────────
+// ── render magnitude (S-parameter) ───────────────────────────────────────────
 function renderMag(divId,data,mkrs,xr,yr){
   const th=TH(),pc=PC();
   const names=Object.keys(data.sp);
-  const vis=getVis(divId,names);
+  const id=divId.replace('md-','');
+  const fs=fileById(id);
+  // Use fs.traceVisible as source of truth so toggleTrace() is immediately reflected
+  const vis=fs?.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
   const traces=names.map(nm=>({
     x:data.freqs,y:data.sp[nm].db,name:nm,mode:'lines',
     line:{color:pc[nm]||'#aaa',width:1.9},
     visible:vis[nm]?true:'legendonly',
   }));
-  const id=divId.replace('md-','');
-  const fs=fileById(id);
   const shapes=[];
   mkrs.forEach((mk,i)=>{
     const idx=nearest(data.freqs,mk.freq);
@@ -800,9 +801,9 @@ function renderSidePanel(id){
 
 function renderSParamSidePanel(id,fs){
   const el=document.getElementById('side-md-'+id); if(!el)return;
-  const pc=PC(),divId='md-'+id;
+  const pc=PC();
   const names=Object.keys(fs.data.sp);
-  const vis=getVis(divId,names);
+  const vis=fs.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
 
   let html='<div class="side-section"><div class="side-title">Traces</div>';
   names.forEach(nm=>{
@@ -863,14 +864,9 @@ function renderSpectrumSidePanel(id,fs){
 
 // Toggle a trace's visibility from the HTML side panel
 function toggleTrace(id,nm){
-  const divId='md-'+id;
-  const div=document.getElementById(divId); if(!div||!div.data)return;
-  const fs=fileById(id); if(!fs)return;
-  const names=Object.keys(fs.data.sp);
-  const idx=names.indexOf(nm); if(idx===-1)return;
-  const cur=div.data[idx]?.visible;
-  Plotly.restyle(divId,{visible:cur==='legendonly'?true:'legendonly'},[idx]);
-  setTimeout(()=>renderSidePanel(id),50);
+  const fs=fileById(id); if(!fs||!fs.traceVisible||!(nm in fs.traceVisible))return;
+  fs.traceVisible[nm]=!fs.traceVisible[nm];
+  renderAll(id); renderMkrList(id);
 }
 
 // Build stable inside-plot marker annotations for PNG export
@@ -890,7 +886,7 @@ function buildExportAnnotations(fs,divId){
   } else {
     const data=fs.data;
     const names=Object.keys(data.sp);
-    const vis=getVis(divId,names);
+    const vis=fs.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
     fs.mkrs.forEach((mk,i)=>{
       const idx=nearest(data.freqs,mk.freq);
       const mf=data.freqs[idx];
@@ -1422,6 +1418,9 @@ function loadFiles(fileList){
             ?parseSpectrumCsv(ev.target.result,file.name)
             :parse(ev.target.result,file.name);
           fs.data=d;
+          if(kind==='sparameter'){
+            fs.traceVisible=Object.fromEntries(Object.keys(d.sp).map(n=>[n,true]));
+          }
 
           // create appropriate panel
           const panel=kind==='spectrum'?createSpectrumPanel(fs):createPanel(fs);
