@@ -352,13 +352,6 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
   display:flex;align-items:center;gap:3px}
 .marker-muted{color:var(--text3);font-family:'Courier New',monospace}
 .trace-swatch-sm{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block}
-/* ── Smith marker readout strip ──────────────────────────────────────────────── */
-.smith-mkr-readout{display:flex;flex-wrap:wrap;gap:5px 14px;padding:6px 12px 8px;
-  border-top:1px solid var(--border);min-height:0}
-.smith-mkr-readout:empty{display:none}
-.smr-item{display:flex;flex-direction:column;gap:1px;min-width:110px}
-.smr-head{font-size:.69rem;font-weight:700}
-.smr-val{font-size:.67rem;color:var(--text3);font-family:'Courier New',monospace;line-height:1.5}
 
 /* ── resume session button ───────────────────────────────────────────────── */
 .resume-session{display:none;align-items:center;gap:14px;
@@ -981,26 +974,42 @@ function renderSpectrumSidePanel(id,fs){
 
 function renderSmithSidePanel(id,fs){
   const el=document.getElementById('side-sc-'+id); if(!el)return;
-  if(!fs.data||!fs.mkrs.length){el.innerHTML='';return;}
+  if(!fs.data){el.innerHTML='';return;}
+  const pc=PC();
   const traceName=fs.sp||'S11';
   const s=fs.data.sp[traceName]; if(!s){el.innerHTML='';return;}
-  let html='';
-  fs.mkrs.forEach((mk,i)=>{
-    const idx=nearest(fs.data.freqs,mk.freq);
-    const mf=fs.data.freqs[idx];
-    const mkName=mk.name||`M${i+1}`;
-    const db=s.db[idx].toFixed(2);
-    const re=s.re[idx].toFixed(4);
-    const im=s.im[idx].toFixed(4);
-    const gamma=Math.sqrt(s.re[idx]*s.re[idx]+s.im[idx]*s.im[idx]).toFixed(4);
-    const ang=(Math.atan2(s.im[idx],s.re[idx])*180/Math.PI).toFixed(1);
-    html+=`<div class="smr-item">
-      <div class="smr-head" style="color:${mk.color}">${mkName} · ${fmtF(mf)}</div>
-      <div class="smr-val">${traceName} ${db} dB</div>
-      <div class="smr-val">Re ${re}  Im ${im}</div>
-      <div class="smr-val">|Γ| ${gamma} ∠${ang}°</div>
-    </div>`;
-  });
+
+  // Trace section — always visible so the user knows which trace is plotted
+  let html=`<div class="side-section">
+    <div class="side-title">Trace</div>
+    <div class="trace-row">
+      <span class="trace-swatch" style="background:${pc[traceName]||'#aaa'}"></span>
+      <span class="trace-name">${traceName}</span>
+    </div>
+  </div>`;
+
+  if(fs.mkrs.length){
+    html+='<div class="side-section"><div class="side-title">Markers</div>';
+    fs.mkrs.forEach((mk,i)=>{
+      const idx=nearest(fs.data.freqs,mk.freq);
+      const mf=fs.data.freqs[idx];
+      const mkName=mk.name||`M${i+1}`;
+      const db=s.db[idx].toFixed(2);
+      const re=s.re[idx].toFixed(4);
+      const im=s.im[idx].toFixed(4);
+      const gamma=Math.sqrt(s.re[idx]*s.re[idx]+s.im[idx]*s.im[idx]).toFixed(4);
+      const ang=(Math.atan2(s.im[idx],s.re[idx])*180/Math.PI).toFixed(1);
+      html+=`<div class="marker-card" style="border-left-color:${mk.color}">
+        <div class="marker-title" style="color:${mk.color}">${mkName}</div>
+        <div class="marker-value marker-muted">${fmtF(mf)}</div>
+        <div class="marker-value"><span class="trace-swatch-sm" style="background:${pc[traceName]||'#aaa'}"></span>&nbsp;${traceName}&nbsp;<b>${db} dB</b></div>
+        <div class="marker-value marker-muted">Re&thinsp;${re}</div>
+        <div class="marker-value marker-muted">Im&thinsp;${im}</div>
+        <div class="marker-value marker-muted">|Γ|&thinsp;${gamma}&ensp;∠${ang}°</div>
+      </div>`;
+    });
+    html+='</div>';
+  }
   el.innerHTML=html;
 }
 
@@ -1517,8 +1526,10 @@ function createPanel(fs){
           ${smithSel}
           <button class="btn btn-save" onclick="previewPlot('sc-${id}','${fnSafe}_smith')">Preview / Save</button>
         </div>
-        <div id="sc-${id}" class="plot-div"></div>
-        <div class="smith-mkr-readout" id="side-sc-${id}"></div>
+        <div class="plot-shell">
+          <div class="plot-main"><div id="sc-${id}" class="plot-div"></div></div>
+          <div class="plot-side" id="side-sc-${id}"></div>
+        </div>
       </div>
     </div>
     <div class="control-dock">
