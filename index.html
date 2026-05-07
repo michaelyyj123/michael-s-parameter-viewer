@@ -56,40 +56,57 @@ body.light .landing-title{
 @keyframes titleShimmer{0%{background-position:0% center}100%{background-position:200% center}}
 .landing-sub{font-size:.88rem;color:var(--text3);margin-top:-18px;letter-spacing:.02em}
 
-/* ── drop zone ───────────────────────────────────────────────────────────── */
-.drop-zone{border:1.5px solid color-mix(in srgb,var(--accent) 35%,var(--border));
-  border-radius:16px;padding:44px 72px;text-align:center;cursor:pointer;
-  background:color-mix(in srgb,var(--accent) 4%,var(--bg2));
-  transition:all .22s ease;max-width:520px;width:100%;
-  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 12%,transparent),
-             0 8px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);
-  position:relative;overflow:hidden}
-.drop-zone::before{content:'';position:absolute;inset:0;border-radius:14px;
-  background:linear-gradient(90deg,transparent 0%,var(--glow-dim) 50%,transparent 100%);
-  background-size:200% 100%;opacity:0;
-  animation:dzSweep 2.8s ease-in-out infinite;transition:opacity .3s}
-.drop-zone:hover::before,.drop-zone.drag-over::before{opacity:1}
+/* ── landing upload grid ──────────────────────────────────────────────────── */
 @keyframes dzSweep{0%{background-position:200% center}100%{background-position:-200% center}}
-.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);
-  background:color-mix(in srgb,var(--accent) 7%,var(--bg2));
-  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent),
-             0 0 32px var(--glow-strong),0 8px 40px rgba(0,0,0,.4),
-             inset 0 1px 0 rgba(255,255,255,.06)}
-.drop-zone.drag-over{
-  box-shadow:0 0 0 2px var(--accent),0 0 48px var(--glow-strong),0 8px 40px rgba(0,0,0,.4);
-  transform:scale(1.015)}
-.drop-zone.drag-over::after{content:'';position:absolute;inset:-6px;border-radius:20px;
-  border:2px solid color-mix(in srgb,var(--accent) 50%,transparent);
-  animation:pulseRing .9s ease-out infinite}
-@keyframes pulseRing{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.04)}}
-.dz-icon{font-size:2rem;margin-bottom:10px;opacity:.75;
-  filter:drop-shadow(0 0 8px var(--glow-dim))}
-.dz-title{font-size:.96rem;font-weight:600;margin-bottom:6px;color:var(--text2)}
-.dz-hint{font-size:.78rem;color:var(--text3)}
-.dz-privacy{font-size:.72rem;color:var(--text4);margin-top:10px;
-  display:flex;align-items:center;justify-content:center;gap:5px}
-.dz-privacy::before{content:'🔒';font-size:.68rem}
-.drop-zone input{display:none}
+.landing-upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;
+  width:100%;max-width:680px}
+@media(max-width:580px){.landing-upload-grid{grid-template-columns:1fr}}
+.upload-card{position:relative;overflow:hidden;border-radius:16px;
+  padding:30px 24px;text-align:center;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:9px;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+  box-shadow:0 6px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.04)}
+.upload-card::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,var(--card-sweep) 50%,transparent 100%);
+  background-size:200% 100%;opacity:0;
+  animation:dzSweep 3s ease-in-out infinite;transition:opacity .25s;pointer-events:none}
+.upload-card:hover::before,.upload-card.drag-over::before{opacity:1}
+.upload-card:hover{transform:translateY(-3px);
+  box-shadow:0 0 0 1.5px var(--card-accent),0 0 28px var(--card-glow),
+    0 10px 40px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.06)}
+.upload-card.drag-over{transform:scale(1.025);
+  box-shadow:0 0 0 2px var(--card-acc),0 0 44px var(--card-glow),
+    0 10px 40px rgba(0,0,0,.4)}
+/* VNA card — blue accent */
+.upload-card.vna{
+  --card-acc:var(--accent);--card-sweep:var(--glow-dim);--card-glow:var(--glow-strong);
+  border:1.5px solid color-mix(in srgb,var(--accent) 30%,var(--border));
+  background:color-mix(in srgb,var(--accent) 5%,var(--bg2))}
+/* Spectrum card — green accent */
+.upload-card.spectrum{
+  --card-acc:var(--green);--card-sweep:var(--glow-trace);
+  --card-glow:rgba(63,185,80,.38);
+  border:1.5px solid color-mix(in srgb,var(--green) 30%,var(--border));
+  background:color-mix(in srgb,var(--green) 4%,var(--bg2))}
+body.light .upload-card.spectrum{--card-glow:rgba(26,127,55,.26)}
+.upload-card-icon{font-size:2.1rem;opacity:.82;
+  filter:drop-shadow(0 0 10px var(--card-sweep))}
+.upload-card-title{font-size:.97rem;font-weight:700;color:var(--card-acc);
+  letter-spacing:.01em}
+.upload-card-desc{font-size:.78rem;color:var(--text3);line-height:1.55;max-width:210px}
+.upload-card-format{font-size:.7rem;font-family:'Courier New',monospace;
+  color:color-mix(in srgb,var(--card-acc) 80%,var(--text3));
+  background:color-mix(in srgb,var(--card-acc) 9%,var(--bg3));
+  border:1px solid color-mix(in srgb,var(--card-acc) 22%,var(--border));
+  border-radius:5px;padding:3px 11px;letter-spacing:.05em}
+.upload-card-hint{font-size:.72rem;color:var(--text4)}
+.upload-card-error{font-size:.73rem;color:var(--red);min-height:16px;
+  display:none;align-items:center;gap:4px;justify-content:center}
+.upload-card-error.on{display:flex}
+.upload-card input{display:none}
+.landing-privacy{font-size:.72rem;color:var(--text4);
+  display:flex;align-items:center;gap:5px}
+.landing-privacy::before{content:'🔒';font-size:.68rem}
 
 /* ── loading overlay ─────────────────────────────────────────────────────── */
 #loading-overlay{position:fixed;inset:0;z-index:500;
@@ -330,13 +347,27 @@ input[type=range].ys-track::-moz-range-thumb{width:15px;height:15px;border-radiu
     <div class="landing-badge">RF · S-Parameter · Spectrum · Touchstone</div>
     <div class="landing-title">S-Parameter Viewer</div>
     <div class="landing-sub">Touchstone file reader &amp; plotter for RF engineering</div>
-    <div class="drop-zone" id="dz-landing">
-      <div class="dz-icon">📡</div>
-      <p class="dz-title">Drop .s1p / .s2p / spectrum .csv files here</p>
-      <p class="dz-hint">or click to browse &nbsp;·&nbsp; multiple files supported</p>
-      <p class="dz-privacy">Files are processed locally in your browser and are not uploaded.</p>
-      <input type="file" id="fi-landing" accept=".s1p,.s2p,.S1P,.S2P,.csv,.CSV" multiple>
+    <div class="landing-upload-grid">
+      <div class="upload-card vna" id="uc-vna">
+        <div class="upload-card-icon">📡</div>
+        <div class="upload-card-title">VNA / S-Parameter</div>
+        <div class="upload-card-desc">Upload Touchstone .s1p or .s2p files from a vector network analyzer.</div>
+        <div class="upload-card-format">.s1p &nbsp;·&nbsp; .s2p</div>
+        <div class="upload-card-hint">click to browse or drag &amp; drop</div>
+        <div class="upload-card-error" id="uce-vna"></div>
+        <input type="file" id="fi-vna" accept=".s1p,.s2p,.S1P,.S2P" multiple>
+      </div>
+      <div class="upload-card spectrum" id="uc-spectrum">
+        <div class="upload-card-icon">📈</div>
+        <div class="upload-card-title">Spectrum Analyzer</div>
+        <div class="upload-card-desc">Upload spectrum trace CSV files with Frequency and Magnitude columns.</div>
+        <div class="upload-card-format">.csv</div>
+        <div class="upload-card-hint">click to browse or drag &amp; drop</div>
+        <div class="upload-card-error" id="uce-spectrum"></div>
+        <input type="file" id="fi-spectrum" accept=".csv,.CSV" multiple>
+      </div>
     </div>
+    <div class="landing-privacy">Files are processed locally in your browser and are not uploaded.</div>
   </div>
 </div>
 
@@ -1393,13 +1424,13 @@ function createSpectrumPanel(fs){
 }
 
 // ── load file ─────────────────────────────────────────────────────────────────
-function loadFiles(fileList){
+function loadFiles(fileList,hint){
   const validExts=['s1p','s2p','csv'];
   const validFiles=Array.from(fileList).filter(f=>
     validExts.includes(f.name.split('.').pop().toLowerCase()));
   if(!validFiles.length)return;
 
-  showLoading('Analyzing file…');
+  showLoading(hint||'Analyzing file…');
 
   setTimeout(()=>{
     validFiles.forEach(file=>{
@@ -1479,16 +1510,42 @@ function loadFiles(fileList){
 }
 
 // ── wire up ───────────────────────────────────────────────────────────────────
-(()=>{
-  const dz=document.getElementById('dz-landing'),fi=document.getElementById('fi-landing');
-  dz.addEventListener('click',()=>fi.click());
-  fi.addEventListener('change',e=>{loadFiles(e.target.files);fi.value='';});
-  dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
-  dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
-  dz.addEventListener('drop',e=>{
-    e.preventDefault();dz.classList.remove('drag-over');loadFiles(e.dataTransfer.files);
+function getFileExt(f){return f.name.split('.').pop().toLowerCase();}
+function filterFilesByKind(fileList,kind){
+  const exts=kind==='vna'?['s1p','s2p']:['csv'];
+  return Array.from(fileList).filter(f=>exts.includes(getFileExt(f)));
+}
+function setupLandingUploadCard(cardId,inputId,kind){
+  const card=document.getElementById(cardId);
+  const fi=document.getElementById(inputId);
+  const errEl=document.getElementById('uce-'+kind);
+  const loadHint=kind==='vna'?'Analyzing Touchstone file…':'Analyzing Spectrum CSV…';
+  const wrongMsg=kind==='vna'
+    ?'⚠ Please drop .s1p or .s2p files here.'
+    :'⚠ Please drop a spectrum .csv file here.';
+  let errTimer=null;
+  function showCardErr(msg){
+    errEl.textContent=msg; errEl.classList.add('on');
+    clearTimeout(errTimer);
+    errTimer=setTimeout(()=>errEl.classList.remove('on'),3200);
+  }
+  function tryLoad(fileList){
+    const valid=filterFilesByKind(fileList,kind);
+    if(!valid.length){showCardErr(wrongMsg);return;}
+    loadFiles(valid,loadHint);
+  }
+  card.addEventListener('click',e=>{if(!fi.contains(e.target))fi.click();});
+  fi.addEventListener('change',e=>{tryLoad(e.target.files);fi.value='';});
+  card.addEventListener('dragover',e=>{e.preventDefault();card.classList.add('drag-over');});
+  card.addEventListener('dragleave',e=>{
+    if(!card.contains(e.relatedTarget))card.classList.remove('drag-over');
   });
-})();
+  card.addEventListener('drop',e=>{
+    e.preventDefault();card.classList.remove('drag-over');tryLoad(e.dataTransfer.files);
+  });
+}
+setupLandingUploadCard('uc-vna','fi-vna','vna');
+setupLandingUploadCard('uc-spectrum','fi-spectrum','spectrum');
 (()=>{
   const fi=document.getElementById('fi-add');
   fi.addEventListener('change',e=>{loadFiles(e.target.files);fi.value='';});
