@@ -228,6 +228,17 @@ input[type=number]::placeholder{color:var(--text4)}
 .rpt-progress{font-size:.78rem;color:var(--text3);display:flex;align-items:center;gap:6px;min-height:18px;margin-right:auto}
 .rpt-spinner{width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:rptSpin .7s linear infinite;flex-shrink:0}
 @keyframes rptSpin{to{transform:rotate(360deg)}}
+.ana-box{margin-top:2px;padding:6px 9px;background:color-mix(in srgb,var(--bg3) 60%,var(--bg2));
+  border:1px solid var(--border);border-radius:6px;font-size:.75rem;color:var(--text2)}
+.ana-title{font-size:.62rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--text4);margin-bottom:5px}
+.ana-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  padding:2px 0;border-bottom:1px solid var(--border)}
+.ana-row:last-child{border-bottom:none}
+.ana-lbl{color:var(--text3);white-space:nowrap;flex-shrink:0}
+.ana-val{font-variant-numeric:tabular-nums;text-align:right;color:var(--text2)}
+.ana-val b{color:var(--accent);font-weight:600}
+.ana-muted{color:var(--text4);font-style:italic;font-size:.74rem;padding:1px 0}
 
 /* ── marker chips ─────────────────────────────────────────────────────────── */
 .marker-chip-list{display:flex;flex-direction:column;gap:3px}
@@ -907,6 +918,7 @@ function renderAll(id){
     renderSmith('sc-'+id,fs.data,fs.type==='s1p'?'S11':fs.sp,fs.mkrs);
   }
   renderSidePanel(id);
+  renderAnalysisSummary(id);
 }
 
 // ── HTML side panel ────────────────────────────────────────────────────────────
@@ -1507,6 +1519,88 @@ function autoMoveMarker(id,mode){
   renderAll(id); renderMkrList(id);
 }
 
+// ── auto analysis summary ──────────────────────────────────────────────────────
+function computeAnalysisSummary(id,fs){
+  if(!fs||!fs.data)return null;
+  const range=getSearchRange(id,fs);
+
+  if(fs.kind==='spectrum'){
+    const freqs=fs.data.freqsMHz,dbm=fs.data.dbm;
+    let peakI=-1,minI=-1,peakV=-Infinity,minV=Infinity;
+    const inRange=[];
+    for(let i=0;i<freqs.length;i++){
+      if(range[0]!==null&&freqs[i]<range[0])continue;
+      if(range[1]!==null&&freqs[i]>range[1])continue;
+      inRange.push(dbm[i]);
+      if(dbm[i]>peakV){peakV=dbm[i];peakI=i;}
+      if(dbm[i]<minV){minV=dbm[i];minI=i;}
+    }
+    if(peakI===-1)return{kind:'spectrum',noData:true};
+    const sorted=[...inRange].sort((a,b)=>a-b);
+    const noiseFloor=sorted[Math.floor(sorted.length/2)];
+    return{kind:'spectrum',noData:false,
+      peak:{freq:freqs[peakI],dbm:peakV},
+      min:{freq:freqs[minI],dbm:minV},
+      noiseFloor};
+  }
+
+  // S-parameter
+  const names=Object.keys(fs.data.sp);
+  const vis=fs.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
+  const visNames=names.filter(n=>vis[n]);
+  if(!visNames.length)return{kind:'sparameter',noVisible:true};
+
+  const traces=[];
+  for(const nm of visNames){
+    const s=fs.data.sp[nm]; if(!s)continue;
+    let minI=-1,maxI=-1,minV=Infinity,maxV=-Infinity;
+    for(let i=0;i<fs.data.freqs.length;i++){
+      const f=fs.data.freqs[i];
+      if(range[0]!==null&&f<range[0])continue;
+      if(range[1]!==null&&f>range[1])continue;
+      if(s.db[i]<minV){minV=s.db[i];minI=i;}
+      if(s.db[i]>maxV){maxV=s.db[i];maxI=i;}
+    }
+    if(minI===-1)continue;
+    traces.push({name:nm,
+      minDb:minV,minFreq:fs.data.freqs[minI],
+      maxDb:maxV,maxFreq:fs.data.freqs[maxI]});
+  }
+  if(!traces.length)return{kind:'sparameter',noData:true};
+  return{kind:'sparameter',noData:false,noVisible:false,traces};
+}
+
+function renderAnalysisSummary(id){
+  const el=document.getElementById('ana-'+id); if(!el)return;
+  const fs=fileById(id);
+  if(!fs||!fs.data){el.innerHTML='';return;}
+  const r=computeAnalysisSummary(id,fs);
+  if(!r){el.innerHTML='';return;}
+
+  let html='<div class="ana-title">Auto Analysis</div>';
+
+  if(r.noData){
+    html+='<div class="ana-muted">No data in current range.</div>';
+    el.innerHTML=html;return;
+  }
+  if(r.noVisible){
+    html+='<div class="ana-muted">No visible traces.</div>';
+    el.innerHTML=html;return;
+  }
+
+  if(r.kind==='spectrum'){
+    html+=`<div class="ana-row"><span class="ana-lbl">Peak</span><span class="ana-val"><b>${fmtF(r.peak.freq)}</b>&ensp;${r.peak.dbm.toFixed(2)} dBm</span></div>`;
+    html+=`<div class="ana-row"><span class="ana-lbl">Min</span><span class="ana-val"><b>${fmtF(r.min.freq)}</b>&ensp;${r.min.dbm.toFixed(2)} dBm</span></div>`;
+    html+=`<div class="ana-row"><span class="ana-lbl">Noise floor</span><span class="ana-val">${r.noiseFloor.toFixed(1)} dBm</span></div>`;
+  } else {
+    r.traces.forEach(tr=>{
+      html+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Min</span><span class="ana-val"><b>${fmtF(tr.minFreq)}</b>&ensp;${tr.minDb.toFixed(2)} dB</span></div>`;
+      html+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Max</span><span class="ana-val"><b>${fmtF(tr.maxFreq)}</b>&ensp;${tr.maxDb.toFixed(2)} dB</span></div>`;
+    });
+  }
+  el.innerHTML=html;
+}
+
 // ── create S-parameter panel ───────────────────────────────────────────────────
 function createPanel(fs){
   const id=fs.id,is2=fs.type==='s2p';
@@ -1572,6 +1666,7 @@ function createPanel(fs){
           </div>
         </div>
         <div class="marker-chip-list" id="ml-${id}"></div>
+        <div class="ana-box" id="ana-${id}"></div>
       </div>
       <div class="dock-right">
         <button class="settings-toggle" id="stoggle-${id}" onclick="toggleSettings('${id}')">⚙ Plot Settings ▾</button>
@@ -1666,6 +1761,7 @@ function createSpectrumPanel(fs){
           </div>
         </div>
         <div class="marker-chip-list" id="ml-${id}"></div>
+        <div class="ana-box" id="ana-${id}"></div>
       </div>
       <div class="dock-right">
         <button class="settings-toggle" id="stoggle-${id}" onclick="toggleSettings('${id}')">⚙ Plot Settings ▾</button>
@@ -1765,6 +1861,7 @@ function loadFiles(fileList,hint){
             document.getElementById(trackId).on('plotly_relayout',e=>{
               if('xaxis.range[0]'in e)fs.xr=[e['xaxis.range[0]'],e['xaxis.range[1]']];
               else if(e['xaxis.autorange'])fs.xr=[null,null];
+              renderAnalysisSummary(fs.id);
             });
           }
 
@@ -2003,8 +2100,27 @@ function _rptSpecTable(fs){
   return h+'</tbody></table>';
 }
 
+function _rptAnalysisHTML(id,fs){
+  const r=computeAnalysisSummary(id,fs);
+  if(!r)return'';
+  if(r.noData)return'<p class="rno-mkr">No data in visible range.</p>';
+  if(r.noVisible)return'<p class="rno-mkr">No visible traces.</p>';
+  let h='<table class="rpt-tbl"><thead><tr><th>Parameter</th><th>Frequency</th><th>Value</th></tr></thead><tbody>';
+  if(r.kind==='spectrum'){
+    h+=`<tr><td>Peak Power</td><td>${fmtF(r.peak.freq)}</td><td>${r.peak.dbm.toFixed(2)} dBm</td></tr>`;
+    h+=`<tr><td>Minimum Power</td><td>${fmtF(r.min.freq)}</td><td>${r.min.dbm.toFixed(2)} dBm</td></tr>`;
+    h+=`<tr><td>Noise Floor (median)</td><td>—</td><td>${r.noiseFloor.toFixed(1)} dBm</td></tr>`;
+  } else {
+    r.traces.forEach(tr=>{
+      h+=`<tr><td>${tr.name} Minimum</td><td>${fmtF(tr.minFreq)}</td><td>${tr.minDb.toFixed(2)} dB</td></tr>`;
+      h+=`<tr><td>${tr.name} Maximum</td><td>${fmtF(tr.maxFreq)}</td><td>${tr.maxDb.toFixed(2)} dB</td></tr>`;
+    });
+  }
+  return h+'</tbody></table>';
+}
+
 function _buildReportHTML(fs,opts){
-  const{dut,operator,setup,notes,magImg,smithImg,specImg}=opts;
+  const{dut,operator,setup,notes,magImg,smithImg,specImg,analysisHtml}=opts;
   const now=new Date().toLocaleString();
   const isSP=fs.kind==='sparameter';
   const freqs=fsFreqs(fs);
@@ -2093,6 +2209,8 @@ figcaption{font-size:.76rem;color:#777;margin-top:7px;font-style:italic}
 ${setup?`<h2>Measurement Setup</h2><div class="rbox">${htmlEsc(setup)}</div>`:''}
 <h2>Plots</h2>
 ${plots||'<p class="rno-mkr">No plots captured.</p>'}
+<h2>Auto Analysis Summary</h2>
+${analysisHtml||'<p class="rno-mkr">No analysis available.</p>'}
 <h2>Marker Data</h2>
 ${mkrs}
 ${notes?`<h2>Notes / Conclusion</h2><div class="rbox">${htmlEsc(notes)}</div>`:''}
@@ -2129,7 +2247,8 @@ async function generateReport(){
     } else {
       specImg=await _plotImage('sp-'+fs.id);
     }
-    const html=_buildReportHTML(fs,{dut,operator,setup,notes,magImg,smithImg,specImg});
+    const analysisHtml=_rptAnalysisHTML(fs.id,fs);
+    const html=_buildReportHTML(fs,{dut,operator,setup,notes,magImg,smithImg,specImg,analysisHtml});
     win.document.open();win.document.write(html);win.document.close();
     closeReportModal();
   }catch(e){
