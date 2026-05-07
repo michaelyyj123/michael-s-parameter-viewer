@@ -1161,31 +1161,64 @@ function setAxisFontSize(id,val){
 // ── save / preview ────────────────────────────────────────────────────────────
 async function _plotImage(divId){
   const isSmith=divId.startsWith('sc-');
+  const W=isSmith?660:1050,H=isSmith?660:540;
   const div=document.getElementById(divId);
+
+  // Smith chart: export live div directly (single trace, no hidden-trace issue)
+  if(isSmith){
+    return await Plotly.toImage(div,{format:'png',width:W,height:H,scale:4});
+  }
+
+  // For magnitude/spectrum: render into a temporary off-screen div so we never
+  // mutate the interactive plot.  Only truly-visible traces are included, so
+  // hidden traces are absent from the exported legend entirely.
   const id=divId.replace(/^(?:md-|sc-|sp-)/,'');
   const fs=fileById(id);
+  const th=TH();
+  const dl=div.layout||{};
+  const lx=dl.xaxis||{},ly=dl.yaxis||{};
 
-  // Pre-export: hide rangeslider, add inline legend + marker annotations
-  if(!isSmith) await Plotly.relayout(div,{'xaxis.rangeslider.visible':false});
-  if(!isSmith&&fs){
-    const expAnnos=buildExportAnnotations(fs,divId);
-    await Plotly.relayout(div,{
-      showlegend:true,annotations:expAnnos,
-      'legend.x':0.01,'legend.y':0.99,'legend.xanchor':'left','legend.yanchor':'top',
-      'legend.bgcolor':TH().legBg,'legend.bordercolor':TH().legBd,'legend.borderwidth':1,
-    });
+  // Keep only visible traces (drop legendonly; keep showlegend:false marker dots)
+  const exportData=(div.data||[])
+    .filter(t=>t.visible!=='legendonly')
+    .map(t=>Object.assign({},t));
+
+  const exportLayout={
+    paper_bgcolor:dl.paper_bgcolor,
+    plot_bgcolor:dl.plot_bgcolor,
+    font:dl.font,
+    margin:dl.margin,
+    hovermode:false,
+    xaxis:{
+      title:lx.title,
+      range:lx.range?[...lx.range]:undefined,
+      gridcolor:lx.gridcolor,zerolinecolor:lx.zerolinecolor,
+      color:lx.color,linecolor:lx.linecolor,tickfont:lx.tickfont,
+      rangeslider:{visible:false},
+    },
+    yaxis:{
+      title:ly.title,
+      range:ly.range?[...ly.range]:undefined,
+      gridcolor:ly.gridcolor,zerolinecolor:ly.zerolinecolor,
+      color:ly.color,linecolor:ly.linecolor,tickfont:ly.tickfont,
+    },
+    shapes:dl.shapes?[...dl.shapes]:[],
+    showlegend:true,
+    legend:{x:0.01,y:0.99,xanchor:'left',yanchor:'top',
+      bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},
+    annotations:buildExportAnnotations(fs,divId),
+  };
+
+  const tmp=document.createElement('div');
+  tmp.style.cssText=`position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;pointer-events:none`;
+  document.body.appendChild(tmp);
+  try{
+    await Plotly.newPlot(tmp,exportData,exportLayout,{staticPlot:true,responsive:false});
+    return await Plotly.toImage(tmp,{format:'png',width:W,height:H,scale:4});
+  }finally{
+    Plotly.purge(tmp);
+    tmp.remove();
   }
-
-  const url=await Plotly.toImage(div,{
-    format:'png',width:isSmith?660:1050,height:isSmith?660:540,scale:4,
-  });
-
-  // Post-export: restore interactive state
-  if(!isSmith&&fs){
-    await Plotly.relayout(div,{showlegend:false,annotations:[]});
-  }
-  if(!isSmith) await Plotly.relayout(div,{'xaxis.rangeslider.visible':true});
-  return url;
 }
 async function previewPlot(divId,filename){
   const url=await _plotImage(divId);
