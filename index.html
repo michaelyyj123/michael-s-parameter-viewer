@@ -219,6 +219,8 @@ input[type=number]::placeholder{color:var(--text4)}
 .dock-add-row{display:flex;align-items:center;gap:6px}
 .dock-add-row input[type=number]{width:82px}
 .chart-hint{font-size:.7rem;color:var(--accent);font-style:italic;margin-left:2px}
+.dock-find-row{display:flex;align-items:center;gap:6px}
+.auto-find-hint{font-size:.7rem;color:var(--red);font-style:italic;margin-left:2px}
 
 /* ── marker chips ─────────────────────────────────────────────────────────── */
 .marker-chip-list{display:flex;flex-direction:column;gap:3px}
@@ -1348,6 +1350,56 @@ function fontCtrlHtml(id){
   </div>`;
 }
 
+// ── auto find max / min ───────────────────────────────────────────────────────
+function getSearchRange(id,fs){
+  const divId=fs.kind==='spectrum'?'sp-'+id:'md-'+id;
+  const div=document.getElementById(divId);
+  if(!div||!div._fullLayout||!div._fullLayout.xaxis)return[null,null];
+  const r=div._fullLayout.xaxis.range;
+  return(r&&r.length>=2)?[r[0],r[1]]:[null,null];
+}
+
+function findExtremeIndex(freqs,values,mode,range){
+  let bestI=-1,bestV=mode==='max'?-Infinity:Infinity;
+  for(let i=0;i<freqs.length;i++){
+    if(range[0]!==null&&freqs[i]<range[0])continue;
+    if(range[1]!==null&&freqs[i]>range[1])continue;
+    if(mode==='max'?values[i]>bestV:values[i]<bestV){bestV=values[i];bestI=i;}
+  }
+  return bestI;
+}
+
+const _afhTimers={};
+function showAutoFindHint(id,msg){
+  const el=document.getElementById('afh-'+id); if(!el)return;
+  el.textContent=msg;
+  clearTimeout(_afhTimers[id]);
+  _afhTimers[id]=setTimeout(()=>{el.textContent='';},2500);
+}
+
+function autoMoveMarker(id,mode){
+  const fs=fileById(id);
+  if(!fs||!fs.data){showAutoFindHint(id,'No data loaded.');return;}
+  if(!fs.mkrs.length){showAutoFindHint(id,'Add a marker first.');return;}
+  const mk=fs.mkrs[fs.activeMkr];
+  if(!mk)return;
+  const range=getSearchRange(id,fs);
+  let freqs,values;
+  if(fs.kind==='spectrum'){
+    freqs=fs.data.freqsMHz; values=fs.data.dbm;
+  } else {
+    const names=Object.keys(fs.data.sp);
+    const vis=fs.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
+    const traceName=mk.trace||(names.find(n=>vis[n])||names[0]);
+    if(!traceName||!fs.data.sp[traceName]){showAutoFindHint(id,'No visible trace.');return;}
+    freqs=fs.data.freqs; values=fs.data.sp[traceName].db;
+  }
+  const idx=findExtremeIndex(freqs,values,mode,range);
+  if(idx===-1){showAutoFindHint(id,'No points in current range.');return;}
+  mk.freq=freqs[idx];
+  renderAll(id); renderMkrList(id);
+}
+
 // ── create S-parameter panel ───────────────────────────────────────────────────
 function createPanel(fs){
   const id=fs.id,is2=fs.type==='s2p';
@@ -1396,6 +1448,11 @@ function createPanel(fs){
           <input type="number" id="mk-inp-${id}" placeholder="freq MHz" step="0.01">
           <button class="btn btn-pri" onclick="addMkr('${id}')">+ Marker</button>
           <span id="hint-${id}" class="chart-hint"></span>
+        </div>
+        <div class="dock-find-row">
+          <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','max')">Find Max</button>
+          <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','min')">Find Min</button>
+          <span id="afh-${id}" class="auto-find-hint"></span>
         </div>
         <div class="marker-chip-list" id="ml-${id}"></div>
       </div>
@@ -1479,6 +1536,11 @@ function createSpectrumPanel(fs){
           <input type="number" id="mk-inp-${id}" placeholder="freq MHz" step="0.01">
           <button class="btn btn-pri" onclick="addMkr('${id}')">+ Marker</button>
           <span id="hint-${id}" class="chart-hint"></span>
+        </div>
+        <div class="dock-find-row">
+          <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','max')">Find Max</button>
+          <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','min')">Find Min</button>
+          <span id="afh-${id}" class="auto-find-hint"></span>
         </div>
         <div class="marker-chip-list" id="ml-${id}"></div>
       </div>
