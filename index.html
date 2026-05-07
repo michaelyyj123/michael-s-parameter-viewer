@@ -239,6 +239,14 @@ input[type=number]::placeholder{color:var(--text4)}
 .ana-val{font-variant-numeric:tabular-nums;text-align:right;color:var(--text2)}
 .ana-val b{color:var(--accent);font-weight:600}
 .ana-muted{color:var(--text4);font-style:italic;font-size:.74rem;padding:1px 0}
+.ana-badge{font-size:.6rem;font-weight:700;
+  background:color-mix(in srgb,var(--accent) 14%,transparent);
+  color:var(--accent);border-radius:3px;padding:0 3px;margin-left:3px;vertical-align:middle}
+.ana-details{margin-top:3px;border-top:1px solid var(--border);padding-top:3px}
+.ana-details-toggle{font-size:.63rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text4);cursor:pointer;list-style:none;padding:2px 0;user-select:none;display:block}
+.ana-details-toggle::-webkit-details-marker{display:none}
+.ana-details[open]>.ana-details-toggle{color:var(--text3)}
 
 /* ── marker chips ─────────────────────────────────────────────────────────── */
 .marker-chip-list{display:flex;flex-direction:column;gap:3px}
@@ -1519,7 +1527,24 @@ function autoMoveMarker(id,mode){
   renderAll(id); renderMkrList(id);
 }
 
-// ── auto analysis summary ──────────────────────────────────────────────────────
+// ── key results (auto analysis) ────────────────────────────────────────────────
+function medianArr(arr){
+  if(!arr.length)return 0;
+  const s=[...arr].sort((a,b)=>a-b);
+  return s[Math.floor(s.length/2)];
+}
+
+function computeTraceExtrema(freqs,dbArr,range){
+  let minI=-1,maxI=-1,minV=Infinity,maxV=-Infinity;
+  for(let i=0;i<freqs.length;i++){
+    if(range[0]!==null&&freqs[i]<range[0])continue;
+    if(range[1]!==null&&freqs[i]>range[1])continue;
+    if(dbArr[i]<minV){minV=dbArr[i];minI=i;}
+    if(dbArr[i]>maxV){maxV=dbArr[i];maxI=i;}
+  }
+  return minI===-1?null:{minI,minV,maxI,maxV};
+}
+
 function computeAnalysisSummary(id,fs){
   if(!fs||!fs.data)return null;
   const range=getSearchRange(id,fs);
@@ -1536,12 +1561,11 @@ function computeAnalysisSummary(id,fs){
       if(dbm[i]<minV){minV=dbm[i];minI=i;}
     }
     if(peakI===-1)return{kind:'spectrum',noData:true};
-    const sorted=[...inRange].sort((a,b)=>a-b);
-    const noiseFloor=sorted[Math.floor(sorted.length/2)];
+    const noiseFloor=medianArr(inRange);
     return{kind:'spectrum',noData:false,
       peak:{freq:freqs[peakI],dbm:peakV},
       min:{freq:freqs[minI],dbm:minV},
-      noiseFloor};
+      noiseFloor,dynamicRange:peakV-noiseFloor};
   }
 
   // S-parameter
@@ -1550,34 +1574,53 @@ function computeAnalysisSummary(id,fs){
   const visNames=names.filter(n=>vis[n]);
   if(!visNames.length)return{kind:'sparameter',noVisible:true};
 
-  const traces=[];
+  const freqs=fs.data.freqs;
+  const activeMk=fs.mkrs&&fs.mkrs.length?fs.mkrs[fs.activeMkr||0]:null;
+  const keyResults=[],traces=[];
+
   for(const nm of visNames){
     const s=fs.data.sp[nm]; if(!s)continue;
-    let minI=-1,maxI=-1,minV=Infinity,maxV=-Infinity;
-    for(let i=0;i<fs.data.freqs.length;i++){
-      const f=fs.data.freqs[i];
-      if(range[0]!==null&&f<range[0])continue;
-      if(range[1]!==null&&f>range[1])continue;
-      if(s.db[i]<minV){minV=s.db[i];minI=i;}
-      if(s.db[i]>maxV){maxV=s.db[i];maxI=i;}
-    }
-    if(minI===-1)continue;
+    const ex=computeTraceExtrema(freqs,s.db,range);
+    if(!ex)continue;
+
     traces.push({name:nm,
-      minDb:minV,minFreq:fs.data.freqs[minI],
-      maxDb:maxV,maxFreq:fs.data.freqs[maxI]});
+      minDb:ex.minV,minFreq:freqs[ex.minI],
+      maxDb:ex.maxV,maxFreq:freqs[ex.maxI]});
+
+    if(nm==='S11'){
+      keyResults.push({label:'Resonance',sub:'Best Match',trace:'S11',
+        freq:freqs[ex.minI],db:ex.minV});
+    } else if(nm==='S21'){
+      keyResults.push({label:'Peak TX',sub:'Insertion Loss',trace:'S21',
+        freq:freqs[ex.maxI],db:ex.maxV});
+    } else if(nm==='S12'){
+      let freq,db;
+      if(activeMk){
+        const idx=nearest(freqs,activeMk.freq);
+        freq=freqs[idx];db=s.db[idx];
+      } else {
+        freq=freqs[ex.minI];db=ex.minV;
+      }
+      keyResults.push({label:'Isolation',sub:'',trace:'S12',freq,db});
+    } else if(nm==='S22'){
+      keyResults.push({label:'Output Match',sub:'',trace:'S22',
+        freq:freqs[ex.minI],db:ex.minV});
+    }
   }
+
   if(!traces.length)return{kind:'sparameter',noData:true};
-  return{kind:'sparameter',noData:false,noVisible:false,traces};
+  return{kind:'sparameter',noData:false,noVisible:false,keyResults,traces};
 }
 
 function renderAnalysisSummary(id){
   const el=document.getElementById('ana-'+id); if(!el)return;
+  const detailsWasOpen=el.querySelector('details.ana-details')?.open||false;
   const fs=fileById(id);
   if(!fs||!fs.data){el.innerHTML='';return;}
   const r=computeAnalysisSummary(id,fs);
   if(!r){el.innerHTML='';return;}
 
-  let html='<div class="ana-title">Auto Analysis</div>';
+  let html='<div class="ana-title">Key Results</div>';
 
   if(r.noData){
     html+='<div class="ana-muted">No data in current range.</div>';
@@ -1590,15 +1633,24 @@ function renderAnalysisSummary(id){
 
   if(r.kind==='spectrum'){
     html+=`<div class="ana-row"><span class="ana-lbl">Peak</span><span class="ana-val"><b>${fmtF(r.peak.freq)}</b>&ensp;${r.peak.dbm.toFixed(2)} dBm</span></div>`;
-    html+=`<div class="ana-row"><span class="ana-lbl">Min</span><span class="ana-val"><b>${fmtF(r.min.freq)}</b>&ensp;${r.min.dbm.toFixed(2)} dBm</span></div>`;
+    html+=`<div class="ana-row"><span class="ana-lbl">Minimum</span><span class="ana-val"><b>${fmtF(r.min.freq)}</b>&ensp;${r.min.dbm.toFixed(2)} dBm</span></div>`;
     html+=`<div class="ana-row"><span class="ana-lbl">Noise floor</span><span class="ana-val">${r.noiseFloor.toFixed(1)} dBm</span></div>`;
+    html+=`<div class="ana-row"><span class="ana-lbl">Dyn range</span><span class="ana-val">${r.dynamicRange.toFixed(1)} dB</span></div>`;
   } else {
-    r.traces.forEach(tr=>{
-      html+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Min</span><span class="ana-val"><b>${fmtF(tr.minFreq)}</b>&ensp;${tr.minDb.toFixed(2)} dB</span></div>`;
-      html+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Max</span><span class="ana-val"><b>${fmtF(tr.maxFreq)}</b>&ensp;${tr.maxDb.toFixed(2)} dB</span></div>`;
+    r.keyResults.forEach(kr=>{
+      html+=`<div class="ana-row"><span class="ana-lbl">${kr.label}<span class="ana-badge">${kr.trace}</span></span><span class="ana-val"><b>${fmtF(kr.freq)}</b>&ensp;${kr.db.toFixed(2)} dB</span></div>`;
     });
+    let detHtml='';
+    r.traces.forEach(tr=>{
+      detHtml+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Min</span><span class="ana-val"><b>${fmtF(tr.minFreq)}</b>&ensp;${tr.minDb.toFixed(2)} dB</span></div>`;
+      detHtml+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Max</span><span class="ana-val"><b>${fmtF(tr.maxFreq)}</b>&ensp;${tr.maxDb.toFixed(2)} dB</span></div>`;
+    });
+    html+=`<details class="ana-details"><summary class="ana-details-toggle">Full min/max</summary>${detHtml}</details>`;
   }
+
   el.innerHTML=html;
+  const det=el.querySelector('details.ana-details');
+  if(det&&detailsWasOpen)det.open=true;
 }
 
 // ── create S-parameter panel ───────────────────────────────────────────────────
@@ -2105,17 +2157,25 @@ function _rptAnalysisHTML(id,fs){
   if(!r)return'';
   if(r.noData)return'<p class="rno-mkr">No data in visible range.</p>';
   if(r.noVisible)return'<p class="rno-mkr">No visible traces.</p>';
-  let h='<table class="rpt-tbl"><thead><tr><th>Parameter</th><th>Frequency</th><th>Value</th></tr></thead><tbody>';
+
+  let h='<table class="rpt-tbl"><thead><tr><th>Result</th><th>Frequency</th><th>Value</th></tr></thead><tbody>';
   if(r.kind==='spectrum'){
     h+=`<tr><td>Peak Power</td><td>${fmtF(r.peak.freq)}</td><td>${r.peak.dbm.toFixed(2)} dBm</td></tr>`;
     h+=`<tr><td>Minimum Power</td><td>${fmtF(r.min.freq)}</td><td>${r.min.dbm.toFixed(2)} dBm</td></tr>`;
     h+=`<tr><td>Noise Floor (median)</td><td>—</td><td>${r.noiseFloor.toFixed(1)} dBm</td></tr>`;
-  } else {
-    r.traces.forEach(tr=>{
-      h+=`<tr><td>${tr.name} Minimum</td><td>${fmtF(tr.minFreq)}</td><td>${tr.minDb.toFixed(2)} dB</td></tr>`;
-      h+=`<tr><td>${tr.name} Maximum</td><td>${fmtF(tr.maxFreq)}</td><td>${tr.maxDb.toFixed(2)} dB</td></tr>`;
-    });
+    h+=`<tr><td>Dynamic Range</td><td>—</td><td>${r.dynamicRange.toFixed(1)} dB</td></tr>`;
+    return h+'</tbody></table>';
   }
+  r.keyResults.forEach(kr=>{
+    const lbl=kr.sub?`${kr.label} — ${kr.sub} [${kr.trace}]`:`${kr.label} [${kr.trace}]`;
+    h+=`<tr><td>${lbl}</td><td>${fmtF(kr.freq)}</td><td>${kr.db.toFixed(2)} dB</td></tr>`;
+  });
+  h+='</tbody></table>';
+  h+='<h3 class="rpt-h3">Full Min/Max Detail</h3>';
+  h+='<table class="rpt-tbl"><thead><tr><th>Trace</th><th>Min Freq</th><th>Min (dB)</th><th>Max Freq</th><th>Max (dB)</th></tr></thead><tbody>';
+  r.traces.forEach(tr=>{
+    h+=`<tr><td>${tr.name}</td><td>${fmtF(tr.minFreq)}</td><td>${tr.minDb.toFixed(2)}</td><td>${fmtF(tr.maxFreq)}</td><td>${tr.maxDb.toFixed(2)}</td></tr>`;
+  });
   return h+'</tbody></table>';
 }
 
@@ -2209,7 +2269,7 @@ figcaption{font-size:.76rem;color:#777;margin-top:7px;font-style:italic}
 ${setup?`<h2>Measurement Setup</h2><div class="rbox">${htmlEsc(setup)}</div>`:''}
 <h2>Plots</h2>
 ${plots||'<p class="rno-mkr">No plots captured.</p>'}
-<h2>Auto Analysis Summary</h2>
+<h2>Key Results</h2>
 ${analysisHtml||'<p class="rno-mkr">No analysis available.</p>'}
 <h2>Marker Data</h2>
 ${mkrs}
