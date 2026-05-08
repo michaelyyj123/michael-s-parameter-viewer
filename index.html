@@ -149,6 +149,13 @@ body.light .upload-card.spectrum{--card-glow:rgba(26,127,55,.26)}
 .tab-badge.spec{background:color-mix(in srgb,var(--green) 15%,var(--bg));
   border-color:color-mix(in srgb,var(--green) 40%,var(--border));color:var(--green)}
 .tab.active .tab-badge.spec{background:var(--green);border-color:var(--green);color:#fff}
+/* compare tab badge uses purple tint */
+.tab-badge.cmp{background:color-mix(in srgb,#8250df 15%,var(--bg));
+  border-color:color-mix(in srgb,#8250df 40%,var(--border));color:#8250df}
+body.light .tab-badge.cmp{background:color-mix(in srgb,#6639ba 15%,var(--bg));
+  border-color:color-mix(in srgb,#6639ba 40%,var(--border));color:#6639ba}
+.tab.active .tab-badge.cmp{background:#8250df;border-color:#8250df;color:#fff}
+body.light .tab.active .tab-badge.cmp{background:#6639ba;border-color:#6639ba;color:#fff}
 .tab-close{background:transparent;border:none;color:var(--text4);cursor:pointer;
   font-size:.82rem;line-height:1;padding:2px 3px;flex-shrink:0;border-radius:3px;
   transition:all .12s;margin-left:2px}
@@ -544,6 +551,10 @@ function fileById(id){return S.files.find(f=>f.id===id);}
 
 // Returns the frequency array (MHz) for any file kind
 function fsFreqs(fs){
+  if(fs.kind==='compare'){
+    const t=fs.data.traces.find(t=>fs.traceVisible[t.label]!==false)||fs.data.traces[0];
+    return t?t.x:[];
+  }
   return fs.kind==='spectrum'?fs.data.freqsMHz:fs.data.freqs;
 }
 
@@ -611,7 +622,10 @@ function goTo(page){
 
 // Resize the correct Plotly divs for a file
 function resizePlots(f){
-  if(f.kind==='spectrum'){
+  if(f.kind==='compare'){
+    const cp=document.getElementById('cmp-plot-'+f.id);
+    if(cp)Plotly.Plots.resize(cp);
+  } else if(f.kind==='spectrum'){
     const sp=document.getElementById('sp-'+f.id);
     if(sp)Plotly.Plots.resize(sp);
   } else {
@@ -650,9 +664,9 @@ function resumeSession(){
 // ── tabs ──────────────────────────────────────────────────────────────────────
 function renderTabs(){
   document.getElementById('tab-bar').innerHTML=S.files.map((f,i)=>{
-    const isSpec=f.kind==='spectrum';
-    const badge=isSpec?'SPEC':f.type.toUpperCase();
-    const badgeCls=isSpec?'tab-badge spec':'tab-badge';
+    const isCmp=f.kind==='compare',isSpec=f.kind==='spectrum';
+    const badge=isCmp?'CMP':isSpec?'SPEC':f.type.toUpperCase();
+    const badgeCls=isCmp?'tab-badge cmp':isSpec?'tab-badge spec':'tab-badge';
     return `<div class="tab${i===S.active?' active':''}" onclick="setActiveTab(${i})">
       <span class="tab-name" title="${f.name}">${f.name}</span>
       <span class="${badgeCls}">${badge}</span>
@@ -673,7 +687,10 @@ function setActiveTab(i){
 function closeTab(i){
   const f=S.files[i];
   if(f){
-    if(f.kind==='spectrum'){
+    if(f.kind==='compare'){
+      const cp=document.getElementById('cmp-plot-'+f.id);
+      if(cp)Plotly.purge(cp);
+    } else if(f.kind==='spectrum'){
       const sp=document.getElementById('sp-'+f.id);
       if(sp)Plotly.purge(sp);
     } else {
@@ -969,13 +986,17 @@ function renderSpectrum(divId,data,mkrs,xr,yr,fs){
 // ── renderAll: branches on kind ───────────────────────────────────────────────
 function renderAll(id){
   const fs=fileById(id); if(!fs||!fs.data)return;
-  if(fs.kind==='spectrum'){
+  if(fs.kind==='compare'){
+    renderCompareTabPlot(id,fs);
+    renderCompareSidePanel(id,fs);
+  } else if(fs.kind==='spectrum'){
     renderSpectrum('sp-'+id,fs.data,fs.mkrs,fs.xr,fs.yr,fs);
+    renderSidePanel(id);
   } else {
     renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr);
     renderSmith('sc-'+id,fs.data,fs.type==='s1p'?'S11':fs.sp,fs.mkrs);
+    renderSidePanel(id);
   }
-  renderSidePanel(id);
   renderAnalysisSummary(id);
 }
 
@@ -1207,8 +1228,11 @@ function renderMkrList(id){
   if(!fs.data||!fs.mkrs.length){el.innerHTML='';updateHint(id);return;}
 
   const freqs=fsFreqs(fs);
-  // for s-parameter only: trace names + visibility
-  const names=fs.kind==='spectrum'?[]:Object.keys(fs.data.sp);
+  const isCmp=fs.kind==='compare';
+  // trace names: compare labels, s-param names, or empty for spectrum
+  const names=isCmp
+    ?fs.data.traces.map(t=>t.label)
+    :fs.kind==='spectrum'?[]:Object.keys(fs.data.sp);
 
   el.innerHTML=fs.mkrs.map((mk,i)=>{
     const idx=nearest(freqs,mk.freq);
@@ -1217,16 +1241,29 @@ function renderMkrList(id){
     const mkName=mk.name||`M${i+1}`;
     const lineOn=mk.showLine!==false;
 
-    const snapLabel=fs.kind==='spectrum'
-      ?`&#8594;&thinsp;${fmtF(mf)}&thinsp;<span style="color:var(--text4)">${fs.data.dbm[idx].toFixed(1)} dBm</span>`
-      :`&#8594;&thinsp;${fmtF(mf)}`;
+    let snapLabel;
+    if(isCmp){
+      const tr=mk.trace
+        ?fs.data.traces.find(t=>t.label===mk.trace)
+        :fs.data.traces.find(t=>fs.traceVisible[t.label]!==false);
+      if(tr){
+        const ti=nearest(tr.x,mk.freq);
+        snapLabel=`&#8594;&thinsp;${fmtF(tr.x[ti])}&thinsp;<span style="color:var(--text4)">${tr.y[ti].toFixed(2)}&thinsp;${tr.unit}</span>`;
+      } else {
+        snapLabel=`&#8594;&thinsp;${fmtF(mf)}`;
+      }
+    } else if(fs.kind==='spectrum'){
+      snapLabel=`&#8594;&thinsp;${fmtF(mf)}&thinsp;<span style="color:var(--text4)">${fs.data.dbm[idx].toFixed(1)} dBm</span>`;
+    } else {
+      snapLabel=`&#8594;&thinsp;${fmtF(mf)}`;
+    }
 
-    const traceSelHtml=fs.kind==='sparameter'
+    const traceSelHtml=(fs.kind==='sparameter'||isCmp)
       ?`<select class="chip-trace" title="Assign to trace"
           onclick="event.stopPropagation()"
           onchange="setMkrTrace('${id}',${i},this.value)">
           <option value="">All</option>
-          ${names.map(nm=>`<option value="${nm}"${mk.trace===nm?' selected':''}>${nm}</option>`).join('')}
+          ${names.map((nm,ni)=>`<option value="${nm}"${mk.trace===nm?' selected':''}>${isCmp?shortName(nm):nm}</option>`).join('')}
         </select>`
       :'';
 
@@ -1262,12 +1299,12 @@ function updateHint(id){
 }
 
 // ── drag markers ──────────────────────────────────────────────────────────────
-// Works for both kinds: uses fsFreqs() to get the right frequency array,
+// Works for all kinds: uses fsFreqs() to get the right frequency array,
 // and looks up the correct plot div id based on fs.kind.
 function attachDragListener(id){
   const fs=fileById(id); if(!fs||fs._click)return;
   fs._click=true;
-  const divId=fs.kind==='spectrum'?'sp-'+id:'md-'+id;
+  const divId=fs.kind==='compare'?'cmp-plot-'+id:fs.kind==='spectrum'?'sp-'+id:'md-'+id;
   const div=document.getElementById(divId);
   let drag=null,rafId=null;
 
@@ -1341,7 +1378,9 @@ function attachDragListener(id){
 function initSliders(id){
   const fs=fileById(id); if(!fs||!fs.data)return;
   // get the dB/dBm values depending on kind
-  const allDb=fs.kind==='spectrum'
+  const allDb=fs.kind==='compare'
+    ?fs.data.traces.flatMap(t=>t.y)
+    :fs.kind==='spectrum'
     ?fs.data.dbm
     :Object.values(fs.data.sp).flatMap(s=>s.db);
   const dMin=Math.min(...allDb),dMax=Math.max(...allDb);
@@ -1366,8 +1405,8 @@ function setupSliders(id){
   const fs=fileById(id); if(!fs)return;
   const loEl=document.getElementById('yr-lo-'+id),hiEl=document.getElementById('yr-hi-'+id);
   if(!loEl||!hiEl)return;
-  // use sp- for spectrum, md- for s-parameter
-  const plotId=fs.kind==='spectrum'?'sp-'+id:'md-'+id;
+  // use cmp-plot- for compare, sp- for spectrum, md- for s-parameter
+  const plotId=fs.kind==='compare'?'cmp-plot-'+id:fs.kind==='spectrum'?'sp-'+id:'md-'+id;
   const chg=(which)=>()=>{
     let lo=parseFloat(loEl.value),hi=parseFloat(hiEl.value);
     if(lo>=hi){which==='lo'?loEl.value=hi-.5:hiEl.value=lo+.5;}
@@ -1381,7 +1420,7 @@ function setupSliders(id){
 }
 function resetY(id){
   const fs=fileById(id); if(!fs||!fs.data)return;
-  const plotId=fs.kind==='spectrum'?'sp-'+id:'md-'+id;
+  const plotId=fs.kind==='compare'?'cmp-plot-'+id:fs.kind==='spectrum'?'sp-'+id:'md-'+id;
   initSliders(id); Plotly.relayout(plotId,{'yaxis.range':fs.yr});
 }
 
@@ -1443,7 +1482,7 @@ async function _plotImage(divId){
   // For magnitude/spectrum: render into a temporary off-screen div so we never
   // mutate the interactive plot.  Only truly-visible traces are included, so
   // hidden traces are absent from the exported legend entirely.
-  const id=divId.replace(/^(?:md-|sc-|sp-)/,'');
+  const id=divId.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
   const fs=fileById(id);
   const th=TH();
   const dl=div.layout||{};
@@ -1477,7 +1516,7 @@ async function _plotImage(divId){
     showlegend:true,
     legend:{x:0.01,y:0.99,xanchor:'left',yanchor:'top',
       bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},
-    annotations:buildExportAnnotations(fs,divId),
+    annotations:fs.kind==='compare'?[]:buildExportAnnotations(fs,divId),
   };
 
   const tmp=document.createElement('div');
@@ -1509,6 +1548,238 @@ function shortName(name){
   return name.length>28?name.slice(0,12)+'…'+name.slice(-12):name;
 }
 
+let _cmpId=0;
+
+function buildCompareTraces(selections){
+  const cols=isLight()
+    ?['#0969da','#1a7f37','#bc4c00','#8250df','#cf222e','#57606a',
+      '#0550ae','#116329','#953800','#6639ba']
+    :['#58a6ff','#3fb950','#f78166','#d2a8ff','#f85149','#8b949e',
+      '#79c0ff','#56d364','#ffa657','#bf8ff8'];
+  const traces=[];
+  selections.forEach((s,i)=>{
+    const fs=fileById(s.fileId);
+    if(!fs||!fs.data)return;
+    const color=cols[i%cols.length];
+    const label=`${shortName(fs.name)} — ${s.trace}`;
+    if(s.kind==='spectrum'){
+      traces.push({sourceFileId:fs.id,sourceFileName:fs.name,traceName:s.trace,kind:'spectrum',
+        x:[...fs.data.freqsMHz],y:[...fs.data.dbm],unit:'dBm',label,color});
+    } else {
+      const sp=fs.data.sp[s.trace]; if(!sp)return;
+      traces.push({sourceFileId:fs.id,sourceFileName:fs.name,traceName:s.trace,kind:'sparameter',
+        x:[...fs.data.freqs],y:[...sp.db],unit:'dB',label,color});
+    }
+  });
+  return traces;
+}
+
+function createComparePanel(fs){
+  const id=fs.id;
+  const allSparam=fs.data.traces.every(t=>t.kind==='sparameter');
+  const yUnit=allSparam?'dB':'dB/dBm';
+  const allX=fs.data.traces.flatMap(t=>t.x);
+  const fMin=allX.length?Math.min(...allX):0;
+  const fMax=allX.length?Math.max(...allX):0;
+  const sourceNames=[...new Set(fs.data.traces.map(t=>t.sourceFileName))].map(n=>shortName(n)).join(', ');
+  const el=document.createElement('div');
+  el.id='panel-'+id; el.className='tab-panel';
+  el.innerHTML=`
+    <div class="info-bar">
+      <div class="ii"><span class="lbl">Name</span><span class="val">${htmlEsc(fs.name)}</span></div>
+      <div class="ii"><span class="lbl">Type</span><span class="val">Comparison</span></div>
+      <div class="ii"><span class="lbl">Traces</span><span class="val">${fs.data.n}</span></div>
+      <div class="ii"><span class="lbl">Sources</span><span class="val" title="${htmlEsc(sourceNames)}">${htmlEsc(sourceNames)}</span></div>
+      <div class="ii"><span class="lbl">Freq Range</span><span class="val">${fmtF(fMin)} – ${fmtF(fMax)}</span></div>
+    </div>
+    <div class="plots-grid" style="grid-template-columns:1fr">
+      <div class="plot-card">
+        <div class="plot-card-hdr">
+          <span class="pch-title">Comparison Plot</span>
+          <button class="btn btn-save" onclick="previewPlot('cmp-plot-${id}','comparison_${id}')">Preview / Save</button>
+        </div>
+        <div class="plot-shell">
+          <div class="plot-main"><div id="cmp-plot-${id}" class="plot-div plot-div-tall"></div></div>
+          <div class="plot-side" id="side-cmp-${id}"></div>
+        </div>
+      </div>
+    </div>
+    <div class="control-dock">
+      <div class="dock-left">
+        <div class="dock-section">
+          <div class="dock-sec-lbl">Marker</div>
+          <div class="dock-add-row">
+            <input type="number" id="mk-inp-${id}" placeholder="freq MHz" step="0.01">
+            <button class="btn btn-pri" onclick="addMkr('${id}')">+ Marker</button>
+            <button class="btn btn-ghost btn-preset" onclick="presetMri('${id}')">MRI 3T · 127.74 MHz</button>
+            <span id="hint-${id}" class="chart-hint"></span>
+          </div>
+        </div>
+        <div class="dock-section">
+          <div class="dock-sec-lbl">Analysis</div>
+          <div class="dock-find-row">
+            <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','max')">Find Max</button>
+            <button class="btn btn-ghost" style="font-size:.76rem;padding:4px 10px" onclick="autoMoveMarker('${id}','min')">Find Min</button>
+            <span id="afh-${id}" class="auto-find-hint"></span>
+          </div>
+        </div>
+        <div class="marker-chip-list" id="ml-${id}"></div>
+        <div class="ana-box" id="ana-${id}"></div>
+      </div>
+      <div class="dock-right">
+        <button class="settings-toggle" id="stoggle-${id}" onclick="toggleSettings('${id}')">⚙ Plot Settings ▾</button>
+        <div class="settings-panel" id="settings-${id}">
+          <div class="sp-section">
+            <div class="sp-lbl">Y Range (${yUnit})</div>
+            <div class="compact-y-range">
+              <div class="cyr-row">
+                <span class="cyr-lbl">Max</span>
+                <input type="range" id="yr-hi-${id}" class="ys-track">
+                <span class="cyr-val" id="yrv-hi-${id}">0</span>
+                <span class="cyr-unit">${yUnit}</span>
+              </div>
+              <div class="cyr-row">
+                <span class="cyr-lbl">Min</span>
+                <input type="range" id="yr-lo-${id}" class="ys-track">
+                <span class="cyr-val" id="yrv-lo-${id}">−100</span>
+                <span class="cyr-unit">${yUnit}</span>
+              </div>
+            </div>
+            <button class="btn btn-ghost" style="font-size:.74rem;padding:3px 8px;margin-top:4px;width:100%" onclick="resetY('${id}')">Reset Y</button>
+          </div>
+          <div class="sp-section">
+            <div class="sp-lbl">Axis Font</div>
+            <div class="sp-row">
+              <select class="cg-sel" id="font-sel-${id}" onchange="setAxisFont('${id}',this.value)">
+                <option value="Arial">Arial</option>
+                <option value="Helvetica" selected>Helvetica</option>
+                <option value="Times New Roman">Times NR</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier</option>
+              </select>
+              <input type="number" id="fontsize-${id}" placeholder="pt" min="6" max="32" step="1"
+                style="width:50px" title="Font size (pt)"
+                onchange="setAxisFontSize('${id}',this.value)"
+                oninput="setAxisFontSize('${id}',this.value)">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  return el;
+}
+
+function renderCompareTabPlot(id,fs){
+  const divId='cmp-plot-'+id;
+  const div=document.getElementById(divId); if(!div)return;
+  const th=TH();
+  const allSparam=fs.data.traces.every(t=>t.kind==='sparameter');
+  const yTitle=allSparam?'Magnitude (dB)':'Power / Magnitude';
+  const axFont=fs.axisFont||'',axSize=fs.axisFontSize||null;
+  const afTitle={color:th.axis,...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
+  const afTick={...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
+
+  const shapes=[];
+  fs.mkrs.forEach(mk=>{
+    if(mk.showLine===false)return;
+    shapes.push({type:'line',x0:mk.freq,x1:mk.freq,y0:0,y1:1,yref:'paper',
+      line:{color:mk.color,width:1.5,dash:'dot'}});
+  });
+
+  const traces=fs.data.traces.map(t=>{
+    const vis=fs.traceVisible[t.label]!==false;
+    return{x:t.x,y:t.y,type:'scatter',mode:'lines',name:htmlEsc(t.label),
+      line:{color:t.color,width:1.5},visible:vis?true:'legendonly',
+      hovertemplate:`%{x:.4f} MHz<br>%{y:.2f} ${t.unit}<extra>${htmlEsc(t.label)}</extra>`};
+  });
+
+  fs.mkrs.forEach((mk,mi)=>{
+    const tr=mk.trace?fs.data.traces.find(t=>t.label===mk.trace)
+                     :fs.data.traces.find(t=>fs.traceVisible[t.label]!==false);
+    if(!tr)return;
+    const idx=nearest(tr.x,mk.freq);
+    const mkName=mk.name||`M${mi+1}`;
+    traces.push({x:[tr.x[idx]],y:[tr.y[idx]],type:'scatter',mode:'markers+text',
+      marker:{color:mk.color,size:10,symbol:'circle'},
+      text:[mkName],textposition:'bottom center',
+      textfont:{color:mk.color,size:14,...(fs.axisFont?{family:fs.axisFont}:{})},
+      showlegend:false,hoverinfo:'skip'});
+  });
+
+  const xr=fs.xr,yr=fs.yr;
+  const xax={title:{text:'Frequency (MHz)',font:afTitle},
+    tickfont:Object.keys(afTick).length?afTick:undefined,
+    gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line,
+    rangeslider:{visible:true,bgcolor:th.rsBg,bordercolor:th.line,thickness:.07}};
+  const yax={title:{text:yTitle,font:afTitle},
+    tickfont:Object.keys(afTick).length?afTick:undefined,
+    gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line};
+  if(xr[0]!==null&&xr[1]!==null)xax.range=xr;
+  if(yr[0]!==null&&yr[1]!==null)yax.range=yr;
+
+  Plotly.react(divId,traces,{
+    paper_bgcolor:th.paper,plot_bgcolor:th.plot,
+    font:{color:th.text,size:11},margin:{t:20,r:20,b:80,l:72},
+    xaxis:xax,yaxis:yax,shapes,annotations:[],showlegend:true,
+    legend:{x:0.01,y:0.99,xanchor:'left',yanchor:'top',
+      bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,font:{color:th.text,size:10}},
+    hovermode:'x unified',
+  },{responsive:true,displayModeBar:true,
+    modeBarButtonsToRemove:['select2d','lasso2d'],displaylogo:false});
+
+  if(!fs._click){
+    fs._click=true;
+    div.on('plotly_restyle',(data,indices)=>{
+      if(!data[0]||data[0].visible===undefined)return;
+      indices.forEach(i=>{
+        const t=fs.data.traces[i]; if(!t)return;
+        fs.traceVisible[t.label]=data[0].visible[0]!=='legendonly';
+      });
+      renderCompareSidePanel(id,fs);
+      renderAnalysisSummary(id);
+    });
+  }
+}
+
+function renderCompareSidePanel(id,fs){
+  const el=document.getElementById('side-cmp-'+id); if(!el)return;
+  let html='<div class="side-section"><div class="side-title">Traces</div>';
+  fs.data.traces.forEach((t,idx)=>{
+    const vis=fs.traceVisible[t.label]!==false;
+    html+=`<div class="trace-row${vis?'':' trace-hidden'}" onclick="toggleCompareTrace('${id}',${idx})">
+      <span class="trace-swatch" style="background:${t.color}"></span>
+      <span class="trace-name">${htmlEsc(t.label)}</span>
+    </div>`;
+  });
+  html+='</div>';
+  if(fs.mkrs.length){
+    html+='<div class="side-section"><div class="side-title">Markers</div>';
+    fs.mkrs.forEach((mk,i)=>{
+      const mkName=mk.name||`M${i+1}`;
+      html+=`<div class="marker-card" style="border-left-color:${mk.color}">
+        <div class="marker-title" style="color:${mk.color}">${mkName}</div>`;
+      const visTraces=mk.trace
+        ?fs.data.traces.filter(t=>t.label===mk.trace&&fs.traceVisible[t.label]!==false)
+        :fs.data.traces.filter(t=>fs.traceVisible[t.label]!==false);
+      visTraces.forEach(t=>{
+        const idx=nearest(t.x,mk.freq);
+        html+=`<div class="marker-value marker-muted">${fmtF(t.x[idx])}</div>
+          <div class="marker-value"><span class="trace-swatch-sm" style="background:${t.color}"></span>&nbsp;${htmlEsc(t.label)}&nbsp;<b>${t.y[idx].toFixed(2)} ${t.unit}</b></div>`;
+      });
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+
+function toggleCompareTrace(id,idx){
+  const fs=fileById(id); if(!fs||fs.kind!=='compare')return;
+  const t=fs.data.traces[idx]; if(!t)return;
+  fs.traceVisible[t.label]=!fs.traceVisible[t.label];
+  renderAll(id); renderMkrList(id);
+}
+
 function openCompareModal(){
   document.getElementById('compare-error').textContent='';
   renderCompareTraceList();
@@ -1522,7 +1793,7 @@ function closeCompareModal(){
 function renderCompareTraceList(){
   const el=document.getElementById('compare-list');
   if(!el)return;
-  const loaded=S.files.filter(fs=>fs.data);
+  const loaded=S.files.filter(fs=>fs.data&&fs.kind!=='compare');
   if(!loaded.length){
     el.innerHTML='<div class="cmp-empty">No files are loaded yet. Go back and load some files first.</div>';
     return;
@@ -1556,10 +1827,6 @@ function getCompareSelections(){
 function clearCompareSelection(){
   document.querySelectorAll('#compare-list .cmp-cb').forEach(cb=>{cb.checked=false;});
   document.getElementById('compare-error').textContent='';
-  const wrap=document.getElementById('compare-plot-wrap');
-  if(wrap)wrap.style.display='none';
-  const div=document.getElementById('compare-plot');
-  if(div&&div.data&&div.data.length)Plotly.purge(div);
 }
 
 function createComparePlot(){
@@ -1568,83 +1835,49 @@ function createComparePlot(){
   if(!sel.length){errEl.textContent='Select at least one trace.';return;}
   errEl.textContent='';
 
-  const th=TH();
-  const cols=isLight()
-    ?['#0969da','#1a7f37','#bc4c00','#8250df','#cf222e','#57606a',
-      '#0550ae','#116329','#953800','#6639ba']
-    :['#58a6ff','#3fb950','#f78166','#d2a8ff','#f85149','#8b949e',
-      '#79c0ff','#56d364','#ffa657','#bf8ff8'];
+  const traces=buildCompareTraces(sel);
+  if(!traces.length){errEl.textContent='No valid trace data found.';return;}
 
-  const allSparam=sel.every(s=>s.kind==='sparameter');
-  const yTitle=allSparam?'Magnitude (dB)':'Power / Magnitude';
+  const cmpId='cmp'+(++_cmpId);
+  const sourceNames=[...new Set(traces.map(t=>t.sourceFileName))];
+  const cmpName='Compare: '+sourceNames.map(n=>shortName(n)).join(', ');
 
-  const plotData=sel.map((s,i)=>{
-    const fs=fileById(s.fileId);
-    if(!fs||!fs.data)return null;
-    const color=cols[i%cols.length];
-    const label=`${shortName(fs.name)} — ${s.trace}`;
-    if(s.kind==='spectrum'){
-      return{x:fs.data.freqsMHz,y:fs.data.dbm,
-        type:'scatter',mode:'lines',name:label,
-        line:{color,width:1.5},hovertemplate:'%{x:.4f} MHz<br>%{y:.2f} dBm<extra>'+htmlEsc(label)+'</extra>'};
-    }
-    const sp=fs.data.sp[s.trace];
-    if(!sp)return null;
-    return{x:fs.data.freqs,y:sp.db,
-      type:'scatter',mode:'lines',name:label,
-      line:{color,width:1.5},hovertemplate:'%{x:.4f} MHz<br>%{y:.2f} dB<extra>'+htmlEsc(label)+'</extra>'};
-  }).filter(Boolean);
-
-  if(!plotData.length){errEl.textContent='No valid trace data found.';return;}
-
-  const layout={
-    paper_bgcolor:th.paper,plot_bgcolor:th.plot,
-    font:{color:th.text,family:"'Segoe UI',system-ui,sans-serif",size:11},
-    margin:{t:20,r:18,b:52,l:58},
-    xaxis:{title:{text:'Frequency (MHz)',font:{color:th.axis}},
-      gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,
-      linecolor:th.line,tickfont:{color:th.axis}},
-    yaxis:{title:{text:yTitle,font:{color:th.axis}},
-      gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,
-      linecolor:th.line,tickfont:{color:th.axis}},
-    showlegend:true,
-    legend:{x:0.01,y:0.99,xanchor:'left',yanchor:'top',
-      bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,
-      font:{color:th.text,size:10}},
-    hovermode:'x unified',
+  const fs={
+    id:cmpId,name:cmpName,type:'compare',kind:'compare',
+    data:{traces,n:traces.length},
+    traceVisible:Object.fromEntries(traces.map(t=>[t.label,true])),
+    mkrs:[],activeMkr:0,xr:[null,null],yr:[null,null],
+    _ev:false,_click:false,axisFont:'Helvetica',axisFontSize:null,
   };
 
-  const wrap=document.getElementById('compare-plot-wrap');
-  wrap.style.display='';
-  Plotly.react(document.getElementById('compare-plot'),plotData,layout,{responsive:true,displayModeBar:false});
-}
+  const panel=createComparePanel(fs);
+  document.getElementById('tab-panels').appendChild(panel);
+  const idx=S.files.length;
+  S.files.push(fs);
 
-async function previewComparePlot(){
-  const div=document.getElementById('compare-plot');
-  if(!div||!div.data||!div.data.length)return;
-  const th=TH();
-  const W=1050,H=540;
-  const dl=div.layout||{};
-  const tmp=document.createElement('div');
-  tmp.style.cssText=`position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;pointer-events:none`;
-  document.body.appendChild(tmp);
-  try{
-    await Plotly.newPlot(tmp,div.data||[],{
-      paper_bgcolor:dl.paper_bgcolor,plot_bgcolor:dl.plot_bgcolor,
-      font:dl.font,margin:dl.margin,hovermode:false,
-      xaxis:{...dl.xaxis,rangeslider:{visible:false}},
-      yaxis:{...dl.yaxis},
-      showlegend:true,
-      legend:{x:0.01,y:0.99,xanchor:'left',yanchor:'top',
-        bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,font:{...dl.legend?.font}},
-    },{staticPlot:true,responsive:false});
-    const url=await Plotly.toImage(tmp,{format:'png',width:W,height:H,scale:4});
-    document.getElementById('preview-img').src=url;
-    document.getElementById('preview-dl-btn').onclick=()=>{
-      const a=document.createElement('a');a.href=url;a.download='comparison_plot.png';a.click();
-    };
-    document.getElementById('preview-modal').classList.add('open');
-  }finally{Plotly.purge(tmp);tmp.remove();}
+  initSliders(cmpId); setupSliders(cmpId);
+  renderAll(cmpId);
+
+  if(!fs._ev){
+    fs._ev=true;
+    document.getElementById('cmp-plot-'+cmpId).on('plotly_relayout',e=>{
+      if('xaxis.range[0]'in e)fs.xr=[e['xaxis.range[0]'],e['xaxis.range[1]']];
+      else if(e['xaxis.autorange'])fs.xr=[null,null];
+      renderAnalysisSummary(cmpId);
+    });
+  }
+
+  attachDragListener(cmpId);
+  document.getElementById('mk-inp-'+cmpId).addEventListener('keydown',e=>{
+    if(e.key==='Enter')addMkr(cmpId);
+  });
+
+  const freqs=fsFreqs(fs);
+  const midFreq=freqs[Math.floor(freqs.length/2)]||127.74;
+  fs.mkrs=[{freq:midFreq,color:MC()[0],name:'M1',showLine:true,trace:null}];
+  renderAll(cmpId); renderMkrList(cmpId);
+
+  setActiveTab(idx); renderTabs(); closeCompareModal();
 }
 
 // ── settings panel toggle ─────────────────────────────────────────────────────
@@ -1659,7 +1892,7 @@ function toggleSettings(id){
 
 // ── auto find max / min ───────────────────────────────────────────────────────
 function getSearchRange(id,fs){
-  const divId=fs.kind==='spectrum'?'sp-'+id:'md-'+id;
+  const divId=fs.kind==='compare'?'cmp-plot-'+id:fs.kind==='spectrum'?'sp-'+id:'md-'+id;
   const div=document.getElementById(divId);
   if(!div||!div._fullLayout||!div._fullLayout.xaxis)return[null,null];
   const r=div._fullLayout.xaxis.range;
@@ -1705,7 +1938,13 @@ function autoMoveMarker(id,mode){
   if(!mk)return;
   const range=getSearchRange(id,fs);
   let freqs,values;
-  if(fs.kind==='spectrum'){
+  if(fs.kind==='compare'){
+    const tr=mk.trace
+      ?fs.data.traces.find(t=>t.label===mk.trace)
+      :fs.data.traces.find(t=>fs.traceVisible[t.label]!==false);
+    if(!tr){showAutoFindHint(id,'No visible trace.');return;}
+    freqs=tr.x; values=tr.y;
+  } else if(fs.kind==='spectrum'){
     freqs=fs.data.freqsMHz; values=fs.data.dbm;
   } else {
     const names=Object.keys(fs.data.sp);
@@ -1741,6 +1980,21 @@ function computeTraceExtrema(freqs,dbArr,range){
 function computeAnalysisSummary(id,fs){
   if(!fs||!fs.data)return null;
   const range=getSearchRange(id,fs);
+
+  if(fs.kind==='compare'){
+    const visTrs=fs.data.traces.filter(t=>fs.traceVisible[t.label]!==false);
+    if(!visTrs.length)return{kind:'compare',noVisible:true};
+    const traces=[];
+    for(const tr of visTrs){
+      const ex=computeTraceExtrema(tr.x,tr.y,range);
+      if(!ex)continue;
+      traces.push({label:tr.label,color:tr.color,unit:tr.unit,
+        minV:ex.minV,minFreq:tr.x[ex.minI],
+        maxV:ex.maxV,maxFreq:tr.x[ex.maxI]});
+    }
+    if(!traces.length)return{kind:'compare',noData:true};
+    return{kind:'compare',noData:false,noVisible:false,traces};
+  }
 
   if(fs.kind==='spectrum'){
     const freqs=fs.data.freqsMHz,dbm=fs.data.dbm;
@@ -1824,7 +2078,15 @@ function renderAnalysisSummary(id){
     el.innerHTML=html;return;
   }
 
-  if(r.kind==='spectrum'){
+  if(r.kind==='compare'){
+    let detHtml='';
+    r.traces.forEach(tr=>{
+      detHtml+=`<div class="ana-row"><span class="ana-lbl" style="color:${tr.color}">${htmlEsc(shortName(tr.label))}</span></div>`;
+      detHtml+=`<div class="ana-row"><span class="ana-lbl">Min</span><span class="ana-val">${fmtF(tr.minFreq)}&ensp;${tr.minV.toFixed(2)}&thinsp;${tr.unit}</span></div>`;
+      detHtml+=`<div class="ana-row"><span class="ana-lbl">Max</span><span class="ana-val">${fmtF(tr.maxFreq)}&ensp;${tr.maxV.toFixed(2)}&thinsp;${tr.unit}</span></div>`;
+    });
+    html+=detHtml;
+  } else if(r.kind==='spectrum'){
     html+='<div class="ana-grid">';
     html+=`<div class="ana-card"><div class="ana-card-title">Peak</div><div class="ana-card-freq">${fmtF(r.peak.freq)}</div><div class="ana-card-value">${r.peak.dbm.toFixed(2)} dBm</div></div>`;
     html+=`<div class="ana-card"><div class="ana-card-title">Minimum</div><div class="ana-card-freq">${fmtF(r.min.freq)}</div><div class="ana-card-value">${r.min.dbm.toFixed(2)} dBm</div></div>`;
@@ -2559,13 +2821,6 @@ async function generateReport(){
       <div class="cmp-actions">
         <button class="btn btn-ghost" style="font-size:.8rem;padding:4px 10px" onclick="clearCompareSelection()">Clear Selection</button>
         <button class="btn btn-pri" style="font-size:.8rem;padding:4px 12px" onclick="createComparePlot()">Create Comparison Plot</button>
-      </div>
-      <div id="compare-plot-wrap" class="cmp-plot-section" style="display:none">
-        <div class="cmp-plot-hdr">
-          <span class="cmp-plot-title">Comparison Plot</span>
-          <button class="btn btn-save" id="compare-save-btn" onclick="previewComparePlot()">Preview / Save PNG</button>
-        </div>
-        <div id="compare-plot"></div>
       </div>
     </div>
   </div>
