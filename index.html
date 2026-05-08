@@ -852,7 +852,7 @@ function smithAnno(th){
 
 
 // ── render magnitude (S-parameter) ───────────────────────────────────────────
-function renderMag(divId,data,mkrs,xr,yr,fs){
+function renderMag(divId,data,mkrs,xr,yr){
   const th=TH(),pc=PC();
   const names=Object.keys(data.sp);
   const id=divId.replace('md-','');
@@ -1010,7 +1010,7 @@ function renderAll(id){
     renderSpectrum('sp-'+id,fs.data,fs.mkrs,fs.xr,fs.yr,fs);
     renderSidePanel(id);
   } else {
-    renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr,fs);
+    renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr);
     renderSmith('sc-'+id,fs.data,fs.type==='s1p'?'S11':fs.sp,fs.mkrs);
     renderSidePanel(id);
   }
