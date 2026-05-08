@@ -852,7 +852,7 @@ function smithAnno(th){
 
 
 // ── render magnitude (S-parameter) ───────────────────────────────────────────
-function renderMag(divId,data,mkrs,xr,yr){
+function renderMag(divId,data,mkrs,xr,yr,fs){
   const th=TH(),pc=PC();
   const names=Object.keys(data.sp);
   const id=divId.replace('md-','');
@@ -901,7 +901,7 @@ function renderMag(divId,data,mkrs,xr,yr){
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
     font:{color:th.text,size:11},margin:{t:20,r:20,b:80,l:72},
     xaxis:xax,yaxis:yax,shapes,annotations:[],showlegend:false,
-    hovermode:'x unified',
+    hovermode:fs?._draggingMarker?false:'x unified',
   },{responsive:true,displayModeBar:true,
     modeBarButtonsToRemove:['select2d','lasso2d'],displaylogo:false});
 }
@@ -995,7 +995,7 @@ function renderSpectrum(divId,data,mkrs,xr,yr,fs){
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
     font:{color:th.text,size:11},margin:{t:20,r:20,b:80,l:72},
     xaxis:xax,yaxis:yax,shapes,annotations:[],showlegend:false,
-    hovermode:'x unified',
+    hovermode:fs?._draggingMarker?false:'x unified',
   },{responsive:true,displayModeBar:true,
     modeBarButtonsToRemove:['select2d','lasso2d'],displaylogo:false});
 }
@@ -1010,7 +1010,7 @@ function renderAll(id){
     renderSpectrum('sp-'+id,fs.data,fs.mkrs,fs.xr,fs.yr,fs);
     renderSidePanel(id);
   } else {
-    renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr);
+    renderMag('md-'+id,fs.data,fs.mkrs,fs.xr,fs.yr,fs);
     renderSmith('sc-'+id,fs.data,fs.type==='s1p'?'S11':fs.sp,fs.mkrs);
     renderSidePanel(id);
   }
@@ -1379,7 +1379,18 @@ function attachDragListener(id){
   fs._dragAttached=true;
   const divId=fs.kind==='compare'?'cmp-plot-'+id:fs.kind==='spectrum'?'sp-'+id:'md-'+id;
   const div=document.getElementById(divId);
-  let drag=null,rafId=null;
+  let drag=null,rafId=null,savedHoverMode=null;
+
+  function disableHoverDuringDrag(){
+    if(savedHoverMode===null)savedHoverMode=div._fullLayout?.hovermode||'x unified';
+    try{Plotly.relayout(div,{hovermode:false});}catch(e){}
+    try{Plotly.Fx.unhover(div);}catch(e){}
+  }
+  function restoreHoverAfterDrag(){
+    const hm=savedHoverMode||'x unified';
+    savedHoverMode=null;
+    try{Plotly.relayout(div,{hovermode:hm});}catch(e){}
+  }
 
   function axInfo(){
     const l=div._fullLayout;
@@ -1412,6 +1423,8 @@ function attachDragListener(id){
     if(px<0||px>xa._length||py<-5||py>ya._length+5)return;
     const mi=nearestMkr(px,xa); if(mi===-1)return;
     drag={idx:mi};
+    fs._draggingMarker=true;
+    disableHoverDuringDrag();
     if(fs.activeMkr!==mi){fs.activeMkr=mi;renderMkrList(id);}
     e.stopPropagation(); e.preventDefault();
   },true);
@@ -1428,6 +1441,7 @@ function attachDragListener(id){
       return;
     }
     e.stopPropagation(); e.preventDefault();
+    try{Plotly.Fx.unhover(div);}catch(e){}
     const freq=pxToFreq(px,xa);
     const fs=fileById(id); if(!fs)return;
     fs.mkrs[drag.idx].freq=freq;
@@ -1440,6 +1454,9 @@ function attachDragListener(id){
   const endDrag=()=>{
     if(!drag)return;
     drag=null; div.style.cursor='';
+    const fsRef=fileById(id);
+    if(fsRef)fsRef._draggingMarker=false;
+    restoreHoverAfterDrag();
     if(rafId){cancelAnimationFrame(rafId);rafId=null;}
     renderAll(id); renderMkrList(id);
   };
@@ -1797,7 +1814,7 @@ function renderCompareTabPlot(id,fs){
     xaxis:xax,yaxis:yax,shapes,annotations:[],showlegend:true,
     legend:{x:0.01,y:0.99,xanchor:'left',yanchor:'top',
       bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,font:{color:th.text,size:10}},
-    hovermode:'x unified',
+    hovermode:fs._draggingMarker?false:'x unified',
   },{responsive:true,displayModeBar:true,
     modeBarButtonsToRemove:['select2d','lasso2d'],displaylogo:false});
 
