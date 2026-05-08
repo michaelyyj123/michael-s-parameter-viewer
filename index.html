@@ -342,6 +342,47 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
   color:var(--accent);padding:4px 11px;font-size:.8rem;flex-shrink:0;margin-left:6px}
 .btn-report:hover{background:color-mix(in srgb,var(--accent) 18%,var(--bg3));
   border-color:var(--accent)}
+.btn-compare{background:color-mix(in srgb,var(--green) 9%,var(--bg3));
+  border-color:color-mix(in srgb,var(--green) 38%,var(--border));
+  color:var(--green);padding:4px 11px;font-size:.8rem;flex-shrink:0}
+.btn-compare:hover{background:color-mix(in srgb,var(--green) 18%,var(--bg3));
+  border-color:var(--green)}
+
+/* ── compare modal ───────────────────────────────────────────────────── */
+#compare-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);
+  z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#compare-modal.open{display:flex}
+.cmp-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
+  width:740px;max-width:97vw;max-height:93vh;display:flex;flex-direction:column;overflow:hidden}
+.cmp-hdr{padding:12px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cmp-title{font-size:.95rem;font-weight:700;color:var(--text)}
+.cmp-body{padding:14px 16px;display:flex;flex-direction:column;gap:11px;overflow-y:auto;flex:1}
+.cmp-sec-lbl{font-size:.66rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--text4);margin-bottom:2px}
+.cmp-list-wrap{display:flex;flex-direction:column;gap:7px}
+.cmp-file-group{border:1px solid var(--border);border-radius:6px;padding:7px 10px;
+  display:flex;flex-direction:column;gap:2px;
+  background:color-mix(in srgb,var(--bg3) 55%,var(--bg2))}
+.cmp-file-name{font-size:.71rem;font-weight:600;color:var(--text3);
+  padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:3px;
+  word-break:break-all;line-height:1.4}
+.cmp-trace-row{display:flex;align-items:center;gap:8px;padding:3px 5px;border-radius:4px;
+  cursor:pointer;transition:background .1s;user-select:none;font-size:.81rem;color:var(--text2)}
+.cmp-trace-row:hover{background:color-mix(in srgb,var(--accent) 7%,var(--bg3))}
+.cmp-trace-row input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);
+  flex-shrink:0;cursor:pointer}
+.cmp-trace-badge{font-size:.66rem;font-weight:700;
+  background:color-mix(in srgb,var(--accent) 14%,transparent);
+  color:var(--accent);border-radius:3px;padding:0 3px;margin-left:2px}
+.cmp-empty{font-size:.83rem;color:var(--text4);font-style:italic;padding:8px 0}
+.cmp-error{font-size:.78rem;color:var(--red);min-height:16px}
+.cmp-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cmp-plot-section{border-top:1px solid var(--border);padding-top:11px;
+  display:flex;flex-direction:column;gap:8px}
+.cmp-plot-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cmp-plot-title{font-size:.84rem;font-weight:600;color:var(--text2)}
+#compare-plot{width:100%;height:520px}
 
 /* ── preview modal ───────────────────────────────────────────────────────── */
 #preview-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);
@@ -480,6 +521,7 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
     <div class="tab-bar" id="tab-bar"></div>
     <label class="btn-add" for="fi-add">&#43; Add file</label>
     <input type="file" id="fi-add" accept=".s1p,.s2p,.S1P,.S2P,.csv,.CSV" multiple style="display:none">
+    <button class="btn btn-compare" onclick="openCompareModal()">Compare Traces</button>
     <button class="btn btn-report" onclick="openReportModal()">Generate Report</button>
     <div style="margin-left:6px;flex-shrink:0">
       <button class="btn btn-theme" onclick="toggleTheme()" id="tbtn-viewer">Light mode</button>
@@ -1462,6 +1504,149 @@ function closePreview(){
   document.getElementById('preview-img').src='';
 }
 
+// ── trace comparison ──────────────────────────────────────────────────────────
+function shortName(name){
+  return name.length>28?name.slice(0,12)+'…'+name.slice(-12):name;
+}
+
+function openCompareModal(){
+  document.getElementById('compare-error').textContent='';
+  renderCompareTraceList();
+  document.getElementById('compare-modal').classList.add('open');
+}
+
+function closeCompareModal(){
+  document.getElementById('compare-modal').classList.remove('open');
+}
+
+function renderCompareTraceList(){
+  const el=document.getElementById('compare-list');
+  if(!el)return;
+  const loaded=S.files.filter(fs=>fs.data);
+  if(!loaded.length){
+    el.innerHTML='<div class="cmp-empty">No files are loaded yet. Go back and load some files first.</div>';
+    return;
+  }
+  el.innerHTML='<div class="cmp-sec-lbl">Select traces to compare</div><div class="cmp-list-wrap">'+
+    loaded.map(fs=>{
+      const rows=fs.kind==='spectrum'
+        ?`<label class="cmp-trace-row">
+            <input type="checkbox" class="cmp-cb"
+              data-file-id="${fs.id}" data-trace="Spectrum" data-kind="spectrum">
+            ${htmlEsc(shortName(fs.name))} — <span class="cmp-trace-badge">Spectrum</span>
+           </label>`
+        :Object.keys(fs.data.sp).map(nm=>
+            `<label class="cmp-trace-row">
+               <input type="checkbox" class="cmp-cb"
+                 data-file-id="${fs.id}" data-trace="${nm}" data-kind="sparameter">
+               ${htmlEsc(shortName(fs.name))} — <span class="cmp-trace-badge">${nm}</span>
+             </label>`
+          ).join('');
+      return`<div class="cmp-file-group">
+        <div class="cmp-file-name">${htmlEsc(fs.name)}</div>${rows}
+      </div>`;
+    }).join('')+'</div>';
+}
+
+function getCompareSelections(){
+  return Array.from(document.querySelectorAll('#compare-list .cmp-cb:checked'))
+    .map(cb=>({fileId:cb.dataset.fileId,trace:cb.dataset.trace,kind:cb.dataset.kind}));
+}
+
+function clearCompareSelection(){
+  document.querySelectorAll('#compare-list .cmp-cb').forEach(cb=>{cb.checked=false;});
+  document.getElementById('compare-error').textContent='';
+  const wrap=document.getElementById('compare-plot-wrap');
+  if(wrap)wrap.style.display='none';
+  const div=document.getElementById('compare-plot');
+  if(div&&div.data&&div.data.length)Plotly.purge(div);
+}
+
+function createComparePlot(){
+  const errEl=document.getElementById('compare-error');
+  const sel=getCompareSelections();
+  if(!sel.length){errEl.textContent='Select at least one trace.';return;}
+  errEl.textContent='';
+
+  const th=TH();
+  const cols=isLight()
+    ?['#0969da','#1a7f37','#bc4c00','#8250df','#cf222e','#57606a',
+      '#0550ae','#116329','#953800','#6639ba']
+    :['#58a6ff','#3fb950','#f78166','#d2a8ff','#f85149','#8b949e',
+      '#79c0ff','#56d364','#ffa657','#bf8ff8'];
+
+  const allSparam=sel.every(s=>s.kind==='sparameter');
+  const yTitle=allSparam?'Magnitude (dB)':'Power / Magnitude';
+
+  const plotData=sel.map((s,i)=>{
+    const fs=fileById(s.fileId);
+    if(!fs||!fs.data)return null;
+    const color=cols[i%cols.length];
+    const label=`${shortName(fs.name)} — ${s.trace}`;
+    if(s.kind==='spectrum'){
+      return{x:fs.data.freqsMHz,y:fs.data.dbm,
+        type:'scatter',mode:'lines',name:label,
+        line:{color,width:1.5},hovertemplate:'%{x:.4f} MHz<br>%{y:.2f} dBm<extra>'+htmlEsc(label)+'</extra>'};
+    }
+    const sp=fs.data.sp[s.trace];
+    if(!sp)return null;
+    return{x:fs.data.freqs,y:sp.db,
+      type:'scatter',mode:'lines',name:label,
+      line:{color,width:1.5},hovertemplate:'%{x:.4f} MHz<br>%{y:.2f} dB<extra>'+htmlEsc(label)+'</extra>'};
+  }).filter(Boolean);
+
+  if(!plotData.length){errEl.textContent='No valid trace data found.';return;}
+
+  const layout={
+    paper_bgcolor:th.paper,plot_bgcolor:th.plot,
+    font:{color:th.text,family:"'Segoe UI',system-ui,sans-serif",size:11},
+    margin:{t:20,r:18,b:52,l:58},
+    xaxis:{title:{text:'Frequency (MHz)',font:{color:th.axis}},
+      gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,
+      linecolor:th.line,tickfont:{color:th.axis}},
+    yaxis:{title:{text:yTitle,font:{color:th.axis}},
+      gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,
+      linecolor:th.line,tickfont:{color:th.axis}},
+    showlegend:true,
+    legend:{x:0.01,y:0.99,xanchor:'left',yanchor:'top',
+      bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,
+      font:{color:th.text,size:10}},
+    hovermode:'x unified',
+  };
+
+  const wrap=document.getElementById('compare-plot-wrap');
+  wrap.style.display='';
+  Plotly.react(document.getElementById('compare-plot'),plotData,layout,{responsive:true,displayModeBar:false});
+}
+
+async function previewComparePlot(){
+  const div=document.getElementById('compare-plot');
+  if(!div||!div.data||!div.data.length)return;
+  const th=TH();
+  const W=1050,H=540;
+  const dl=div.layout||{};
+  const tmp=document.createElement('div');
+  tmp.style.cssText=`position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;pointer-events:none`;
+  document.body.appendChild(tmp);
+  try{
+    await Plotly.newPlot(tmp,div.data||[],{
+      paper_bgcolor:dl.paper_bgcolor,plot_bgcolor:dl.plot_bgcolor,
+      font:dl.font,margin:dl.margin,hovermode:false,
+      xaxis:{...dl.xaxis,rangeslider:{visible:false}},
+      yaxis:{...dl.yaxis},
+      showlegend:true,
+      legend:{x:0.01,y:0.99,xanchor:'left',yanchor:'top',
+        bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,font:{...dl.legend?.font}},
+    },{staticPlot:true,responsive:false});
+    const url=await Plotly.toImage(tmp,{format:'png',width:W,height:H,scale:4});
+    document.getElementById('preview-img').src=url;
+    document.getElementById('preview-dl-btn').onclick=()=>{
+      const a=document.createElement('a');a.href=url;a.download='comparison_plot.png';a.click();
+    };
+    document.getElementById('preview-modal').classList.add('open');
+  }finally{Plotly.purge(tmp);tmp.remove();}
+}
+
 // ── settings panel toggle ─────────────────────────────────────────────────────
 function toggleSettings(id){
   const p=document.getElementById('settings-'+id);
@@ -2357,6 +2542,31 @@ async function generateReport(){
       <div class="rpt-progress" id="rpt-progress"></div>
       <button class="btn btn-ghost" onclick="closeReportModal()">Cancel</button>
       <button class="btn btn-pri" id="rpt-gen-btn" onclick="generateReport()">Generate Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ COMPARE MODAL -->
+<div id="compare-modal" onclick="closeCompareModal()">
+  <div class="cmp-box" onclick="event.stopPropagation()">
+    <div class="cmp-hdr">
+      <span class="cmp-title">Trace Comparison</span>
+      <button class="btn btn-ghost" style="padding:2px 8px;font-size:.82rem" onclick="closeCompareModal()">&#x2715;</button>
+    </div>
+    <div class="cmp-body">
+      <div id="compare-list"></div>
+      <div id="compare-error" class="cmp-error"></div>
+      <div class="cmp-actions">
+        <button class="btn btn-ghost" style="font-size:.8rem;padding:4px 10px" onclick="clearCompareSelection()">Clear Selection</button>
+        <button class="btn btn-pri" style="font-size:.8rem;padding:4px 12px" onclick="createComparePlot()">Create Comparison Plot</button>
+      </div>
+      <div id="compare-plot-wrap" class="cmp-plot-section" style="display:none">
+        <div class="cmp-plot-hdr">
+          <span class="cmp-plot-title">Comparison Plot</span>
+          <button class="btn btn-save" id="compare-save-btn" onclick="previewComparePlot()">Preview / Save PNG</button>
+        </div>
+        <div id="compare-plot"></div>
+      </div>
     </div>
   </div>
 </div>
