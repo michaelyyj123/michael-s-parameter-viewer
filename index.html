@@ -426,6 +426,10 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 .trace-row.trace-hidden{opacity:.38}
 .trace-swatch{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .trace-name{font-size:.76rem;color:var(--text2);letter-spacing:.01em}
+.trace-name-input{background:transparent;border:1px solid transparent;border-radius:3px;
+  color:var(--text2);font-size:.74rem;width:100%;min-width:0;padding:1px 3px;outline:none}
+.trace-name-input:hover{border-color:var(--border)}
+.trace-name-input:focus{border-color:var(--accent);background:var(--bg3)}
 .marker-card{padding:5px 5px 5px 8px;border-left:2px solid;border-radius:0 4px 4px 0;
   display:flex;flex-direction:column;gap:2px;
   background:color-mix(in srgb,var(--bg2) 50%,transparent)}
@@ -856,7 +860,7 @@ function renderMag(divId,data,mkrs,xr,yr){
   // Use fs.traceVisible as source of truth so toggleTrace() is immediately reflected
   const vis=fs?.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
   const traces=names.map(nm=>({
-    x:data.freqs,y:data.sp[nm].db,name:nm,mode:'lines',
+    x:data.freqs,y:data.sp[nm].db,name:getTraceDisplayName(fs,nm),mode:'lines',
     line:{color:pc[nm]||'#aaa',width:1.9},
     visible:vis[nm]?true:'legendonly',
   }));
@@ -912,7 +916,7 @@ function renderSmith(divId,data,paramName,mkrs){
   const afTick={...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
   const s=data.sp[paramName];
   const trs=[...smithGrid()];
-  trs.push({x:s.re,y:s.im,name:paramName,mode:'lines',
+  trs.push({x:s.re,y:s.im,name:getTraceDisplayName(fs,paramName),mode:'lines',
     line:{color:pc[paramName]||th.axis,width:2.2},
     hovertemplate:`${paramName}<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`});
   mkrs.forEach((mk,i)=>{
@@ -944,7 +948,7 @@ function renderSpectrum(divId,data,mkrs,xr,yr,fs){
   const th=TH();
   const specColor=isLight()?'#0969da':'#58a6ff';
   const traces=[{
-    x:data.freqsMHz,y:data.dbm,name:'Spectrum',mode:'lines',
+    x:data.freqsMHz,y:data.dbm,name:getTraceDisplayName(fs,'Spectrum'),mode:'lines',
     line:{color:specColor,width:1.6},
   }];
   const shapes=[];
@@ -1015,9 +1019,13 @@ function renderSParamSidePanel(id,fs){
 
   let html='<div class="side-section"><div class="side-title">Traces</div>';
   names.forEach(nm=>{
+    const dispNm=getTraceDisplayName(fs,nm);
     html+=`<div class="trace-row${vis[nm]?'':' trace-hidden'}" onclick="toggleTrace('${id}','${nm}')">
       <span class="trace-swatch" style="background:${pc[nm]}"></span>
-      <span class="trace-name">${nm}</span>
+      <input type="text" class="trace-name-input" value="${htmlEsc(dispNm)}"
+        onclick="event.stopPropagation()"
+        onkeydown="if(event.key==='Enter')this.blur()"
+        onblur="renameTrace('${id}','${nm}',this.value)">
     </div>`;
   });
   html+='</div>';
@@ -1033,7 +1041,7 @@ function renderSParamSidePanel(id,fs){
         <div class="marker-title" style="color:${mk.color}">${mkName}</div>
         <div class="marker-value marker-muted">${fmtF(mf)}</div>`;
       visNames.forEach(nm=>{
-        html+=`<div class="marker-value"><span class="trace-swatch-sm" style="background:${pc[nm]}"></span>&nbsp;${nm}&nbsp;<b>${fs.data.sp[nm].db[idx].toFixed(2)} dB</b></div>`;
+        html+=`<div class="marker-value"><span class="trace-swatch-sm" style="background:${pc[nm]}"></span>&nbsp;${getTraceDisplayName(fs,nm)}&nbsp;<b>${fs.data.sp[nm].db[idx].toFixed(2)} dB</b></div>`;
       });
       html+='</div>';
     });
@@ -1049,7 +1057,10 @@ function renderSpectrumSidePanel(id,fs){
   let html=`<div class="side-section"><div class="side-title">Trace</div>
     <div class="trace-row">
       <span class="trace-swatch" style="background:${specColor}"></span>
-      <span class="trace-name">Spectrum</span>
+      <input type="text" class="trace-name-input" value="${htmlEsc(getTraceDisplayName(fs,'Spectrum'))}"
+        onclick="event.stopPropagation()"
+        onkeydown="if(event.key==='Enter')this.blur()"
+        onblur="renameTrace('${id}','Spectrum',this.value)">
     </div>
   </div>`;
 
@@ -1082,7 +1093,10 @@ function renderSmithSidePanel(id,fs){
     <div class="side-title">Trace</div>
     <div class="trace-row">
       <span class="trace-swatch" style="background:${pc[traceName]||'#aaa'}"></span>
-      <span class="trace-name">${traceName}</span>
+      <input type="text" class="trace-name-input" value="${htmlEsc(getTraceDisplayName(fs,traceName))}"
+        onclick="event.stopPropagation()"
+        onkeydown="if(event.key==='Enter')this.blur()"
+        onblur="renameTrace('${id}','${traceName}',this.value)">
     </div>
   </div>`;
 
@@ -1100,7 +1114,7 @@ function renderSmithSidePanel(id,fs){
       html+=`<div class="marker-card" style="border-left-color:${mk.color}">
         <div class="marker-title" style="color:${mk.color}">${mkName}</div>
         <div class="marker-value marker-muted">${fmtF(mf)}</div>
-        <div class="marker-value"><span class="trace-swatch-sm" style="background:${pc[traceName]||'#aaa'}"></span>&nbsp;${traceName}&nbsp;<b>${db} dB</b></div>
+        <div class="marker-value"><span class="trace-swatch-sm" style="background:${pc[traceName]||'#aaa'}"></span>&nbsp;${getTraceDisplayName(fs,traceName)}&nbsp;<b>${db} dB</b></div>
         <div class="marker-value marker-muted">Re&thinsp;${re}</div>
         <div class="marker-value marker-muted">Im&thinsp;${im}</div>
         <div class="marker-value marker-muted">|Γ|&thinsp;${gamma}&ensp;∠${ang}°</div>
@@ -1142,7 +1156,7 @@ function buildExportAnnotations(fs,divId){
       const visNames=mk.trace?(vis[mk.trace]?[mk.trace]:[]):names.filter(n=>vis[n]);
       if(lines.length)lines.push('');
       lines.push(`<b>${mk.name||'M'+(i+1)}</b>  ${fmtF(mf)}`);
-      visNames.forEach(nm=>{lines.push(`${nm}: ${data.sp[nm].db[idx].toFixed(2)} dB`);});
+      visNames.forEach(nm=>{lines.push(`${getTraceDisplayName(fs,nm)}: ${data.sp[nm].db[idx].toFixed(2)} dB`);});
     });
   }
   if(!lines.length)return[];
@@ -1167,7 +1181,7 @@ function buildSmithExportAnnotations(fs){
     const mkName=mk.name||`M${i+1}`;
     if(lines.length)lines.push('');
     lines.push(`<b>${mkName}</b>  ${fmtF(mf)}`);
-    lines.push(`${traceName}: ${s.db[idx].toFixed(2)} dB`);
+    lines.push(`${getTraceDisplayName(fs,traceName)}: ${s.db[idx].toFixed(2)} dB`);
     lines.push(`Re ${s.re[idx].toFixed(4)}  Im ${s.im[idx].toFixed(4)}`);
     const gamma=Math.sqrt(s.re[idx]*s.re[idx]+s.im[idx]*s.im[idx]).toFixed(4);
     const ang=(Math.atan2(s.im[idx],s.re[idx])*180/Math.PI).toFixed(1);
@@ -1263,7 +1277,7 @@ function renderMkrList(id){
           onclick="event.stopPropagation()"
           onchange="setMkrTrace('${id}',${i},this.value)">
           <option value="">All</option>
-          ${names.map((nm,ni)=>`<option value="${nm}"${mk.trace===nm?' selected':''}>${isCmp?shortName(nm):nm}</option>`).join('')}
+          ${names.map(nm=>`<option value="${nm}"${mk.trace===nm?' selected':''}>${htmlEsc(getTraceDisplayName(fs,nm))}</option>`).join('')}
         </select>`
       :'';
 
@@ -1298,12 +1312,52 @@ function updateHint(id){
   el.textContent=fs&&fs.mkrs.length?'Drag a marker line to move it':'';
 }
 
+// ── compare helpers ───────────────────────────────────────────────────────────
+function getCompareTraceByLabel(fs,label){
+  if(!fs||fs.kind!=='compare')return null;
+  if(label)return fs.data.traces.find(t=>t.label===label)||null;
+  return fs.data.traces.find(t=>fs.traceVisible[t.label]!==false)||fs.data.traces[0]||null;
+}
+
+function getCompareMarkerValues(fs,mk){
+  if(!fs||fs.kind!=='compare')return[];
+  const trs=mk.trace
+    ?fs.data.traces.filter(t=>t.label===mk.trace&&fs.traceVisible[t.label]!==false)
+    :fs.data.traces.filter(t=>fs.traceVisible[t.label]!==false);
+  return trs.map(t=>{
+    const idx=nearest(t.x,mk.freq);
+    return{trace:t,idx,freq:t.x[idx],value:t.y[idx],unit:t.unit};
+  });
+}
+
+function getTraceDisplayName(fs,rawName){
+  if(!fs)return rawName;
+  if(fs.kind==='compare'){
+    const t=fs.data?.traces.find(t=>t.label===rawName);
+    return t?.displayName||rawName;
+  }
+  return fs.traceNames?.[rawName]||rawName;
+}
+
+function renameTrace(id,rawName,newName){
+  const fs=fileById(id); if(!fs)return;
+  const clean=(newName||'').trim(); if(!clean)return;
+  if(fs.kind==='compare'){
+    const t=fs.data.traces.find(t=>t.label===rawName);
+    if(t)t.displayName=clean;
+  } else {
+    if(!fs.traceNames)fs.traceNames={};
+    fs.traceNames[rawName]=clean;
+  }
+  renderAll(id); renderMkrList(id);
+}
+
 // ── drag markers ──────────────────────────────────────────────────────────────
 // Works for all kinds: uses fsFreqs() to get the right frequency array,
 // and looks up the correct plot div id based on fs.kind.
 function attachDragListener(id){
-  const fs=fileById(id); if(!fs||fs._click)return;
-  fs._click=true;
+  const fs=fileById(id); if(!fs||fs._dragAttached)return;
+  fs._dragAttached=true;
   const divId=fs.kind==='compare'?'cmp-plot-'+id:fs.kind==='spectrum'?'sp-'+id:'md-'+id;
   const div=document.getElementById(divId);
   let drag=null,rafId=null;
@@ -1323,7 +1377,7 @@ function attachDragListener(id){
     if(!fs||!fs.data)return best;
     const freqs=fsFreqs(fs);
     fs.mkrs.forEach((mk,i)=>{
-      const mf=freqs[nearest(freqs,mk.freq)];
+      const mf=fs.kind==='compare'?mk.freq:freqs[nearest(freqs,mk.freq)];
       const d=Math.abs(px-freqToPx(mf,xa));
       if(d<THRESH&&d<bestD){best=i;bestD=d;}
     });
@@ -1561,14 +1615,15 @@ function buildCompareTraces(selections){
     const fs=fileById(s.fileId);
     if(!fs||!fs.data)return;
     const color=cols[i%cols.length];
-    const label=`${shortName(fs.name)} — ${s.trace}`;
+    const label=`${fs.id}::${s.trace}::${i}`;
+    const displayName=`${shortName(fs.name)} — ${s.trace}`;
     if(s.kind==='spectrum'){
       traces.push({sourceFileId:fs.id,sourceFileName:fs.name,traceName:s.trace,kind:'spectrum',
-        x:[...fs.data.freqsMHz],y:[...fs.data.dbm],unit:'dBm',label,color});
+        x:[...fs.data.freqsMHz],y:[...fs.data.dbm],unit:'dBm',label,displayName,color});
     } else {
       const sp=fs.data.sp[s.trace]; if(!sp)return;
       traces.push({sourceFileId:fs.id,sourceFileName:fs.name,traceName:s.trace,kind:'sparameter',
-        x:[...fs.data.freqs],y:[...sp.db],unit:'dB',label,color});
+        x:[...fs.data.freqs],y:[...sp.db],unit:'dB',label,displayName,color});
     }
   });
   return traces;
@@ -1688,22 +1743,22 @@ function renderCompareTabPlot(id,fs){
 
   const traces=fs.data.traces.map(t=>{
     const vis=fs.traceVisible[t.label]!==false;
-    return{x:t.x,y:t.y,type:'scatter',mode:'lines',name:htmlEsc(t.label),
+    const dn=t.displayName||t.label;
+    return{x:t.x,y:t.y,type:'scatter',mode:'lines',name:htmlEsc(dn),
       line:{color:t.color,width:1.5},visible:vis?true:'legendonly',
-      hovertemplate:`%{x:.4f} MHz<br>%{y:.2f} ${t.unit}<extra>${htmlEsc(t.label)}</extra>`};
+      hovertemplate:`%{x:.4f} MHz<br>%{y:.2f} ${t.unit}<extra>${htmlEsc(dn)}</extra>`};
   });
 
   fs.mkrs.forEach((mk,mi)=>{
-    const tr=mk.trace?fs.data.traces.find(t=>t.label===mk.trace)
-                     :fs.data.traces.find(t=>fs.traceVisible[t.label]!==false);
-    if(!tr)return;
-    const idx=nearest(tr.x,mk.freq);
     const mkName=mk.name||`M${mi+1}`;
-    traces.push({x:[tr.x[idx]],y:[tr.y[idx]],type:'scatter',mode:'markers+text',
-      marker:{color:mk.color,size:10,symbol:'circle'},
-      text:[mkName],textposition:'bottom center',
-      textfont:{color:mk.color,size:14,...(fs.axisFont?{family:fs.axisFont}:{})},
-      showlegend:false,hoverinfo:'skip'});
+    const vals=getCompareMarkerValues(fs,mk);
+    vals.forEach((v,j)=>{
+      traces.push({x:[v.freq],y:[v.value],type:'scatter',mode:'markers+text',
+        marker:{color:mk.color,size:10,symbol:'circle'},
+        text:[j===0?mkName:''],textposition:'bottom center',
+        textfont:{color:mk.color,size:14,...(fs.axisFont?{family:fs.axisFont}:{})},
+        showlegend:false,hoverinfo:'skip'});
+    });
   });
 
   const xr=fs.xr,yr=fs.yr;
@@ -1727,8 +1782,8 @@ function renderCompareTabPlot(id,fs){
   },{responsive:true,displayModeBar:true,
     modeBarButtonsToRemove:['select2d','lasso2d'],displaylogo:false});
 
-  if(!fs._click){
-    fs._click=true;
+  if(!fs._legendAttached){
+    fs._legendAttached=true;
     div.on('plotly_restyle',(data,indices)=>{
       if(!data[0]||data[0].visible===undefined)return;
       indices.forEach(i=>{
@@ -1746,9 +1801,13 @@ function renderCompareSidePanel(id,fs){
   let html='<div class="side-section"><div class="side-title">Traces</div>';
   fs.data.traces.forEach((t,idx)=>{
     const vis=fs.traceVisible[t.label]!==false;
+    const dn=t.displayName||t.label;
     html+=`<div class="trace-row${vis?'':' trace-hidden'}" onclick="toggleCompareTrace('${id}',${idx})">
       <span class="trace-swatch" style="background:${t.color}"></span>
-      <span class="trace-name">${htmlEsc(t.label)}</span>
+      <input type="text" class="trace-name-input" value="${htmlEsc(dn)}"
+        onclick="event.stopPropagation()"
+        onkeydown="if(event.key==='Enter')this.blur()"
+        onblur="renameTrace('${id}','${t.label}',this.value)">
     </div>`;
   });
   html+='</div>';
@@ -1758,13 +1817,10 @@ function renderCompareSidePanel(id,fs){
       const mkName=mk.name||`M${i+1}`;
       html+=`<div class="marker-card" style="border-left-color:${mk.color}">
         <div class="marker-title" style="color:${mk.color}">${mkName}</div>`;
-      const visTraces=mk.trace
-        ?fs.data.traces.filter(t=>t.label===mk.trace&&fs.traceVisible[t.label]!==false)
-        :fs.data.traces.filter(t=>fs.traceVisible[t.label]!==false);
-      visTraces.forEach(t=>{
-        const idx=nearest(t.x,mk.freq);
-        html+=`<div class="marker-value marker-muted">${fmtF(t.x[idx])}</div>
-          <div class="marker-value"><span class="trace-swatch-sm" style="background:${t.color}"></span>&nbsp;${htmlEsc(t.label)}&nbsp;<b>${t.y[idx].toFixed(2)} ${t.unit}</b></div>`;
+      getCompareMarkerValues(fs,mk).forEach(v=>{
+        const dn=v.trace.displayName||v.trace.label;
+        html+=`<div class="marker-value marker-muted">${fmtF(v.freq)}</div>
+          <div class="marker-value"><span class="trace-swatch-sm" style="background:${v.trace.color}"></span>&nbsp;${htmlEsc(dn)}&nbsp;<b>${v.value.toFixed(2)} ${v.unit}</b></div>`;
       });
       html+='</div>';
     });
@@ -1847,7 +1903,7 @@ function createComparePlot(){
     data:{traces,n:traces.length},
     traceVisible:Object.fromEntries(traces.map(t=>[t.label,true])),
     mkrs:[],activeMkr:0,xr:[null,null],yr:[null,null],
-    _ev:false,_click:false,axisFont:'Helvetica',axisFontSize:null,
+    _ev:false,_dragAttached:false,_legendAttached:false,axisFont:'Helvetica',axisFontSize:null,
   };
 
   const panel=createComparePanel(fs);
@@ -1988,7 +2044,7 @@ function computeAnalysisSummary(id,fs){
     for(const tr of visTrs){
       const ex=computeTraceExtrema(tr.x,tr.y,range);
       if(!ex)continue;
-      traces.push({label:tr.label,color:tr.color,unit:tr.unit,
+      traces.push({label:tr.label,displayName:tr.displayName||tr.label,color:tr.color,unit:tr.unit,
         minV:ex.minV,minFreq:tr.x[ex.minI],
         maxV:ex.maxV,maxFreq:tr.x[ex.maxI]});
     }
@@ -2081,7 +2137,7 @@ function renderAnalysisSummary(id){
   if(r.kind==='compare'){
     let detHtml='';
     r.traces.forEach(tr=>{
-      detHtml+=`<div class="ana-row"><span class="ana-lbl" style="color:${tr.color}">${htmlEsc(shortName(tr.label))}</span></div>`;
+      detHtml+=`<div class="ana-row"><span class="ana-lbl" style="color:${tr.color}">${htmlEsc(shortName(tr.displayName||tr.label))}</span></div>`;
       detHtml+=`<div class="ana-row"><span class="ana-lbl">Min</span><span class="ana-val">${fmtF(tr.minFreq)}&ensp;${tr.minV.toFixed(2)}&thinsp;${tr.unit}</span></div>`;
       detHtml+=`<div class="ana-row"><span class="ana-lbl">Max</span><span class="ana-val">${fmtF(tr.maxFreq)}&ensp;${tr.maxV.toFixed(2)}&thinsp;${tr.unit}</span></div>`;
     });
@@ -2334,7 +2390,7 @@ function loadFiles(fileList,hint){
         id:'f'+(_fid++),name:file.name,type:ext,
         kind,
         data:null,mkrs:[],activeMkr:0,xr:[null,null],yr:[null,null],
-        _ev:false,_click:false,sp:'S11',axisFont:'Helvetica',axisFontSize:null,
+        _ev:false,_dragAttached:false,_legendAttached:false,sp:'S11',axisFont:'Helvetica',axisFontSize:null,
       };
       const r=new FileReader();
       r.onload=ev=>{
@@ -2345,6 +2401,9 @@ function loadFiles(fileList,hint){
           fs.data=d;
           if(kind==='sparameter'){
             fs.traceVisible=Object.fromEntries(Object.keys(d.sp).map(n=>[n,true]));
+            fs.traceNames=Object.fromEntries(Object.keys(d.sp).map(n=>[n,n]));
+          } else {
+            fs.traceNames={Spectrum:'Spectrum'};
           }
 
           // create appropriate panel
@@ -2580,7 +2639,7 @@ function _rptMagTable(fs){
   const vis=fs.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
   const vn=names.filter(n=>vis[n]);
   if(!vn.length)return '<p class="rno-mkr">All traces hidden.</p>';
-  let h=`<table class="rpt-tbl"><thead><tr><th>Marker</th><th>Frequency</th>${vn.map(n=>`<th>${n} (dB)</th>`).join('')}</tr></thead><tbody>`;
+  let h=`<table class="rpt-tbl"><thead><tr><th>Marker</th><th>Frequency</th>${vn.map(n=>`<th>${htmlEsc(getTraceDisplayName(fs,n))} (dB)</th>`).join('')}</tr></thead><tbody>`;
   fs.mkrs.forEach((mk,i)=>{
     const idx=nearest(fs.data.freqs,mk.freq);
     h+=`<tr><td style="color:${mk.color};font-weight:700">${htmlEsc(mk.name||'M'+(i+1))}</td><td>${htmlEsc(fmtF(fs.data.freqs[idx]))}</td>`;
@@ -2626,14 +2685,15 @@ function _rptAnalysisHTML(id,fs){
     return h+'</tbody></table>';
   }
   r.keyResults.forEach(kr=>{
-    const lbl=kr.sub?`${kr.label} — ${kr.sub} [${kr.trace}]`:`${kr.label} [${kr.trace}]`;
+    const dn=getTraceDisplayName(fs,kr.trace);
+    const lbl=kr.sub?`${kr.label} — ${kr.sub} [${dn}]`:`${kr.label} [${dn}]`;
     h+=`<tr><td>${lbl}</td><td>${fmtF(kr.freq)}</td><td>${kr.db.toFixed(2)} dB</td></tr>`;
   });
   h+='</tbody></table>';
   h+='<h3 class="rpt-h3">Full Min/Max Detail</h3>';
   h+='<table class="rpt-tbl"><thead><tr><th>Trace</th><th>Min Freq</th><th>Min (dB)</th><th>Max Freq</th><th>Max (dB)</th></tr></thead><tbody>';
   r.traces.forEach(tr=>{
-    h+=`<tr><td>${tr.name}</td><td>${fmtF(tr.minFreq)}</td><td>${tr.minDb.toFixed(2)}</td><td>${fmtF(tr.maxFreq)}</td><td>${tr.maxDb.toFixed(2)}</td></tr>`;
+    h+=`<tr><td>${htmlEsc(getTraceDisplayName(fs,tr.name))}</td><td>${fmtF(tr.minFreq)}</td><td>${tr.minDb.toFixed(2)}</td><td>${fmtF(tr.maxFreq)}</td><td>${tr.maxDb.toFixed(2)}</td></tr>`;
   });
   return h+'</tbody></table>';
 }
