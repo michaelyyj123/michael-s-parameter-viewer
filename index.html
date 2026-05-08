@@ -915,19 +915,32 @@ function renderSmith(divId,data,paramName,mkrs){
   const afTitle={color:th.axis,...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
   const afTick={...(axFont?{family:axFont}:{}),...(axSize?{size:axSize}:{})};
   const s=data.sp[paramName];
+  const isRefl=paramName==='S11'||paramName==='S22';
   const trs=[...smithGrid()];
-  trs.push({x:s.re,y:s.im,name:getTraceDisplayName(fs,paramName),mode:'lines',
-    line:{color:pc[paramName]||th.axis,width:2.2},
-    hovertemplate:`${paramName}<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`});
+  const lineTrace={x:s.re,y:s.im,name:getTraceDisplayName(fs,paramName),mode:'lines',
+    line:{color:pc[paramName]||th.axis,width:2.2}};
+  if(isRefl){
+    lineTrace.customdata=s.re.map((re,i)=>{
+      const gamma=Math.sqrt(re*re+s.im[i]*s.im[i]);
+      return[fmtVSWR(gammaToVSWR(gamma))];
+    });
+    lineTrace.hovertemplate=`${paramName}<br>Re: %{x:.4f}<br>Im: %{y:.4f}<br>VSWR: %{customdata[0]}<extra></extra>`;
+  } else {
+    lineTrace.hovertemplate=`${paramName}<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`;
+  }
+  trs.push(lineTrace);
   mkrs.forEach((mk,i)=>{
     const idx=nearest(data.freqs,mk.freq);
     const db=s.db[idx].toFixed(2);
-    trs.push({x:[s.re[idx]],y:[s.im[idx]],mode:'markers+text',
+    const re=s.re[idx],im=s.im[idx];
+    const gamma=Math.sqrt(re*re+im*im);
+    const vswrStr=isRefl?`<br>VSWR: ${fmtVSWR(gammaToVSWR(gamma))}`:'';
+    trs.push({x:[re],y:[im],mode:'markers+text',
       marker:{color:mk.color,size:12,symbol:'circle',line:{color:th.plot,width:1.8}},
       text:[mk.name||`M${i+1}`],textposition:'top right',
       textfont:{color:mk.color,size:axSize||10,...(axFont?{family:axFont}:{})},
       showlegend:false,
-      hovertemplate:`${mk.name||`M${i+1}`}: ${fmtF(data.freqs[idx])}<br>${paramName}: ${db} dB<br>Re: %{x:.4f}<br>Im: %{y:.4f}<extra></extra>`});
+      hovertemplate:`${mk.name||`M${i+1}`}: ${fmtF(data.freqs[idx])}<br>${paramName}: ${db} dB<br>Re: %{x:.4f}<br>Im: %{y:.4f}${vswrStr}<extra></extra>`});
   });
   Plotly.react(divId,trs,{
     paper_bgcolor:th.paper,plot_bgcolor:th.plot,
@@ -1109,8 +1122,12 @@ function renderSmithSidePanel(id,fs){
       const db=s.db[idx].toFixed(2);
       const re=s.re[idx].toFixed(4);
       const im=s.im[idx].toFixed(4);
-      const gamma=Math.sqrt(s.re[idx]*s.re[idx]+s.im[idx]*s.im[idx]).toFixed(4);
+      const gammaRaw=Math.sqrt(s.re[idx]*s.re[idx]+s.im[idx]*s.im[idx]);
+      const gamma=gammaRaw.toFixed(4);
       const ang=(Math.atan2(s.im[idx],s.re[idx])*180/Math.PI).toFixed(1);
+      const isRefl=traceName==='S11'||traceName==='S22';
+      const vswrLine=isRefl
+        ?`<div class="marker-value marker-muted">VSWR&thinsp;${fmtVSWR(gammaToVSWR(gammaRaw))}</div>`:'' ;
       html+=`<div class="marker-card" style="border-left-color:${mk.color}">
         <div class="marker-title" style="color:${mk.color}">${mkName}</div>
         <div class="marker-value marker-muted">${fmtF(mf)}</div>
@@ -1118,6 +1135,7 @@ function renderSmithSidePanel(id,fs){
         <div class="marker-value marker-muted">Re&thinsp;${re}</div>
         <div class="marker-value marker-muted">Im&thinsp;${im}</div>
         <div class="marker-value marker-muted">|Γ|&thinsp;${gamma}&ensp;∠${ang}°</div>
+        ${vswrLine}
       </div>`;
     });
     html+='</div>';
@@ -1183,9 +1201,10 @@ function buildSmithExportAnnotations(fs){
     lines.push(`<b>${mkName}</b>  ${fmtF(mf)}`);
     lines.push(`${getTraceDisplayName(fs,traceName)}: ${s.db[idx].toFixed(2)} dB`);
     lines.push(`Re ${s.re[idx].toFixed(4)}  Im ${s.im[idx].toFixed(4)}`);
-    const gamma=Math.sqrt(s.re[idx]*s.re[idx]+s.im[idx]*s.im[idx]).toFixed(4);
+    const gammaRaw=Math.sqrt(s.re[idx]*s.re[idx]+s.im[idx]*s.im[idx]);
     const ang=(Math.atan2(s.im[idx],s.re[idx])*180/Math.PI).toFixed(1);
-    lines.push(`|Γ| ${gamma} ∠${ang}°`);
+    lines.push(`|Γ| ${gammaRaw.toFixed(4)} ∠${ang}°`);
+    if(traceName==='S11'||traceName==='S22')lines.push(`VSWR ${fmtVSWR(gammaToVSWR(gammaRaw))}`);
   });
   if(!lines.length)return[];
   return[{x:0.98,y:0.97,xref:'paper',yref:'paper',xanchor:'right',yanchor:'top',
@@ -2033,6 +2052,60 @@ function computeTraceExtrema(freqs,dbArr,range){
   return minI===-1?null:{minI,minV,maxI,maxV};
 }
 
+// ── 3 dB bandwidth & VSWR helpers ────────────────────────────────────────────
+function interpCrossX(x1,y1,x2,y2,threshold){
+  if(y2===y1)return x1;
+  return x1+(threshold-y1)*(x2-x1)/(y2-y1);
+}
+
+function compute3dBBandwidth(freqs,y,mode,range){
+  mode=mode||'peak'; range=range||[null,null];
+  const inRange=[];
+  for(let i=0;i<freqs.length;i++){
+    if(range[0]!==null&&freqs[i]<range[0])continue;
+    if(range[1]!==null&&freqs[i]>range[1])continue;
+    inRange.push(i);
+  }
+  if(inRange.length<2)return{ok:false,reason:'Insufficient data in range.'};
+  let peakI=-1;
+  if(mode==='peak'){let best=-Infinity;for(const i of inRange){if(y[i]>best){best=y[i];peakI=i;}}}
+  else{let best=Infinity;for(const i of inRange){if(y[i]<best){best=y[i];peakI=i;}}}
+  const peakVal=y[peakI];
+  const threshold=mode==='peak'?peakVal-3:peakVal+3;
+  const centerFreq=freqs[peakI];
+  let fLow=null;
+  for(let i=peakI-1;i>=0;i--){
+    const crosses=mode==='peak'?y[i]<threshold:y[i]>threshold;
+    if(crosses){fLow=interpCrossX(freqs[i],y[i],freqs[i+1],y[i+1],threshold);break;}
+  }
+  let fHigh=null;
+  for(let i=peakI+1;i<freqs.length;i++){
+    const crosses=mode==='peak'?y[i]<threshold:y[i]>threshold;
+    if(crosses){fHigh=interpCrossX(freqs[i-1],y[i-1],freqs[i],y[i],threshold);break;}
+  }
+  if(fLow===null||fHigh===null)return{ok:false,mode,centerFreq,peakOrDipValue:peakVal,threshold,
+    reason:'No full 3 dB crossing in visible range.'};
+  return{ok:true,mode,centerFreq,peakOrDipValue:peakVal,threshold,fLow,fHigh,bw:fHigh-fLow};
+}
+
+function bandwidthModeForTrace(kind,traceName){
+  if(kind==='spectrum')return'peak';
+  if(traceName==='S11'||traceName==='S22')return'dip';
+  return'peak';
+}
+
+function gammaToVSWR(gamma){
+  if(!isFinite(gamma))return null;
+  if(gamma>=1)return Infinity;
+  return(1+gamma)/(1-gamma);
+}
+function dbToGamma(db){return Math.pow(10,db/20);}
+function fmtVSWR(v){
+  if(v===null)return'—';
+  if(!isFinite(v))return'∞';
+  return v.toFixed(2)+':1';
+}
+
 function computeAnalysisSummary(id,fs){
   if(!fs||!fs.data)return null;
   const range=getSearchRange(id,fs);
@@ -2044,9 +2117,11 @@ function computeAnalysisSummary(id,fs){
     for(const tr of visTrs){
       const ex=computeTraceExtrema(tr.x,tr.y,range);
       if(!ex)continue;
+      const bwMode=bandwidthModeForTrace(tr.kind,tr.traceName);
+      const bw3=compute3dBBandwidth(tr.x,tr.y,bwMode,range);
       traces.push({label:tr.label,displayName:tr.displayName||tr.label,color:tr.color,unit:tr.unit,
         minV:ex.minV,minFreq:tr.x[ex.minI],
-        maxV:ex.maxV,maxFreq:tr.x[ex.maxI]});
+        maxV:ex.maxV,maxFreq:tr.x[ex.maxI],bw3});
     }
     if(!traces.length)return{kind:'compare',noData:true};
     return{kind:'compare',noData:false,noVisible:false,traces};
@@ -2065,10 +2140,11 @@ function computeAnalysisSummary(id,fs){
     }
     if(peakI===-1)return{kind:'spectrum',noData:true};
     const noiseFloor=medianArr(inRange);
+    const bw3=compute3dBBandwidth(freqs,dbm,'peak',range);
     return{kind:'spectrum',noData:false,
       peak:{freq:freqs[peakI],dbm:peakV},
       min:{freq:freqs[minI],dbm:minV},
-      noiseFloor,dynamicRange:peakV-noiseFloor};
+      noiseFloor,dynamicRange:peakV-noiseFloor,bw3};
   }
 
   // S-parameter
@@ -2086,16 +2162,18 @@ function computeAnalysisSummary(id,fs){
     const ex=computeTraceExtrema(freqs,s.db,range);
     if(!ex)continue;
 
+    const bwMode=bandwidthModeForTrace('sparameter',nm);
+    const bw3=compute3dBBandwidth(freqs,s.db,bwMode,range);
     traces.push({name:nm,
       minDb:ex.minV,minFreq:freqs[ex.minI],
-      maxDb:ex.maxV,maxFreq:freqs[ex.maxI]});
+      maxDb:ex.maxV,maxFreq:freqs[ex.maxI],bw3});
 
     if(nm==='S11'){
       keyResults.push({label:'Resonance',sub:'Best Match',trace:'S11',
-        freq:freqs[ex.minI],db:ex.minV});
+        freq:freqs[ex.minI],db:ex.minV,bw3});
     } else if(nm==='S21'){
       keyResults.push({label:'Peak TX',sub:'Insertion Loss',trace:'S21',
-        freq:freqs[ex.maxI],db:ex.maxV});
+        freq:freqs[ex.maxI],db:ex.maxV,bw3});
     } else if(nm==='S12'){
       let freq,db;
       if(activeMk){
@@ -2104,10 +2182,10 @@ function computeAnalysisSummary(id,fs){
       } else {
         freq=freqs[ex.minI];db=ex.minV;
       }
-      keyResults.push({label:'Isolation',sub:'',trace:'S12',freq,db});
+      keyResults.push({label:'Isolation',sub:'',trace:'S12',freq,db,bw3});
     } else if(nm==='S22'){
       keyResults.push({label:'Output Match',sub:'',trace:'S22',
-        freq:freqs[ex.minI],db:ex.minV});
+        freq:freqs[ex.minI],db:ex.minV,bw3});
     }
   }
 
@@ -2137,9 +2215,11 @@ function renderAnalysisSummary(id){
   if(r.kind==='compare'){
     let detHtml='';
     r.traces.forEach(tr=>{
+      const bwStr=tr.bw3?.ok?`${tr.bw3.bw.toFixed(3)} MHz`:'—';
       detHtml+=`<div class="ana-row"><span class="ana-lbl" style="color:${tr.color}">${htmlEsc(shortName(tr.displayName||tr.label))}</span></div>`;
       detHtml+=`<div class="ana-row"><span class="ana-lbl">Min</span><span class="ana-val">${fmtF(tr.minFreq)}&ensp;${tr.minV.toFixed(2)}&thinsp;${tr.unit}</span></div>`;
       detHtml+=`<div class="ana-row"><span class="ana-lbl">Max</span><span class="ana-val">${fmtF(tr.maxFreq)}&ensp;${tr.maxV.toFixed(2)}&thinsp;${tr.unit}</span></div>`;
+      detHtml+=`<div class="ana-row"><span class="ana-lbl">3 dB BW</span><span class="ana-val">${bwStr}</span></div>`;
     });
     html+=detHtml;
   } else if(r.kind==='spectrum'){
@@ -2148,17 +2228,21 @@ function renderAnalysisSummary(id){
     html+=`<div class="ana-card"><div class="ana-card-title">Minimum</div><div class="ana-card-freq">${fmtF(r.min.freq)}</div><div class="ana-card-value">${r.min.dbm.toFixed(2)} dBm</div></div>`;
     html+=`<div class="ana-card"><div class="ana-card-title">Noise Floor</div><div class="ana-card-muted">${r.noiseFloor.toFixed(1)} dBm</div></div>`;
     html+=`<div class="ana-card"><div class="ana-card-title">Dyn Range</div><div class="ana-card-muted">${r.dynamicRange.toFixed(1)} dB</div></div>`;
+    if(r.bw3?.ok)html+=`<div class="ana-card"><div class="ana-card-title">3 dB BW</div><div class="ana-card-freq">${fmtF(r.bw3.centerFreq)}</div><div class="ana-card-value">${r.bw3.bw.toFixed(3)} MHz</div></div>`;
     html+='</div>';
   } else {
     html+='<div class="ana-grid">';
     r.keyResults.forEach(kr=>{
-      html+=`<div class="ana-card"><div class="ana-card-title">${kr.label}</div><div class="ana-card-trace">${kr.trace}</div><div class="ana-card-freq">${fmtF(kr.freq)}</div><div class="ana-card-value">${kr.db.toFixed(2)} dB</div></div>`;
+      const bwLine=kr.bw3?.ok?`<div class="ana-card-muted" style="font-size:.68rem">3 dB BW: ${kr.bw3.bw.toFixed(3)} MHz</div>`:'';
+      html+=`<div class="ana-card"><div class="ana-card-title">${kr.label}</div><div class="ana-card-trace">${kr.trace}</div><div class="ana-card-freq">${fmtF(kr.freq)}</div><div class="ana-card-value">${kr.db.toFixed(2)} dB</div>${bwLine}</div>`;
     });
     html+='</div>';
     let detHtml='';
     r.traces.forEach(tr=>{
+      const bwStr=tr.bw3?.ok?`${tr.bw3.bw.toFixed(3)} MHz`:'—';
       detHtml+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Min</span><span class="ana-val">${fmtF(tr.minFreq)}&ensp;${tr.minDb.toFixed(2)} dB</span></div>`;
       detHtml+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;Max</span><span class="ana-val">${fmtF(tr.maxFreq)}&ensp;${tr.maxDb.toFixed(2)} dB</span></div>`;
+      detHtml+=`<div class="ana-row"><span class="ana-lbl">${tr.name}&thinsp;3dB BW</span><span class="ana-val">${bwStr}</span></div>`;
     });
     html+=`<details class="ana-details"><summary class="ana-details-toggle">Full min/max</summary>${detHtml}</details>`;
   }
@@ -2624,10 +2708,24 @@ function openReportModal(){
   if(!fs||!fs.data)return;
   const info=document.getElementById('rpt-file-info');
   if(info){
-    const isSP=fs.kind==='sparameter';
-    const freqs=fsFreqs(fs);
-    const fr=fmtF(Math.min(...freqs))+' – '+fmtF(Math.max(...freqs));
-    info.innerHTML=`<b>${htmlEsc(fs.name)}</b>&ensp;·&ensp;${isSP?fs.type.toUpperCase()+' S-Parameter':'Spectrum Analyzer'}&ensp;·&ensp;${fs.data.n} pts&ensp;·&ensp;${fr}`;
+    let typeLabel,ptsLabel,fr;
+    if(fs.kind==='sparameter'){
+      typeLabel=fs.type.toUpperCase()+' S-Parameter';
+      ptsLabel=`${fs.data.n} pts`;
+      const freqs=fsFreqs(fs);
+      fr=fmtF(Math.min(...freqs))+' – '+fmtF(Math.max(...freqs));
+    } else if(fs.kind==='spectrum'){
+      typeLabel='Spectrum Analyzer';
+      ptsLabel=`${fs.data.n} pts`;
+      const freqs=fsFreqs(fs);
+      fr=fmtF(Math.min(...freqs))+' – '+fmtF(Math.max(...freqs));
+    } else {
+      typeLabel='Trace Comparison';
+      ptsLabel=`${fs.data.n} traces`;
+      const allX=fs.data.traces.flatMap(t=>t.x);
+      fr=allX.length?fmtF(Math.min(...allX))+' – '+fmtF(Math.max(...allX)):'—';
+    }
+    info.innerHTML=`<b>${htmlEsc(fs.name)}</b>&ensp;·&ensp;${typeLabel}&ensp;·&ensp;${ptsLabel}&ensp;·&ensp;${fr}`;
   }
   document.getElementById('report-modal').classList.add('open');
 }
@@ -2651,12 +2749,30 @@ function _rptMagTable(fs){
 function _rptSmithTable(fs){
   const tn=fs.sp||'S11',s=fs.data.sp[tn];
   if(!fs.mkrs.length||!s)return '';
-  let h=`<table class="rpt-tbl"><thead><tr><th>Marker</th><th>Frequency</th><th>Trace</th><th>Mag (dB)</th><th>Re(Γ)</th><th>Im(Γ)</th><th>|Γ|</th><th>∠ (°)</th></tr></thead><tbody>`;
+  const isRefl=tn==='S11'||tn==='S22';
+  const vswrHdr=isRefl?'<th>VSWR</th>':'';
+  let h=`<table class="rpt-tbl"><thead><tr><th>Marker</th><th>Frequency</th><th>Trace</th><th>Mag (dB)</th><th>Re(Γ)</th><th>Im(Γ)</th><th>|Γ|</th><th>∠ (°)</th>${vswrHdr}</tr></thead><tbody>`;
   fs.mkrs.forEach((mk,i)=>{
     const idx=nearest(fs.data.freqs,mk.freq);
     const re=s.re[idx],im=s.im[idx];
     const gm=Math.sqrt(re*re+im*im),ang=Math.atan2(im,re)*180/Math.PI;
-    h+=`<tr><td style="color:${mk.color};font-weight:700">${htmlEsc(mk.name||'M'+(i+1))}</td><td>${htmlEsc(fmtF(fs.data.freqs[idx]))}</td><td>${tn}</td><td>${s.db[idx].toFixed(2)}</td><td>${re.toFixed(4)}</td><td>${im.toFixed(4)}</td><td>${gm.toFixed(4)}</td><td>${ang.toFixed(1)}</td></tr>`;
+    const vswrCell=isRefl?`<td>${fmtVSWR(gammaToVSWR(gm))}</td>`:'';
+    h+=`<tr><td style="color:${mk.color};font-weight:700">${htmlEsc(mk.name||'M'+(i+1))}</td><td>${htmlEsc(fmtF(fs.data.freqs[idx]))}</td><td>${tn}</td><td>${s.db[idx].toFixed(2)}</td><td>${re.toFixed(4)}</td><td>${im.toFixed(4)}</td><td>${gm.toFixed(4)}</td><td>${ang.toFixed(1)}</td>${vswrCell}</tr>`;
+  });
+  return h+'</tbody></table>';
+}
+function _rptCompareTable(fs){
+  if(!fs.mkrs.length)return'<p class="rno-mkr">No markers set.</p>';
+  const visTrs=fs.data.traces.filter(t=>fs.traceVisible[t.label]!==false);
+  if(!visTrs.length)return'<p class="rno-mkr">All traces hidden.</p>';
+  let h='<table class="rpt-tbl"><thead><tr><th>Marker</th><th>Trace</th><th>Frequency</th><th>Value</th></tr></thead><tbody>';
+  fs.mkrs.forEach((mk,i)=>{
+    const vals=getCompareMarkerValues(fs,mk);
+    vals.forEach(v=>{
+      const dn=v.trace.displayName||v.trace.label;
+      h+=`<tr><td style="color:${mk.color};font-weight:700">${htmlEsc(mk.name||'M'+(i+1))}</td>`;
+      h+=`<td>${htmlEsc(dn)}</td><td>${htmlEsc(fmtF(v.freq))}</td><td>${v.value.toFixed(2)} ${v.unit}</td></tr>`;
+    });
   });
   return h+'</tbody></table>';
 }
@@ -2676,45 +2792,80 @@ function _rptAnalysisHTML(id,fs){
   if(r.noData)return'<p class="rno-mkr">No data in visible range.</p>';
   if(r.noVisible)return'<p class="rno-mkr">No visible traces.</p>';
 
+  if(r.kind==='compare'){
+    let h='<table class="rpt-tbl"><thead><tr><th>Trace</th><th>Min</th><th>Max</th><th>3 dB BW</th></tr></thead><tbody>';
+    r.traces.forEach(tr=>{
+      const bw=tr.bw3?.ok?`${tr.bw3.bw.toFixed(4)} MHz`:'—';
+      h+=`<tr><td>${htmlEsc(tr.displayName||tr.label)}</td>`;
+      h+=`<td>${fmtF(tr.minFreq)} / ${tr.minV.toFixed(2)} ${tr.unit}</td>`;
+      h+=`<td>${fmtF(tr.maxFreq)} / ${tr.maxV.toFixed(2)} ${tr.unit}</td>`;
+      h+=`<td>${bw}</td></tr>`;
+    });
+    return h+'</tbody></table>';
+  }
+
   let h='<table class="rpt-tbl"><thead><tr><th>Result</th><th>Frequency</th><th>Value</th></tr></thead><tbody>';
   if(r.kind==='spectrum'){
     h+=`<tr><td>Peak Power</td><td>${fmtF(r.peak.freq)}</td><td>${r.peak.dbm.toFixed(2)} dBm</td></tr>`;
     h+=`<tr><td>Minimum Power</td><td>${fmtF(r.min.freq)}</td><td>${r.min.dbm.toFixed(2)} dBm</td></tr>`;
     h+=`<tr><td>Noise Floor (median)</td><td>—</td><td>${r.noiseFloor.toFixed(1)} dBm</td></tr>`;
     h+=`<tr><td>Dynamic Range</td><td>—</td><td>${r.dynamicRange.toFixed(1)} dB</td></tr>`;
+    if(r.bw3?.ok)h+=`<tr><td>3 dB Bandwidth</td><td>${fmtF(r.bw3.centerFreq)}</td><td>${r.bw3.bw.toFixed(4)} MHz</td></tr>`;
     return h+'</tbody></table>';
   }
   r.keyResults.forEach(kr=>{
     const dn=getTraceDisplayName(fs,kr.trace);
     const lbl=kr.sub?`${kr.label} — ${kr.sub} [${dn}]`:`${kr.label} [${dn}]`;
     h+=`<tr><td>${lbl}</td><td>${fmtF(kr.freq)}</td><td>${kr.db.toFixed(2)} dB</td></tr>`;
+    if(kr.bw3?.ok)h+=`<tr><td>&emsp;3 dB BW</td><td>${fmtF(kr.bw3.centerFreq)}</td><td>${kr.bw3.bw.toFixed(4)} MHz</td></tr>`;
   });
   h+='</tbody></table>';
   h+='<h3 class="rpt-h3">Full Min/Max Detail</h3>';
-  h+='<table class="rpt-tbl"><thead><tr><th>Trace</th><th>Min Freq</th><th>Min (dB)</th><th>Max Freq</th><th>Max (dB)</th></tr></thead><tbody>';
+  h+='<table class="rpt-tbl"><thead><tr><th>Trace</th><th>Min Freq</th><th>Min (dB)</th><th>Max Freq</th><th>Max (dB)</th><th>3 dB BW</th></tr></thead><tbody>';
   r.traces.forEach(tr=>{
-    h+=`<tr><td>${htmlEsc(getTraceDisplayName(fs,tr.name))}</td><td>${fmtF(tr.minFreq)}</td><td>${tr.minDb.toFixed(2)}</td><td>${fmtF(tr.maxFreq)}</td><td>${tr.maxDb.toFixed(2)}</td></tr>`;
+    const bw=tr.bw3?.ok?`${tr.bw3.bw.toFixed(4)} MHz`:'—';
+    h+=`<tr><td>${htmlEsc(getTraceDisplayName(fs,tr.name))}</td><td>${fmtF(tr.minFreq)}</td><td>${tr.minDb.toFixed(2)}</td><td>${fmtF(tr.maxFreq)}</td><td>${tr.maxDb.toFixed(2)}</td><td>${bw}</td></tr>`;
   });
   return h+'</tbody></table>';
 }
 
 function _buildReportHTML(fs,opts){
-  const{dut,operator,setup,notes,magImg,smithImg,specImg,analysisHtml}=opts;
+  const{dut,operator,setup,notes,magImg,smithImg,specImg,cmpImg,analysisHtml}=opts;
   const now=new Date().toLocaleString();
   const isSP=fs.kind==='sparameter';
-  const freqs=fsFreqs(fs);
-  const fMin=fmtF(Math.min(...freqs)),fMax=fmtF(Math.max(...freqs));
+  const isCmp=fs.kind==='compare';
+
+  let typeLabel,fMin,fMax;
+  if(isSP){
+    typeLabel=fs.type.toUpperCase()+' S-Parameter';
+    const freqs=fsFreqs(fs);
+    fMin=fmtF(Math.min(...freqs));fMax=fmtF(Math.max(...freqs));
+  } else if(isCmp){
+    typeLabel='Trace Comparison';
+    const allX=fs.data.traces.flatMap(t=>t.x);
+    fMin=allX.length?fmtF(Math.min(...allX)):'—';
+    fMax=allX.length?fmtF(Math.max(...allX)):'—';
+  } else {
+    typeLabel='Spectrum Analyzer CSV';
+    const freqs=fsFreqs(fs);
+    fMin=fmtF(Math.min(...freqs));fMax=fmtF(Math.max(...freqs));
+  }
 
   let meta=`<tr><td>DUT Name</td><td>${htmlEsc(dut||'—')}</td></tr>
 <tr><td>Operator</td><td>${htmlEsc(operator||'—')}</td></tr>
 <tr><td>File</td><td>${htmlEsc(fs.name)}</td></tr>
-<tr><td>Type</td><td>${isSP?fs.type.toUpperCase()+' S-Parameter':'Spectrum Analyzer CSV'}</td></tr>
+<tr><td>Type</td><td>${typeLabel}</td></tr>
 <tr><td>Generated</td><td>${now}</td></tr>
-<tr><td>Freq Range</td><td>${fMin} – ${fMax}</td></tr>
-<tr><td>Points</td><td>${fs.data.n}</td></tr>`;
-  if(isSP){
+<tr><td>Freq Range</td><td>${fMin} – ${fMax}</td></tr>`;
+  if(isCmp){
+    const srcFiles=[...new Set(fs.data.traces.map(t=>t.sourceFileName))];
+    meta+=`<tr><td>Trace Count</td><td>${fs.data.n}</td></tr>`;
+    meta+=`<tr><td>Source Files</td><td>${htmlEsc(srcFiles.join(', '))}</td></tr>`;
+  } else if(isSP){
+    meta+=`<tr><td>Points</td><td>${fs.data.n}</td></tr>`;
     meta+=`<tr><td>Format</td><td>${fs.data.fmt}</td></tr><tr><td>Z₀</td><td>${fs.data.z0} Ω</td></tr>`;
   } else {
+    meta+=`<tr><td>Points</td><td>${fs.data.n}</td></tr>`;
     const m=fs.data.meta||{};
     ['Instrument','Center Frequency','Span','RBW','VBW','Ref Level'].forEach(k=>{
       if(m[k])meta+=`<tr><td>${k}</td><td>${htmlEsc(fmtSpecMeta(m,k))}</td></tr>`;
@@ -2725,8 +2876,12 @@ function _buildReportHTML(fs,opts){
   if(magImg)plots+=`<figure><img src="${magImg}" style="max-width:100%;border:1px solid #dde4ee;border-radius:4px"><figcaption>Figure 1 – Magnitude Response (dB)</figcaption></figure>`;
   if(smithImg)plots+=`<figure style="text-align:center"><img src="${smithImg}" style="max-width:480px;width:100%;border:1px solid #dde4ee;border-radius:4px"><figcaption>Figure 2 – Smith Chart (${htmlEsc(fs.sp||'S11')})</figcaption></figure>`;
   if(specImg)plots+=`<figure><img src="${specImg}" style="max-width:100%;border:1px solid #dde4ee;border-radius:4px"><figcaption>Figure 1 – Spectrum Analyzer Trace</figcaption></figure>`;
+  if(cmpImg)plots+=`<figure><img src="${cmpImg}" style="max-width:100%;border:1px solid #dde4ee;border-radius:4px"><figcaption>Figure 1 – Trace Comparison Plot</figcaption></figure>`;
 
-  let mkrs=isSP?_rptMagTable(fs):_rptSpecTable(fs);
+  let mkrs='';
+  if(isSP) mkrs=_rptMagTable(fs);
+  else if(isCmp) mkrs=_rptCompareTable(fs);
+  else mkrs=_rptSpecTable(fs);
   const smithTbl=isSP?_rptSmithTable(fs):'';
   if(smithTbl)mkrs+=`<h3 class="rpt-h3">Smith Chart Values (${htmlEsc(fs.sp||'S11')})</h3>${smithTbl}`;
 
@@ -2819,15 +2974,17 @@ async function generateReport(){
   btn.textContent='Generate Report';btn.disabled=true;
   if(prog)prog.innerHTML='<div class="rpt-spinner"></div>Capturing plots…';
   try{
-    let magImg=null,smithImg=null,specImg=null;
+    let magImg=null,smithImg=null,specImg=null,cmpImg=null;
     if(fs.kind==='sparameter'){
       magImg=await _plotImage('md-'+fs.id);
       smithImg=await _plotImage('sc-'+fs.id);
-    } else {
+    } else if(fs.kind==='spectrum'){
       specImg=await _plotImage('sp-'+fs.id);
+    } else if(fs.kind==='compare'){
+      cmpImg=await _plotImage('cmp-plot-'+fs.id);
     }
     const analysisHtml=_rptAnalysisHTML(fs.id,fs);
-    const html=_buildReportHTML(fs,{dut,operator,setup,notes,magImg,smithImg,specImg,analysisHtml});
+    const html=_buildReportHTML(fs,{dut,operator,setup,notes,magImg,smithImg,specImg,cmpImg,analysisHtml});
     win.document.open();win.document.write(html);win.document.close();
     closeReportModal();
   }catch(e){
