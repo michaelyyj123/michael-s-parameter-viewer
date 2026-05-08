@@ -427,9 +427,12 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 .trace-swatch{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .trace-name{font-size:.76rem;color:var(--text2);letter-spacing:.01em}
 .trace-name-input{background:transparent;border:1px solid transparent;border-radius:3px;
-  color:var(--text2);font-size:.74rem;width:100%;min-width:0;padding:1px 3px;outline:none}
+  color:var(--text2);font-size:.74rem;flex:1;min-width:0;padding:1px 3px;outline:none}
 .trace-name-input:hover{border-color:var(--border)}
 .trace-name-input:focus{border-color:var(--accent);background:var(--bg3)}
+.trace-color-input{width:18px;height:18px;padding:1px;border:1px solid var(--border);
+  border-radius:4px;background:transparent;cursor:pointer;flex-shrink:0}
+.trace-color-input:hover{border-color:var(--accent)}
 .marker-card{padding:5px 5px 5px 8px;border-left:2px solid;border-radius:0 4px 4px 0;
   display:flex;flex-direction:column;gap:2px;
   background:color-mix(in srgb,var(--bg2) 50%,transparent)}
@@ -853,7 +856,7 @@ function smithAnno(th){
 
 // ── render magnitude (S-parameter) ───────────────────────────────────────────
 function renderMag(divId,data,mkrs,xr,yr){
-  const th=TH(),pc=PC();
+  const th=TH();
   const names=Object.keys(data.sp);
   const id=divId.replace('md-','');
   const fs=fileById(id);
@@ -861,7 +864,7 @@ function renderMag(divId,data,mkrs,xr,yr){
   const vis=fs?.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
   const traces=names.map(nm=>({
     x:data.freqs,y:data.sp[nm].db,name:getTraceDisplayName(fs,nm),mode:'lines',
-    line:{color:pc[nm]||'#aaa',width:1.9},
+    line:{color:getTraceColor(fs,nm),width:1.9},
     visible:vis[nm]?true:'legendonly',
   }));
   const shapes=[];
@@ -908,7 +911,7 @@ function renderMag(divId,data,mkrs,xr,yr){
 
 // ── render Smith (unchanged) ───────────────────────────────────────────────────
 function renderSmith(divId,data,paramName,mkrs){
-  const th=TH(),pc=PC();
+  const th=TH();
   const id=divId.replace('sc-','');
   const fs=fileById(id);
   const axFont=fs?.axisFont||'',axSize=fs?.axisFontSize||null;
@@ -918,7 +921,7 @@ function renderSmith(divId,data,paramName,mkrs){
   const isRefl=paramName==='S11'||paramName==='S22';
   const trs=[...smithGrid()];
   const lineTrace={x:s.re,y:s.im,name:getTraceDisplayName(fs,paramName),mode:'lines',
-    line:{color:pc[paramName]||th.axis,width:2.2}};
+    line:{color:getTraceColor(fs,paramName),width:2.2}};
   if(isRefl){
     lineTrace.customdata=s.re.map((re,i)=>{
       const gamma=Math.sqrt(re*re+s.im[i]*s.im[i]);
@@ -959,7 +962,7 @@ function renderSmith(divId,data,paramName,mkrs){
 // ── render spectrum (CSV) ─────────────────────────────────────────────────────
 function renderSpectrum(divId,data,mkrs,xr,yr,fs){
   const th=TH();
-  const specColor=isLight()?'#0969da':'#58a6ff';
+  const specColor=getTraceColor(fs,'Spectrum');
   const traces=[{
     x:data.freqsMHz,y:data.dbm,name:getTraceDisplayName(fs,'Spectrum'),mode:'lines',
     line:{color:specColor,width:1.6},
@@ -1026,15 +1029,18 @@ function renderSidePanel(id){
 
 function renderSParamSidePanel(id,fs){
   const el=document.getElementById('side-md-'+id); if(!el)return;
-  const pc=PC();
   const names=Object.keys(fs.data.sp);
   const vis=fs.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
 
   let html='<div class="side-section"><div class="side-title">Traces</div>';
   names.forEach(nm=>{
     const dispNm=getTraceDisplayName(fs,nm);
+    const col=getTraceColor(fs,nm);
     html+=`<div class="trace-row${vis[nm]?'':' trace-hidden'}" onclick="toggleTrace('${id}','${nm}')">
-      <span class="trace-swatch" style="background:${pc[nm]}"></span>
+      <span class="trace-swatch" style="background:${col}"></span>
+      <input type="color" class="trace-color-input" value="${col}"
+        onclick="event.stopPropagation()"
+        onchange="setTraceColor('${id}','${nm}',this.value)">
       <input type="text" class="trace-name-input" value="${htmlEsc(dispNm)}"
         onclick="event.stopPropagation()"
         onkeydown="if(event.key==='Enter')this.blur()"
@@ -1054,7 +1060,7 @@ function renderSParamSidePanel(id,fs){
         <div class="marker-title" style="color:${mk.color}">${mkName}</div>
         <div class="marker-value marker-muted">${fmtF(mf)}</div>`;
       visNames.forEach(nm=>{
-        html+=`<div class="marker-value"><span class="trace-swatch-sm" style="background:${pc[nm]}"></span>&nbsp;${getTraceDisplayName(fs,nm)}&nbsp;<b>${fs.data.sp[nm].db[idx].toFixed(2)} dB</b></div>`;
+        html+=`<div class="marker-value"><span class="trace-swatch-sm" style="background:${getTraceColor(fs,nm)}"></span>&nbsp;${getTraceDisplayName(fs,nm)}&nbsp;<b>${fs.data.sp[nm].db[idx].toFixed(2)} dB</b></div>`;
       });
       html+='</div>';
     });
@@ -1065,11 +1071,14 @@ function renderSParamSidePanel(id,fs){
 
 function renderSpectrumSidePanel(id,fs){
   const el=document.getElementById('side-sp-'+id); if(!el)return;
-  const specColor=isLight()?'#0969da':'#58a6ff';
+  const specColor=getTraceColor(fs,'Spectrum');
 
   let html=`<div class="side-section"><div class="side-title">Trace</div>
     <div class="trace-row">
       <span class="trace-swatch" style="background:${specColor}"></span>
+      <input type="color" class="trace-color-input" value="${specColor}"
+        onclick="event.stopPropagation()"
+        onchange="setTraceColor('${id}','Spectrum',this.value)">
       <input type="text" class="trace-name-input" value="${htmlEsc(getTraceDisplayName(fs,'Spectrum'))}"
         onclick="event.stopPropagation()"
         onkeydown="if(event.key==='Enter')this.blur()"
@@ -1097,15 +1106,18 @@ function renderSpectrumSidePanel(id,fs){
 function renderSmithSidePanel(id,fs){
   const el=document.getElementById('side-sc-'+id); if(!el)return;
   if(!fs.data){el.innerHTML='';return;}
-  const pc=PC();
   const traceName=fs.sp||'S11';
   const s=fs.data.sp[traceName]; if(!s){el.innerHTML='';return;}
+  const traceCol=getTraceColor(fs,traceName);
 
   // Trace section — always visible so the user knows which trace is plotted
   let html=`<div class="side-section">
     <div class="side-title">Trace</div>
     <div class="trace-row">
-      <span class="trace-swatch" style="background:${pc[traceName]||'#aaa'}"></span>
+      <span class="trace-swatch" style="background:${traceCol}"></span>
+      <input type="color" class="trace-color-input" value="${traceCol}"
+        onclick="event.stopPropagation()"
+        onchange="setTraceColor('${id}','${traceName}',this.value)">
       <input type="text" class="trace-name-input" value="${htmlEsc(getTraceDisplayName(fs,traceName))}"
         onclick="event.stopPropagation()"
         onkeydown="if(event.key==='Enter')this.blur()"
@@ -1131,7 +1143,7 @@ function renderSmithSidePanel(id,fs){
       html+=`<div class="marker-card" style="border-left-color:${mk.color}">
         <div class="marker-title" style="color:${mk.color}">${mkName}</div>
         <div class="marker-value marker-muted">${fmtF(mf)}</div>
-        <div class="marker-value"><span class="trace-swatch-sm" style="background:${pc[traceName]||'#aaa'}"></span>&nbsp;${getTraceDisplayName(fs,traceName)}&nbsp;<b>${db} dB</b></div>
+        <div class="marker-value"><span class="trace-swatch-sm" style="background:${traceCol}"></span>&nbsp;${getTraceDisplayName(fs,traceName)}&nbsp;<b>${db} dB</b></div>
         <div class="marker-value marker-muted">Re&thinsp;${re}</div>
         <div class="marker-value marker-muted">Im&thinsp;${im}</div>
         <div class="marker-value marker-muted">|Γ|&thinsp;${gamma}&ensp;∠${ang}°</div>
@@ -1367,6 +1379,28 @@ function renameTrace(id,rawName,newName){
   } else {
     if(!fs.traceNames)fs.traceNames={};
     fs.traceNames[rawName]=clean;
+  }
+  renderAll(id); renderMkrList(id);
+}
+
+function getTraceColor(fs,rawNameOrLabel){
+  if(!fs)return'#888888';
+  if(fs.kind==='compare'){
+    const t=fs.data?.traces.find(t=>t.label===rawNameOrLabel);
+    return t?.color||'#888888';
+  }
+  if(fs.kind==='spectrum')return fs.traceColors?.Spectrum||(isLight()?'#0969da':'#58a6ff');
+  return fs.traceColors?.[rawNameOrLabel]||PC()[rawNameOrLabel]||'#888888';
+}
+
+function setTraceColor(id,rawNameOrLabel,color){
+  const fs=fileById(id); if(!fs||!color)return;
+  if(fs.kind==='compare'){
+    const t=fs.data?.traces.find(t=>t.label===rawNameOrLabel);
+    if(t)t.color=color;
+  } else {
+    if(!fs.traceColors)fs.traceColors={};
+    fs.traceColors[rawNameOrLabel]=color;
   }
   renderAll(id); renderMkrList(id);
 }
@@ -1840,6 +1874,9 @@ function renderCompareSidePanel(id,fs){
     const dn=t.displayName||t.label;
     html+=`<div class="trace-row${vis?'':' trace-hidden'}" onclick="toggleCompareTrace('${id}',${idx})">
       <span class="trace-swatch" style="background:${t.color}"></span>
+      <input type="color" class="trace-color-input" value="${t.color}"
+        onclick="event.stopPropagation()"
+        onchange="setTraceColor('${id}','${t.label}',this.value)">
       <input type="text" class="trace-name-input" value="${htmlEsc(dn)}"
         onclick="event.stopPropagation()"
         onkeydown="if(event.key==='Enter')this.blur()"
@@ -2503,8 +2540,11 @@ function loadFiles(fileList,hint){
           if(kind==='sparameter'){
             fs.traceVisible=Object.fromEntries(Object.keys(d.sp).map(n=>[n,true]));
             fs.traceNames=Object.fromEntries(Object.keys(d.sp).map(n=>[n,n]));
+            const defaultColors=PC();
+            fs.traceColors=Object.fromEntries(Object.keys(d.sp).map(n=>[n,defaultColors[n]||'#888888']));
           } else {
             fs.traceNames={Spectrum:'Spectrum'};
+            fs.traceColors={Spectrum:isLight()?'#0969da':'#58a6ff'};
           }
 
           // create appropriate panel
