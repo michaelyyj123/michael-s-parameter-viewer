@@ -1513,13 +1513,18 @@ function _updateStylePreview(st){
 function applyTraceStyleFromEditor(key,value){
   const{fileId,traceKey}=_traceStyleEditor;
   if(!fileId||!traceKey)return;
+  const modal=document.getElementById('trace-style-modal');
+  if(!modal||!modal.classList.contains('open'))return;
   setTraceStyle(fileId,traceKey,key,value);
   const fs=fileById(fileId); if(!fs)return;
   const st=getTraceStyle(fs,traceKey);
   _updateStylePreview(st);
-  document.getElementById('trace-style-color').value=st.color;
-  document.getElementById('trace-style-width-range').value=st.width;
-  document.getElementById('trace-style-width-number').value=st.width;
+  const colorEl=document.getElementById('trace-style-color');
+  const rangeEl=document.getElementById('trace-style-width-range');
+  const numberEl=document.getElementById('trace-style-width-number');
+  if(colorEl)colorEl.value=st.color;
+  if(rangeEl)rangeEl.value=st.width;
+  if(numberEl)numberEl.value=st.width;
   document.querySelectorAll('#trace-style-dash-options button').forEach(btn=>{
     btn.classList.toggle('on',btn.dataset.dash===st.dash);
   });
@@ -2898,17 +2903,15 @@ function initVnaBg(){
 initVnaBg();
 
 // ── trace style modal wiring ──────────────────────────────────────────────────
-document.getElementById('trace-style-color')?.addEventListener('input',e=>{
-  applyTraceStyleFromEditor('color',e.target.value);
-});
-document.getElementById('trace-style-width-range')?.addEventListener('input',e=>{
-  applyTraceStyleFromEditor('width',e.target.value);
-});
-document.getElementById('trace-style-width-number')?.addEventListener('change',e=>{
-  applyTraceStyleFromEditor('width',e.target.value);
-});
-document.querySelectorAll('#trace-style-dash-options button').forEach(btn=>{
-  btn.addEventListener('click',()=>applyTraceStyleFromEditor('dash',btn.dataset.dash));
+document.addEventListener('DOMContentLoaded',()=>{
+  const colorEl=document.getElementById('trace-style-color');
+  const widthRangeEl=document.getElementById('trace-style-width-range');
+  const widthNumberEl=document.getElementById('trace-style-width-number');
+  const dashBtns=document.querySelectorAll('#trace-style-dash-options button');
+  if(colorEl)colorEl.addEventListener('input',e=>applyTraceStyleFromEditor('color',e.target.value));
+  if(widthRangeEl)widthRangeEl.addEventListener('input',e=>applyTraceStyleFromEditor('width',e.target.value));
+  if(widthNumberEl)widthNumberEl.addEventListener('input',e=>applyTraceStyleFromEditor('width',e.target.value));
+  dashBtns.forEach(btn=>btn.addEventListener('click',()=>applyTraceStyleFromEditor('dash',btn.dataset.dash)));
 });
 
 // ── lab report ────────────────────────────────────────────────────────────────
