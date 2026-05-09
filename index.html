@@ -523,8 +523,14 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
   color:var(--text4);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
 .mini-text-btn{background:transparent;border:none;color:var(--accent);cursor:pointer;font-size:.72rem}
 .saved-color-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;min-height:24px}
-.saved-color-grid .picker-color-cell{height:22px;border-radius:4px}
 .saved-color-empty{grid-column:1/-1;font-size:.72rem;color:var(--text4);font-style:italic;padding:4px 0}
+.saved-color-item{position:relative;width:100%;height:22px}
+.saved-color-item .picker-color-cell{width:100%;height:22px;border-radius:4px}
+.saved-color-delete{position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;
+  border:1px solid var(--border);background:var(--bg2);color:var(--text3);font-size:10px;
+  line-height:11px;cursor:pointer;display:none;padding:0}
+.saved-color-item:hover .saved-color-delete{display:block}
+.saved-color-delete:hover{color:var(--red,#f85149);border-color:var(--red,#f85149)}
 .color-picker-footer{padding:11px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
 .marker-card{padding:5px 5px 5px 8px;border-left:2px solid;border-radius:0 4px 4px 0;
   display:flex;flex-direction:column;gap:2px;
@@ -3007,9 +3013,10 @@ function getSavedColors(){
 }
 function saveColorToHistory(color){
   color=normalizeHexColor(color);
-  let arr=getSavedColors().filter(c=>normalizeHexColor(c)!==color);
-  arr.unshift(color);
-  localStorage.setItem('rfv-saved-colors',JSON.stringify(arr.slice(0,24)));
+  let arr=getSavedColors().map(normalizeHexColor).filter(c=>c!==color);
+  arr.push(color);
+  if(arr.length>24)arr=arr.slice(arr.length-24);
+  localStorage.setItem('rfv-saved-colors',JSON.stringify(arr));
 }
 
 let _colorPickerState={open:false,color:'#000000',h:0,s:1,v:1,opacity:100,title:'Color',onPick:null};
@@ -3031,15 +3038,13 @@ function closeColorPicker(){
   document.getElementById('color-picker-modal').classList.remove('open');
   _colorPickerState.open=false;
 }
-function applyPickerColor(color,saveHistory){
+function applyPickerColor(color){
   color=normalizeHexColor(color);
   _colorPickerState.color=color;
   const rgb=hexToRgb(color);
   const hsv=rgbToHsv(rgb.r,rgb.g,rgb.b);
   _colorPickerState.h=hsv.h;_colorPickerState.s=hsv.s;_colorPickerState.v=hsv.v;
   if(typeof _colorPickerState.onPick==='function')_colorPickerState.onPick(color);
-  if(saveHistory!==false)saveColorToHistory(color);
-  renderSavedColors();
   syncColorPickerUI();
 }
 function syncColorPickerUI(){
@@ -3079,12 +3084,25 @@ function renderStandardColors(){
 function renderSavedColors(){
   const grid=document.getElementById('saved-color-grid');
   if(!grid)return;
-  const colors=getSavedColors();
+  const colors=getSavedColors().map(normalizeHexColor);
   if(!colors.length){grid.innerHTML='<div class="saved-color-empty">No saved colors yet.</div>';return;}
-  grid.innerHTML=colors.map(c=>`<button class="picker-color-cell saved" style="--c:${c}" onclick="applyPickerColor('${c}',false)"></button>`).join('');
+  grid.innerHTML=colors.map(c=>`
+    <div class="saved-color-item">
+      <button class="picker-color-cell saved" style="--c:${c}" title="${c}"
+        onclick="applyPickerColor('${c}')"></button>
+      <button class="saved-color-delete" title="Delete saved color"
+        onclick="event.stopPropagation();deleteSavedColor('${c}')">×</button>
+    </div>`).join('');
 }
 function saveCurrentPickerColor(){
-  saveColorToHistory(_colorPickerState.color);
+  const color=normalizeHexColor(_colorPickerState.color);
+  saveColorToHistory(color);
+  renderSavedColors();
+}
+function deleteSavedColor(color){
+  color=normalizeHexColor(color);
+  const arr=getSavedColors().map(normalizeHexColor).filter(c=>c!==color);
+  localStorage.setItem('rfv-saved-colors',JSON.stringify(arr));
   renderSavedColors();
 }
 function showColorPresets(){
@@ -3157,7 +3175,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     wheel.addEventListener('mousedown',e=>{dragging=true;updateFromPointer(e);e.preventDefault();});
     document.addEventListener('mousemove',e=>{if(dragging)updateFromPointer(e);});
     document.addEventListener('mouseup',()=>{
-      if(dragging){dragging=false;saveColorToHistory(_colorPickerState.color);renderSavedColors();}
+      if(dragging){dragging=false;}
     });
   }
 });
@@ -3552,7 +3570,7 @@ async function generateReport(){
     <div class="color-picker-hdr">
       <div>
         <div class="color-picker-title" id="color-picker-title">Color</div>
-        <div class="color-picker-sub">Choose a color or open the color wheel.</div>
+        <div class="color-picker-sub">Choose a standard color, use the color wheel, or save custom colors.</div>
       </div>
       <button class="btn btn-ghost" style="padding:2px 8px;font-size:.82rem" onclick="closeColorPicker()">×</button>
     </div>
@@ -3565,7 +3583,7 @@ async function generateReport(){
         </div>
       </div>
       <div class="color-tabs">
-        <button class="color-tab on" id="color-tab-presets" onclick="showColorPresets()">Presets</button>
+        <button class="color-tab on" id="color-tab-presets" onclick="showColorPresets()">Standard Colors</button>
         <button class="color-wheel-btn" onclick="showColorAdvanced()" title="Color wheel">🌈</button>
       </div>
       <div id="color-presets-view">
@@ -3585,7 +3603,7 @@ async function generateReport(){
       <div class="saved-color-section">
         <div class="saved-color-hdr">
           <span>Saved Colors</span>
-          <button class="mini-text-btn" onclick="saveCurrentPickerColor()">+ Save</button>
+          <button class="mini-text-btn" onclick="saveCurrentPickerColor()">Save Color</button>
         </div>
         <div class="saved-color-grid" id="saved-color-grid"></div>
       </div>
