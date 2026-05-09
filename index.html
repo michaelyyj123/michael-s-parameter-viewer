@@ -422,8 +422,12 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
   overflow:hidden;position:relative}
 #preview-plot-wrap.smith-preview{max-width:660px;aspect-ratio:1/1}
 #preview-plot{width:100%;height:100%}
-#preview-plot .legend,#preview-plot .annotation,
-#preview-plot .annotation-text-g,#preview-plot .annotation-bg{cursor:move}
+#preview-plot .legend{cursor:move}
+#preview-plot .annotation,
+#preview-plot .annotation *,
+#preview-plot .annotation-text-g,
+#preview-plot .annotation-bg,
+#preview-plot .annotation-text{pointer-events:all !important;cursor:move}
 
 @media(max-width:860px){
   .plots-grid{grid-template-columns:1fr}
@@ -1299,6 +1303,31 @@ function buildExportAnnotations(fs,divId,opts={}){
   const th=TH(),pc=PC();
   if(!fs||!fs.mkrs.length)return[];
   const mb=opts.markerBox||{x:0.98,y:0.97,xanchor:'right',yanchor:'top'};
+
+  if(fs.kind==='compare'){
+    const lines=[];
+    fs.mkrs.forEach((mk,i)=>{
+      const vals=getCompareMarkerValues(fs,mk);
+      if(!vals.length)return;
+      if(lines.length)lines.push('');
+      lines.push(`<b>${mk.name||'M'+(i+1)}</b>  ${fmtF(vals[0].freq)}`);
+      vals.forEach(v=>{
+        const dn=v.trace.displayName||v.trace.label;
+        lines.push(`${dn}: ${v.value.toFixed(2)} ${v.unit}`);
+      });
+    });
+    if(!lines.length)return[];
+    const ann={
+      x:mb.x,y:mb.y,xref:'paper',yref:'paper',
+      xanchor:mb.xanchor||'right',yanchor:mb.yanchor||'top',
+      text:lines.join('<br>'),showarrow:false,
+      font:{size:Number(mb.fontSize)||11,family:mb.fontFamily||fs.axisFont||'Helvetica',color:th.text},
+      bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,borderpad:6,opacity:1,align:'left'
+    };
+    if(mb.width)ann.width=mb.width;
+    return[ann];
+  }
+
   const lines=[];
   if(fs.kind==='spectrum'){
     const data=fs.data;
@@ -1897,7 +1926,7 @@ function buildExportPlotSpec(divId,opts={}){
       ...(legendOpts.width?{itemwidth:legendOpts.width}:{}),
       font:{color:th.text,family:legendOpts.fontFamily||'Helvetica',size:Number(legendOpts.fontSize)||11}
     },
-    annotations:fs&&fs.kind==='compare'?[]:buildExportAnnotations(fs,divId,{markerBox:markerBoxOpts}),
+    annotations:buildExportAnnotations(fs,divId,{markerBox:markerBoxOpts}),
   };
 
   return{data:exportData,layout,width:W,height:H,isSmith:false};
@@ -1966,11 +1995,35 @@ function refreshPreviewAnnotationsOnly(){
   const spec=buildExportPlotSpec(_previewState.divId,{
     legend:_previewState.legend,markerBox:_previewState.markerBox
   });
-  Plotly.relayout(previewDiv,{annotations:spec.layout.annotations});
+  Plotly.relayout(previewDiv,{annotations:spec.layout.annotations}).then(()=>{
+    previewDiv._directDragAttached=false;
+    attachPreviewDirectDragHandlers();
+  });
 }
 
 function isMarkerAnnotationText(txt){
-  return /M\d|MHz|GHz|kHz|dB|dBm|VSWR|Re\s|Im\s/.test(txt);
+  txt=String(txt||'');
+  return /M\d|MHz|GHz|kHz|dB|dBm|VSWR|Re\s|Im\s|\|Γ\||Power|Magnitude/.test(txt);
+}
+
+function getMarkerAnnotationElementAtPoint(clientX,clientY){
+  const previewDiv=document.getElementById('preview-plot');
+  if(!previewDiv)return null;
+
+  const anns=Array.from(previewDiv.querySelectorAll('.annotation'));
+  for(const ann of anns){
+    const txt=ann.textContent||'';
+    if(!isMarkerAnnotationText(txt))continue;
+    const r=ann.getBoundingClientRect();
+    if(clientX>=r.left&&clientX<=r.right&&clientY>=r.top&&clientY<=r.bottom)return ann;
+  }
+
+  const el=document.elementFromPoint(clientX,clientY);
+  if(el){
+    const ann=el.closest?.('.annotation');
+    if(ann&&isMarkerAnnotationText(ann.textContent||''))return ann;
+  }
+  return null;
 }
 
 function previewHasMarkers(){
@@ -1986,32 +2039,32 @@ function attachPreviewDirectDragHandlers(){
   previewDiv._directDragAttached=true;
 
   previewDiv.addEventListener('mousedown',e=>{
-    const legendEl=e.target.closest('.legend');
+    const legendEl=e.target.closest?.('.legend');
     if(legendEl){startPreviewObjectDrag(e,'legend');return;}
-    const markerAnnotationEl=e.target.closest('.annotation')||e.target.closest('.annotation-text-g');
-    if(markerAnnotationEl){
-      const txt=(markerAnnotationEl.textContent||'').trim();
-      if(isMarkerAnnotationText(txt)){
-        startPreviewObjectDrag(e,'markerBox');
-      }
-    }
+
+    const markerAnn=getMarkerAnnotationElementAtPoint(e.clientX,e.clientY);
+    if(markerAnn){startPreviewObjectDrag(e,'markerBox',markerAnn);return;}
   },true);
 }
 
-function startPreviewObjectDrag(e,type){
+function startPreviewObjectDrag(e,type,sourceEl=null){
   const previewDiv=document.getElementById('preview-plot');
   if(!previewDiv)return;
   const rect=previewDiv.getBoundingClientRect();
   const obj=type==='legend'?_previewState.legend:_previewState.markerBox;
 
-  // Convert xanchor:'right' → 'left' on first markerBox drag so dragging feels natural
+  // On first markerBox drag: convert xanchor:'right'→'left' using measured element position
+  // so the box doesn't jump when we switch anchor semantics
   if(type==='markerBox'&&obj.xanchor==='right'){
-    const annotEl=e.target.closest('.annotation')||e.target.closest('.annotation-text-g');
-    if(annotEl){
-      const annotRect=annotEl.getBoundingClientRect();
-      obj.x=Math.max(0,obj.x-annotRect.width/rect.width);
+    const annEl=sourceEl||getMarkerAnnotationElementAtPoint(e.clientX,e.clientY);
+    if(annEl){
+      const annRect=annEl.getBoundingClientRect();
+      obj.x=Math.max(0,Math.min(1,(annRect.left-rect.left)/rect.width));
+      obj.y=Math.max(0,Math.min(1,1-((annRect.top-rect.top)/rect.height)));
     }
     obj.xanchor='left';
+    obj.yanchor='top';
+    refreshPreviewAnnotationsOnly();
   }
 
   _previewDrag={
@@ -2070,7 +2123,12 @@ async function refreshPreviewPlot(){
     staticPlot:false,responsive:false,displayModeBar:false,
     scrollZoom:false,doubleClick:false,displaylogo:false
   });
+  previewDiv._directDragAttached=false;
   attachPreviewDirectDragHandlers();
+  setTimeout(()=>{
+    previewDiv._directDragAttached=false;
+    attachPreviewDirectDragHandlers();
+  },50);
 }
 
 async function refreshPreviewFromControls(){
