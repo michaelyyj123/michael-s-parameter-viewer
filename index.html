@@ -397,11 +397,22 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
   z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 #preview-modal.open{display:flex}
 .preview-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
-  padding:16px;display:flex;flex-direction:column;gap:10px;max-width:92vw;max-height:92vh}
-.preview-box img{max-width:100%;max-height:calc(90vh - 80px);object-fit:contain;
+  padding:16px;display:flex;flex-direction:column;gap:10px;width:min(1120px,94vw);max-height:92vh}
+.preview-box img{max-width:100%;max-height:calc(90vh - 140px);object-fit:contain;
   border-radius:4px;display:block}
 .preview-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .preview-title{font-size:.9rem;font-weight:600;color:var(--text2)}
+.preview-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 10px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:7px}
+.preview-tool-group{display:flex;align-items:center;gap:5px;font-size:.74rem;color:var(--text3)}
+.preview-tool-group span{font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text4);font-weight:700}
+.preview-tool-group select,.preview-tool-group input[type=number]{
+  background:var(--bg2);border:1px solid var(--border);border-radius:5px;
+  color:var(--text2);font-size:.76rem;padding:4px 7px;outline:none}
+.preview-tool-group input[type=number]{width:58px}
+.preview-tool-group select:focus,.preview-tool-group input[type=number]:focus{border-color:var(--accent)}
+.preview-tool-group label{display:flex;align-items:center;gap:5px;cursor:pointer}
 
 @media(max-width:860px){
   .plots-grid{grid-template-columns:1fr}
@@ -1771,7 +1782,34 @@ function setAxisFontSize(id,val){
 }
 
 // ── save / preview ────────────────────────────────────────────────────────────
-async function _plotImage(divId){
+function legendPositionToLayout(pos){
+  switch(pos){
+    case 'top-right':    return{x:0.99,y:0.99,xanchor:'right',yanchor:'top'};
+    case 'bottom-left':  return{x:0.01,y:0.01,xanchor:'left',yanchor:'bottom'};
+    case 'bottom-right': return{x:0.99,y:0.01,xanchor:'right',yanchor:'bottom'};
+    case 'top-center':   return{x:0.5,y:0.99,xanchor:'center',yanchor:'top'};
+    case 'bottom-center':return{x:0.5,y:0.01,xanchor:'center',yanchor:'bottom'};
+    case 'outside-right':return{x:1.02,y:0.99,xanchor:'left',yanchor:'top'};
+    default:             return{x:0.01,y:0.99,xanchor:'left',yanchor:'top'};
+  }
+}
+
+function getLegendExportOptions(fs){
+  return{
+    show: fs.legendShow!==false,
+    position: fs.legendPosition||'top-left',
+    fontFamily: fs.legendFontFamily||fs.axisFont||'Helvetica',
+    fontSize: fs.legendFontSize||11
+  };
+}
+
+let _previewState={
+  divId:null,filename:null,imgUrl:null,
+  legend:{show:true,position:'top-left',fontFamily:'Helvetica',fontSize:11}
+};
+
+async function _plotImage(divId,opts={}){
+  const legendOpts=opts.legend||{show:true,position:'top-left',fontFamily:'Helvetica',fontSize:11};
   const isSmith=divId.startsWith('sc-');
   const W=isSmith?660:1050,H=isSmith?660:540;
   const div=document.getElementById(divId);
@@ -1805,7 +1843,7 @@ async function _plotImage(divId){
     }finally{Plotly.purge(tmp);tmp.remove();}
   }
 
-  // For magnitude/spectrum: render into a temporary off-screen div so we never
+  // For magnitude/spectrum/compare: render into a temporary off-screen div so we never
   // mutate the interactive plot.  Only truly-visible traces are included, so
   // hidden traces are absent from the exported legend entirely.
   const id=divId.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
@@ -1813,6 +1851,8 @@ async function _plotImage(divId){
   const th=TH();
   const dl=div.layout||{};
   const lx=dl.xaxis||{},ly=dl.yaxis||{};
+
+  const legendPos=legendPositionToLayout(legendOpts.position||'top-left');
 
   // Keep only visible traces (drop legendonly; keep showlegend:false marker dots)
   const exportData=(div.data||[])
@@ -1823,7 +1863,7 @@ async function _plotImage(divId){
     paper_bgcolor:dl.paper_bgcolor,
     plot_bgcolor:dl.plot_bgcolor,
     font:dl.font,
-    margin:dl.margin,
+    margin:{...(dl.margin||{})},
     hovermode:false,
     xaxis:{
       title:lx.title,
@@ -1839,11 +1879,18 @@ async function _plotImage(divId){
       color:ly.color,linecolor:ly.linecolor,tickfont:ly.tickfont,
     },
     shapes:dl.shapes?[...dl.shapes]:[],
-    showlegend:true,
-    legend:{x:0.01,y:0.99,xanchor:'left',yanchor:'top',
-      bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1},
+    showlegend:legendOpts.show!==false,
+    legend:{
+      ...legendPos,
+      bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,
+      font:{color:th.text,family:legendOpts.fontFamily||'Helvetica',size:Number(legendOpts.fontSize)||11}
+    },
     annotations:fs.kind==='compare'?[]:buildExportAnnotations(fs,divId),
   };
+
+  if((legendOpts.position||'').includes('outside')){
+    exportLayout.margin.r=Math.max(exportLayout.margin.r||20,180);
+  }
 
   const tmp=document.createElement('div');
   tmp.style.cssText=`position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;pointer-events:none`;
@@ -1856,14 +1903,69 @@ async function _plotImage(divId){
     tmp.remove();
   }
 }
-async function previewPlot(divId,filename){
-  const url=await _plotImage(divId);
+
+async function refreshPreviewImage(){
+  if(!_previewState.divId)return;
+  const url=await _plotImage(_previewState.divId,{legend:_previewState.legend});
+  _previewState.imgUrl=url;
   document.getElementById('preview-img').src=url;
   document.getElementById('preview-dl-btn').onclick=()=>{
-    const a=document.createElement('a');a.href=url;a.download=filename+'.png';a.click();
+    const a=document.createElement('a');
+    a.href=_previewState.imgUrl;
+    a.download=(_previewState.filename||'plot')+'.png';
+    a.click();
   };
+}
+
+function syncPreviewLegendControls(){
+  const show=document.getElementById('preview-legend-show');
+  const pos=document.getElementById('preview-legend-position');
+  const font=document.getElementById('preview-legend-font');
+  const size=document.getElementById('preview-legend-size');
+  if(show)show.checked=_previewState.legend.show!==false;
+  if(pos)pos.value=_previewState.legend.position||'top-left';
+  if(font)font.value=_previewState.legend.fontFamily||'Helvetica';
+  if(size)size.value=_previewState.legend.fontSize||11;
+}
+
+async function refreshPreviewFromControls(){
+  const show=document.getElementById('preview-legend-show');
+  const pos=document.getElementById('preview-legend-position');
+  const font=document.getElementById('preview-legend-font');
+  const size=document.getElementById('preview-legend-size');
+  _previewState.legend.show=show?show.checked:true;
+  _previewState.legend.position=pos?pos.value:'top-left';
+  _previewState.legend.fontFamily=font?font.value:'Helvetica';
+  _previewState.legend.fontSize=size?Number(size.value)||11:11;
+  const id=_previewState.divId.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
+  const fs=fileById(id);
+  if(fs){
+    fs.legendShow=_previewState.legend.show;
+    fs.legendPosition=_previewState.legend.position;
+    fs.legendFontFamily=_previewState.legend.fontFamily;
+    fs.legendFontSize=_previewState.legend.fontSize;
+  }
+  await refreshPreviewImage();
+}
+
+async function previewPlot(divId,filename){
+  _previewState.divId=divId;
+  _previewState.filename=filename;
+  const id=divId.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
+  const fs=fileById(id);
+  if(fs){
+    _previewState.legend.fontFamily=fs.legendFontFamily||fs.axisFont||'Helvetica';
+    _previewState.legend.fontSize=fs.legendFontSize||11;
+    _previewState.legend.position=fs.legendPosition||'top-left';
+    _previewState.legend.show=fs.legendShow!==false;
+  } else {
+    _previewState.legend={show:true,position:'top-left',fontFamily:'Helvetica',fontSize:11};
+  }
+  syncPreviewLegendControls();
+  await refreshPreviewImage();
   document.getElementById('preview-modal').classList.add('open');
 }
+
 function closePreview(){
   document.getElementById('preview-modal').classList.remove('open');
   document.getElementById('preview-img').src='';
@@ -3139,6 +3241,12 @@ function updateTraceStyleColorButton(color){
 
 // ── modal wiring (after DOM is ready) ────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
+  // preview legend controls — auto-update on change
+  ['preview-legend-show','preview-legend-position','preview-legend-font','preview-legend-size'].forEach(eid=>{
+    const el=document.getElementById(eid);
+    if(el)el.addEventListener('change',refreshPreviewFromControls);
+  });
+
   // trace style: width + dash
   const widthRangeEl=document.getElementById('trace-style-width-range');
   const widthNumberEl=document.getElementById('trace-style-width-number');
@@ -3456,12 +3564,12 @@ async function generateReport(){
   try{
     let magImg=null,smithImg=null,specImg=null,cmpImg=null;
     if(fs.kind==='sparameter'){
-      magImg=await _plotImage('md-'+fs.id);
+      magImg=await _plotImage('md-'+fs.id,{legend:getLegendExportOptions(fs)});
       smithImg=await _plotImage('sc-'+fs.id);
     } else if(fs.kind==='spectrum'){
-      specImg=await _plotImage('sp-'+fs.id);
+      specImg=await _plotImage('sp-'+fs.id,{legend:getLegendExportOptions(fs)});
     } else if(fs.kind==='compare'){
-      cmpImg=await _plotImage('cmp-plot-'+fs.id);
+      cmpImg=await _plotImage('cmp-plot-'+fs.id,{legend:getLegendExportOptions(fs)});
     }
     const analysisHtml=_rptAnalysisHTML(fs.id,fs);
     const html=_buildReportHTML(fs,{dut,operator,setup,notes,magImg,smithImg,specImg,cmpImg,analysisHtml});
@@ -3623,6 +3731,41 @@ async function generateReport(){
         <button class="btn btn-save" id="preview-dl-btn">Download PNG</button>
         <button class="btn btn-ghost" onclick="closePreview()">Close</button>
       </div>
+    </div>
+    <div class="preview-tools">
+      <div class="preview-tool-group">
+        <label>
+          <input type="checkbox" id="preview-legend-show" checked>
+          Legend
+        </label>
+      </div>
+      <div class="preview-tool-group">
+        <span>Position</span>
+        <select id="preview-legend-position">
+          <option value="top-left">Top Left</option>
+          <option value="top-right">Top Right</option>
+          <option value="bottom-left">Bottom Left</option>
+          <option value="bottom-right">Bottom Right</option>
+          <option value="top-center">Top Center</option>
+          <option value="bottom-center">Bottom Center</option>
+          <option value="outside-right">Outside Right</option>
+        </select>
+      </div>
+      <div class="preview-tool-group">
+        <span>Font</span>
+        <select id="preview-legend-font">
+          <option value="Helvetica">Helvetica</option>
+          <option value="Arial">Arial</option>
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Courier New">Courier New</option>
+        </select>
+      </div>
+      <div class="preview-tool-group">
+        <span>Size</span>
+        <input type="number" id="preview-legend-size" min="6" max="32" step="1" value="11">
+      </div>
+      <button class="btn btn-ghost" id="preview-refresh-btn" onclick="refreshPreviewFromControls()">Update Preview</button>
     </div>
     <img id="preview-img" src="" alt="preview">
   </div>
