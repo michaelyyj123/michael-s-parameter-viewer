@@ -414,7 +414,7 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 /* ── plot shell (chart + side panel) ─────────────────────────────────────── */
 .plot-shell{display:flex;overflow:hidden}
 .plot-main{flex:1;min-width:0}
-.plot-side{width:220px;flex-shrink:0;border-left:1px solid var(--border);
+.plot-side{width:190px;flex-shrink:0;border-left:1px solid var(--border);
   background:color-mix(in srgb,var(--bg3) 70%,var(--bg2));
   padding:10px 9px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
 .side-section{display:flex;flex-direction:column;gap:4px}
@@ -424,24 +424,50 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
   cursor:pointer;transition:background .1s;user-select:none}
 .trace-row:hover{background:color-mix(in srgb,var(--accent) 8%,var(--bg3))}
 .trace-row.trace-hidden{opacity:.38}
-.trace-row-top{display:flex;align-items:center;gap:6px}
-.trace-row-btm{display:flex;align-items:center;gap:5px;padding-left:2px}
+.trace-row-top{display:flex;align-items:center;gap:5px}
+.trace-line-preview{display:inline-block;width:32px;border-radius:99px;flex-shrink:0}
+.trace-style-btn{background:var(--bg3);border:1px solid var(--border);border-radius:4px;
+  color:var(--text3);font-size:.63rem;padding:2px 6px;cursor:pointer;flex-shrink:0}
+.trace-style-btn:hover{color:var(--accent);border-color:var(--accent)}
 .trace-swatch{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .trace-name{font-size:.76rem;color:var(--text2);letter-spacing:.01em}
 .trace-name-input{background:transparent;border:1px solid transparent;border-radius:3px;
   color:var(--text2);font-size:.74rem;flex:1;min-width:0;padding:1px 3px;outline:none}
 .trace-name-input:hover{border-color:var(--border)}
 .trace-name-input:focus{border-color:var(--accent);background:var(--bg3)}
-.trace-color-input{width:18px;height:18px;padding:1px;border:1px solid var(--border);
-  border-radius:4px;background:transparent;cursor:pointer;flex-shrink:0}
-.trace-color-input:hover{border-color:var(--accent)}
-.trace-style-select{background:var(--bg3);border:1px solid var(--border);border-radius:4px;
-  color:var(--text3);font-size:.63rem;padding:1px 2px;max-width:68px;
-  cursor:pointer;outline:none;flex-shrink:0}
-.trace-style-select:focus{border-color:var(--accent)}
-.trace-width-input{width:44px;background:var(--bg3);border:1px solid var(--border);
-  border-radius:4px;color:var(--text2);font-size:.63rem;padding:1px 3px;outline:none;flex-shrink:0}
-.trace-width-input:focus{border-color:var(--accent)}
+#trace-style-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#trace-style-modal.open{display:flex}
+.trace-style-box{width:360px;max-width:92vw;background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,.45);overflow:hidden}
+.trace-style-hdr{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;
+  align-items:center;justify-content:space-between;gap:12px}
+.trace-style-title{font-size:.95rem;font-weight:700;color:var(--text)}
+.trace-style-sub{font-size:.72rem;color:var(--text3);margin-top:2px;max-width:250px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trace-style-body{padding:14px 16px;display:flex;flex-direction:column;gap:9px}
+.trace-style-preview-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:12px;display:flex;flex-direction:column;gap:8px}
+.trace-style-preview-label{font-size:.64rem;color:var(--text4);text-transform:uppercase;
+  letter-spacing:.08em;font-weight:700}
+.trace-style-preview-line{width:100%;min-height:2px;border-radius:99px}
+.trace-style-label{font-size:.66rem;color:var(--text4);text-transform:uppercase;
+  letter-spacing:.07em;font-weight:700;margin-top:2px}
+.trace-style-color{width:100%;height:34px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:6px;padding:3px;cursor:pointer}
+.trace-style-options{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.trace-style-options button{background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  color:var(--text3);font-size:.76rem;padding:7px 8px;cursor:pointer}
+.trace-style-options button:hover{border-color:var(--text3);color:var(--text2)}
+.trace-style-options button.on{border-color:var(--accent);color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 10%,var(--bg3))}
+.trace-width-row{display:flex;align-items:center;gap:8px}
+.trace-width-row input[type=range]{flex:1}
+.trace-width-row input[type=number]{width:64px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:6px;color:var(--text2);font-size:.8rem;padding:4px 6px;outline:none}
+.trace-width-row input[type=number]:focus{border-color:var(--accent)}
+.trace-style-footer{padding:11px 16px;border-top:1px solid var(--border);display:flex;
+  justify-content:flex-end;gap:8px}
 .marker-card{padding:5px 5px 5px 8px;border-left:2px solid;border-radius:0 4px 4px 0;
   display:flex;flex-direction:column;gap:2px;
   background:color-mix(in srgb,var(--bg2) 50%,transparent)}
@@ -1051,15 +1077,14 @@ function renderSParamSidePanel(id,fs){
     html+=`<div class="trace-row${vis[nm]?'':' trace-hidden'}" onclick="toggleTrace('${id}','${nm}')">
       <div class="trace-row-top">
         <span class="trace-swatch" style="background:${st.color}"></span>
-        <input type="color" class="trace-color-input" value="${st.color}"
-          onclick="event.stopPropagation()"
-          onchange="setTraceStyle('${id}','${nm}','color',this.value)">
         <input type="text" class="trace-name-input" value="${htmlEsc(dispNm)}"
           onclick="event.stopPropagation()"
           onkeydown="if(event.key==='Enter')this.blur()"
           onblur="renameTrace('${id}','${nm}',this.value)">
+        ${traceStylePreviewHTML(st)}
+        <button class="trace-style-btn"
+          onclick="event.stopPropagation();openTraceStyleEditor('${id}','${nm}')">Style</button>
       </div>
-      <div class="trace-row-btm">${traceStyleControls(id,nm,st)}</div>
     </div>`;
   });
   html+='</div>';
@@ -1093,15 +1118,14 @@ function renderSpectrumSidePanel(id,fs){
     <div class="trace-row">
       <div class="trace-row-top">
         <span class="trace-swatch" style="background:${specColor}"></span>
-        <input type="color" class="trace-color-input" value="${specColor}"
-          onclick="event.stopPropagation()"
-          onchange="setTraceStyle('${id}','Spectrum','color',this.value)">
         <input type="text" class="trace-name-input" value="${htmlEsc(getTraceDisplayName(fs,'Spectrum'))}"
           onclick="event.stopPropagation()"
           onkeydown="if(event.key==='Enter')this.blur()"
           onblur="renameTrace('${id}','Spectrum',this.value)">
+        ${traceStylePreviewHTML(st)}
+        <button class="trace-style-btn"
+          onclick="event.stopPropagation();openTraceStyleEditor('${id}','Spectrum')">Style</button>
       </div>
-      <div class="trace-row-btm">${traceStyleControls(id,'Spectrum',st)}</div>
     </div>
   </div>`;
 
@@ -1136,15 +1160,14 @@ function renderSmithSidePanel(id,fs){
     <div class="trace-row">
       <div class="trace-row-top">
         <span class="trace-swatch" style="background:${traceCol}"></span>
-        <input type="color" class="trace-color-input" value="${traceCol}"
-          onclick="event.stopPropagation()"
-          onchange="setTraceStyle('${id}','${traceName}','color',this.value)">
         <input type="text" class="trace-name-input" value="${htmlEsc(getTraceDisplayName(fs,traceName))}"
           onclick="event.stopPropagation()"
           onkeydown="if(event.key==='Enter')this.blur()"
           onblur="renameTrace('${id}','${traceName}',this.value)">
+        ${traceStylePreviewHTML(trSt)}
+        <button class="trace-style-btn"
+          onclick="event.stopPropagation();openTraceStyleEditor('${id}','${traceName}')">Style</button>
       </div>
-      <div class="trace-row-btm">${traceStyleControls(id,traceName,trSt)}</div>
     </div>
   </div>`;
 
@@ -1446,17 +1469,77 @@ function setTraceColor(id,rawNameOrLabel,color){
   setTraceStyle(id,rawNameOrLabel,'color',color);
 }
 
-function traceStyleControls(id,key,st){
-  return `<select class="trace-style-select" onclick="event.stopPropagation()"
-    onchange="setTraceStyle('${id}','${key}','dash',this.value)">
-    <option value="solid"${st.dash==='solid'?' selected':''}>Solid</option>
-    <option value="dash"${st.dash==='dash'?' selected':''}>Dashed</option>
-    <option value="dot"${st.dash==='dot'?' selected':''}>Dotted</option>
-    <option value="dashdot"${st.dash==='dashdot'?' selected':''}>Dash-dot</option>
-  </select>
-  <input type="number" class="trace-width-input" value="${st.width}" min="0.5" max="8" step="0.5"
-    title="Line width" onclick="event.stopPropagation()"
-    onchange="setTraceStyle('${id}','${key}','width',this.value)">`;
+let _traceStyleEditor={fileId:null,traceKey:null};
+
+function traceDashCss(dash){
+  if(dash==='dash')return'repeating-linear-gradient(90deg,currentColor 0 8px,transparent 8px 13px)';
+  if(dash==='dot')return'repeating-linear-gradient(90deg,currentColor 0 2px,transparent 2px 7px)';
+  if(dash==='dashdot')return'repeating-linear-gradient(90deg,currentColor 0 8px,transparent 8px 12px,currentColor 12px 14px,transparent 14px 19px)';
+  return'linear-gradient(90deg,currentColor,currentColor)';
+}
+
+function traceStylePreviewHTML(st){
+  const h=Math.max(2,Math.min(8,Number(st.width||2)));
+  return`<span class="trace-line-preview" style="color:${st.color};height:${h}px;background:${traceDashCss(st.dash)}"></span>`;
+}
+
+function openTraceStyleEditor(fileId,traceKey){
+  const fs=fileById(fileId); if(!fs)return;
+  _traceStyleEditor={fileId,traceKey};
+  const st=getTraceStyle(fs,traceKey);
+  const name=getTraceDisplayName(fs,traceKey);
+  document.getElementById('trace-style-sub').textContent=name;
+  document.getElementById('trace-style-color').value=st.color;
+  document.getElementById('trace-style-width-range').value=st.width;
+  document.getElementById('trace-style-width-number').value=st.width;
+  document.querySelectorAll('#trace-style-dash-options button').forEach(btn=>{
+    btn.classList.toggle('on',btn.dataset.dash===st.dash);
+  });
+  _updateStylePreview(st);
+  document.getElementById('trace-style-modal').classList.add('open');
+}
+
+function closeTraceStyleEditor(){
+  document.getElementById('trace-style-modal').classList.remove('open');
+}
+
+function _updateStylePreview(st){
+  const line=document.getElementById('trace-style-preview-line'); if(!line)return;
+  line.style.color=st.color;
+  line.style.height=Math.max(2,Math.min(8,Number(st.width||2)))+'px';
+  line.style.background=traceDashCss(st.dash);
+}
+
+function applyTraceStyleFromEditor(key,value){
+  const{fileId,traceKey}=_traceStyleEditor;
+  if(!fileId||!traceKey)return;
+  setTraceStyle(fileId,traceKey,key,value);
+  const fs=fileById(fileId); if(!fs)return;
+  const st=getTraceStyle(fs,traceKey);
+  _updateStylePreview(st);
+  document.getElementById('trace-style-color').value=st.color;
+  document.getElementById('trace-style-width-range').value=st.width;
+  document.getElementById('trace-style-width-number').value=st.width;
+  document.querySelectorAll('#trace-style-dash-options button').forEach(btn=>{
+    btn.classList.toggle('on',btn.dataset.dash===st.dash);
+  });
+}
+
+function resetTraceStyleFromEditor(){
+  const{fileId,traceKey}=_traceStyleEditor;
+  const fs=fileById(fileId); if(!fs)return;
+  if(fs.kind==='compare'){
+    const t=fs.data?.traces.find(t=>t.label===traceKey);
+    if(t){t.width=1.5;t.dash='solid';}
+  } else if(fs.kind==='spectrum'){
+    if(!fs.traceStyles)fs.traceStyles={};
+    fs.traceStyles.Spectrum={color:isLight()?'#0969da':'#58a6ff',width:1.6,dash:'solid'};
+  } else {
+    if(!fs.traceStyles)fs.traceStyles={};
+    fs.traceStyles[traceKey]={color:PC()[traceKey]||'#888888',width:1.9,dash:'solid'};
+  }
+  renderAll(fileId); renderMkrList(fileId);
+  openTraceStyleEditor(fileId,traceKey);
 }
 
 // ── drag markers ──────────────────────────────────────────────────────────────
@@ -1930,15 +2013,14 @@ function renderCompareSidePanel(id,fs){
     html+=`<div class="trace-row${vis?'':' trace-hidden'}" onclick="toggleCompareTrace('${id}',${idx})">
       <div class="trace-row-top">
         <span class="trace-swatch" style="background:${tst.color}"></span>
-        <input type="color" class="trace-color-input" value="${tst.color}"
-          onclick="event.stopPropagation()"
-          onchange="setTraceStyle('${id}','${t.label}','color',this.value)">
         <input type="text" class="trace-name-input" value="${htmlEsc(dn)}"
           onclick="event.stopPropagation()"
           onkeydown="if(event.key==='Enter')this.blur()"
           onblur="renameTrace('${id}','${t.label}',this.value)">
+        ${traceStylePreviewHTML(tst)}
+        <button class="trace-style-btn"
+          onclick="event.stopPropagation();openTraceStyleEditor('${id}','${t.label}')">Style</button>
       </div>
-      <div class="trace-row-btm">${traceStyleControls(id,t.label,tst)}</div>
     </div>`;
   });
   html+='</div>';
@@ -2815,6 +2897,20 @@ function initVnaBg(){
 }
 initVnaBg();
 
+// ── trace style modal wiring ──────────────────────────────────────────────────
+document.getElementById('trace-style-color')?.addEventListener('input',e=>{
+  applyTraceStyleFromEditor('color',e.target.value);
+});
+document.getElementById('trace-style-width-range')?.addEventListener('input',e=>{
+  applyTraceStyleFromEditor('width',e.target.value);
+});
+document.getElementById('trace-style-width-number')?.addEventListener('change',e=>{
+  applyTraceStyleFromEditor('width',e.target.value);
+});
+document.querySelectorAll('#trace-style-dash-options button').forEach(btn=>{
+  btn.addEventListener('click',()=>applyTraceStyleFromEditor('dash',btn.dataset.dash));
+});
+
 // ── lab report ────────────────────────────────────────────────────────────────
 function htmlEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
@@ -3154,6 +3250,43 @@ async function generateReport(){
         <button class="btn btn-ghost" style="font-size:.8rem;padding:4px 10px" onclick="clearCompareSelection()">Clear Selection</button>
         <button class="btn btn-pri" style="font-size:.8rem;padding:4px 12px" onclick="createComparePlot()">Create Comparison Plot</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ TRACE STYLE MODAL -->
+<div id="trace-style-modal" onclick="closeTraceStyleEditor()">
+  <div class="trace-style-box" onclick="event.stopPropagation()">
+    <div class="trace-style-hdr">
+      <div>
+        <div class="trace-style-title">Trace Style</div>
+        <div class="trace-style-sub" id="trace-style-sub">—</div>
+      </div>
+      <button class="btn btn-ghost" style="padding:2px 8px;font-size:.82rem" onclick="closeTraceStyleEditor()">&#x2715;</button>
+    </div>
+    <div class="trace-style-body">
+      <div class="trace-style-preview-wrap">
+        <div class="trace-style-preview-label">Preview</div>
+        <div class="trace-style-preview-line" id="trace-style-preview-line"></div>
+      </div>
+      <label class="trace-style-label">Color</label>
+      <input type="color" id="trace-style-color" class="trace-style-color">
+      <label class="trace-style-label">Line Style</label>
+      <div class="trace-style-options" id="trace-style-dash-options">
+        <button type="button" data-dash="solid">Solid</button>
+        <button type="button" data-dash="dash">Dashed</button>
+        <button type="button" data-dash="dot">Dotted</button>
+        <button type="button" data-dash="dashdot">Dash-dot</button>
+      </div>
+      <label class="trace-style-label">Line Width</label>
+      <div class="trace-width-row">
+        <input type="range" id="trace-style-width-range" min="0.5" max="8" step="0.5">
+        <input type="number" id="trace-style-width-number" min="0.5" max="8" step="0.5">
+      </div>
+    </div>
+    <div class="trace-style-footer">
+      <button class="btn btn-ghost" onclick="resetTraceStyleFromEditor()">Reset</button>
+      <button class="btn btn-pri" onclick="closeTraceStyleEditor()">Done</button>
     </div>
   </div>
 </div>
