@@ -273,9 +273,10 @@ input[type=number]::placeholder{color:var(--text4)}
   border-top-color:color-mix(in srgb,var(--accent) 22%,var(--border));
   border-right-color:color-mix(in srgb,var(--accent) 22%,var(--border));
   border-bottom-color:color-mix(in srgb,var(--accent) 22%,var(--border))}
-.mkr-dot{width:18px;height:18px;padding:1px;border:1px solid var(--border);
-  border-radius:3px;cursor:pointer;background:none;flex-shrink:0;outline:none}
-.mkr-dot:hover{border-color:var(--text3)}
+.mkr-dot{width:18px;height:18px;padding:0;border:1px solid var(--border);
+  border-radius:4px;cursor:pointer;background:var(--swatch,#888);flex-shrink:0;outline:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+.mkr-dot:hover{border-color:var(--accent);transform:translateY(-1px)}
 .chip-name{background:transparent;border:1px solid transparent;border-radius:3px;
   color:var(--text2);font-size:.77rem;font-weight:600;width:40px;padding:1px 4px;
   outline:none;transition:all .12s;flex-shrink:0}
@@ -468,6 +469,63 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 .trace-width-row input[type=number]:focus{border-color:var(--accent)}
 .trace-style-footer{padding:11px 16px;border-top:1px solid var(--border);display:flex;
   justify-content:flex-end;gap:8px}
+.color-swatch-btn{width:18px;height:18px;border-radius:4px;border:1px solid var(--border);
+  background:var(--swatch);cursor:pointer;flex-shrink:0;padding:0;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.color-swatch-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.trace-style-big-color-btn{width:100%;height:34px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:7px;color:var(--text2);display:flex;align-items:center;gap:10px;padding:5px 8px;cursor:pointer}
+.trace-style-big-color-btn span{width:22px;height:22px;border-radius:5px;background:var(--swatch,#888);
+  border:1px solid var(--border);flex-shrink:0}
+.trace-style-big-color-btn b{font-size:.78rem;font-weight:600}
+.trace-style-big-color-btn:hover{border-color:var(--accent)}
+#color-picker-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);
+  z-index:1200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#color-picker-modal.open{display:flex}
+.color-picker-box{width:430px;max-width:94vw;background:var(--bg2);border:1px solid var(--border);
+  border-radius:14px;box-shadow:0 22px 70px rgba(0,0,0,.48);overflow:hidden}
+.color-picker-hdr{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;
+  justify-content:space-between;align-items:flex-start;gap:12px}
+.color-picker-title{font-size:.95rem;font-weight:700;color:var(--text)}
+.color-picker-sub{font-size:.72rem;color:var(--text3);margin-top:2px}
+.color-picker-body{padding:14px 16px;display:flex;flex-direction:column;gap:11px}
+.color-current-row{display:flex;align-items:center;gap:10px}
+.color-current-preview{width:42px;height:42px;border-radius:8px;border:1px solid var(--border);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);flex-shrink:0}
+.color-current-meta{display:flex;flex-direction:column;gap:4px;flex:1}
+.color-current-label{font-size:.66rem;color:var(--text4);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.color-hex-input{background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  color:var(--text2);font-family:'Courier New',monospace;font-size:.84rem;padding:5px 8px;outline:none;width:100%}
+.color-hex-input:focus{border-color:var(--accent)}
+.color-tabs{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.color-tab,.color-wheel-btn{background:var(--bg3);border:1px solid var(--border);border-radius:7px;
+  color:var(--text3);font-size:.76rem;padding:6px 10px;cursor:pointer}
+.color-tab.on,.color-tab:hover,.color-wheel-btn:hover{border-color:var(--accent);color:var(--accent)}
+.color-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:6px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:9px}
+.picker-color-cell{height:32px;border:1px solid color-mix(in srgb,var(--border) 75%,transparent);
+  border-radius:2px;background:var(--c);cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.picker-color-cell:hover{outline:2px solid var(--accent);outline-offset:1px}
+.color-wheel-area{position:relative;height:260px;border-radius:50%;border:1px solid var(--border);
+  cursor:crosshair;overflow:hidden;margin:2px auto 10px;aspect-ratio:1/1;width:min(260px,80vw)}
+.color-wheel-cursor{position:absolute;width:16px;height:16px;border:2px solid #000;border-radius:50%;
+  transform:translate(-50%,-50%);pointer-events:none;box-shadow:0 0 0 1px rgba(255,255,255,.6)}
+#color-hue-slider{-webkit-appearance:none;appearance:none;width:100%;height:14px;border-radius:7px;
+  cursor:pointer;background:linear-gradient(to right,
+    hsl(0,100%,50%),hsl(30,100%,50%),hsl(60,100%,50%),hsl(90,100%,50%),hsl(120,100%,50%),
+    hsl(150,100%,50%),hsl(180,100%,50%),hsl(210,100%,50%),hsl(240,100%,50%),
+    hsl(270,100%,50%),hsl(300,100%,50%),hsl(330,100%,50%),hsl(360,100%,50%))}
+.opacity-row{display:flex;align-items:center;gap:9px;color:var(--text3);font-size:.78rem}
+.opacity-row input{flex:1}
+.opacity-row b{width:42px;text-align:right;color:var(--text2);font-variant-numeric:tabular-nums}
+.saved-color-section{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.saved-color-hdr{display:flex;align-items:center;justify-content:space-between;font-size:.66rem;
+  color:var(--text4);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.mini-text-btn{background:transparent;border:none;color:var(--accent);cursor:pointer;font-size:.72rem}
+.saved-color-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;min-height:24px}
+.saved-color-grid .picker-color-cell{height:22px;border-radius:4px}
+.saved-color-empty{grid-column:1/-1;font-size:.72rem;color:var(--text4);font-style:italic;padding:4px 0}
+.color-picker-footer{padding:11px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
 .marker-card{padding:5px 5px 5px 8px;border-left:2px solid;border-radius:0 4px 4px 0;
   display:flex;flex-direction:column;gap:2px;
   background:color-mix(in srgb,var(--bg2) 50%,transparent)}
@@ -1360,9 +1418,8 @@ function renderMkrList(id){
 
     return `<div class="marker-chip${isAct?' active':''}" style="border-left-color:${mk.color}"
       onclick="setActiveMkr('${id}',${i})">
-      <input type="color" class="mkr-dot" value="${mk.color}"
-        onclick="event.stopPropagation()"
-        onchange="changeMkrColor('${id}',${i},this.value)">
+      <button class="mkr-dot" style="--swatch:${mk.color}"
+        onclick="event.stopPropagation();openColorPickerForMarker('${id}',${i},'${mk.color}')"></button>
       <input type="text" class="chip-name" value="${mkName}"
         onclick="event.stopPropagation()"
         onkeydown="if(event.key==='Enter')this.blur()"
@@ -1489,7 +1546,7 @@ function openTraceStyleEditor(fileId,traceKey){
   const st=getTraceStyle(fs,traceKey);
   const name=getTraceDisplayName(fs,traceKey);
   document.getElementById('trace-style-sub').textContent=name;
-  document.getElementById('trace-style-color').value=st.color;
+  updateTraceStyleColorButton(st.color);
   document.getElementById('trace-style-width-range').value=st.width;
   document.getElementById('trace-style-width-number').value=st.width;
   document.querySelectorAll('#trace-style-dash-options button').forEach(btn=>{
@@ -1513,16 +1570,13 @@ function _updateStylePreview(st){
 function applyTraceStyleFromEditor(key,value){
   const{fileId,traceKey}=_traceStyleEditor;
   if(!fileId||!traceKey)return;
-  const modal=document.getElementById('trace-style-modal');
-  if(!modal||!modal.classList.contains('open'))return;
   setTraceStyle(fileId,traceKey,key,value);
   const fs=fileById(fileId); if(!fs)return;
   const st=getTraceStyle(fs,traceKey);
   _updateStylePreview(st);
-  const colorEl=document.getElementById('trace-style-color');
+  updateTraceStyleColorButton(st.color);
   const rangeEl=document.getElementById('trace-style-width-range');
   const numberEl=document.getElementById('trace-style-width-number');
-  if(colorEl)colorEl.value=st.color;
   if(rangeEl)rangeEl.value=st.width;
   if(numberEl)numberEl.value=st.width;
   document.querySelectorAll('#trace-style-dash-options button').forEach(btn=>{
@@ -2902,16 +2956,210 @@ function initVnaBg(){
 }
 initVnaBg();
 
-// ── trace style modal wiring ──────────────────────────────────────────────────
+// ── custom color picker ───────────────────────────────────────────────────────
+const STANDARD_COLORS=[
+  '#ffffff','#d9d9d9','#999999','#555555','#000000',
+  '#5ac8fa','#32ade6','#007aff','#0051a8','#003b73',
+  '#64d2ff','#40c8e0','#00c7be','#009688','#006c67',
+  '#a3ff5f','#7ed957','#34c759','#1f8f3a','#0b6623',
+  '#fff45c','#ffd60a','#ffb000','#ff8c00','#ef6c00',
+  '#ff9f8a','#ff6b5f','#ff3b30','#d70015','#a60000',
+  '#ff8ad8','#ff2d92','#d10072','#9b0056','#6f003d'
+];
+
+function normalizeHexColor(color){
+  if(!color)return'#000000';
+  color=String(color).trim();
+  if(/^#[0-9a-fA-F]{6}$/.test(color))return color.toLowerCase();
+  if(/^#[0-9a-fA-F]{3}$/.test(color))
+    return'#'+color.slice(1).split('').map(c=>c+c).join('').toLowerCase();
+  return'#000000';
+}
+function hexToRgb(hex){
+  hex=normalizeHexColor(hex).slice(1);
+  return{r:parseInt(hex.slice(0,2),16),g:parseInt(hex.slice(2,4),16),b:parseInt(hex.slice(4,6),16)};
+}
+function rgbToHex(r,g,b){
+  const h=n=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0');
+  return'#'+h(r)+h(g)+h(b);
+}
+function hsvToRgb(h,s,v){
+  h=((h%360)+360)%360;s=Math.max(0,Math.min(1,s));v=Math.max(0,Math.min(1,v));
+  const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;
+  let r=0,g=0,b=0;
+  if(h<60){r=c;g=x;}else if(h<120){r=x;g=c;}else if(h<180){g=c;b=x;}
+  else if(h<240){g=x;b=c;}else if(h<300){r=x;b=c;}else{r=c;b=x;}
+  return{r:(r+m)*255,g:(g+m)*255,b:(b+m)*255};
+}
+function rgbToHsv(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min;
+  let h=0;
+  if(d){
+    if(max===r)h=60*(((g-b)/d+6)%6);
+    else if(max===g)h=60*((b-r)/d+2);
+    else h=60*((r-g)/d+4);
+  }
+  return{h,s:max?d/max:0,v:max};
+}
+function getSavedColors(){
+  try{return JSON.parse(localStorage.getItem('rfv-saved-colors')||'[]');}catch(e){return[];}
+}
+function saveColorToHistory(color){
+  color=normalizeHexColor(color);
+  let arr=getSavedColors().filter(c=>normalizeHexColor(c)!==color);
+  arr.unshift(color);
+  localStorage.setItem('rfv-saved-colors',JSON.stringify(arr.slice(0,24)));
+}
+
+let _colorPickerState={open:false,color:'#000000',h:0,s:1,v:1,opacity:100,title:'Color',onPick:null};
+
+function openColorPicker(opts){
+  const color=normalizeHexColor(opts.initialColor||'#000000');
+  const rgb=hexToRgb(color);
+  const hsv=rgbToHsv(rgb.r,rgb.g,rgb.b);
+  _colorPickerState={open:true,color,h:hsv.h,s:hsv.s,v:hsv.v,opacity:100,
+    title:opts.title||'Color',onPick:opts.onPick||null};
+  document.getElementById('color-picker-title').textContent=_colorPickerState.title;
+  document.getElementById('color-picker-modal').classList.add('open');
+  renderStandardColors();
+  renderSavedColors();
+  showColorPresets();
+  syncColorPickerUI();
+}
+function closeColorPicker(){
+  document.getElementById('color-picker-modal').classList.remove('open');
+  _colorPickerState.open=false;
+}
+function applyPickerColor(color,saveHistory){
+  color=normalizeHexColor(color);
+  _colorPickerState.color=color;
+  const rgb=hexToRgb(color);
+  const hsv=rgbToHsv(rgb.r,rgb.g,rgb.b);
+  _colorPickerState.h=hsv.h;_colorPickerState.s=hsv.s;_colorPickerState.v=hsv.v;
+  if(typeof _colorPickerState.onPick==='function')_colorPickerState.onPick(color);
+  if(saveHistory!==false)saveColorToHistory(color);
+  renderSavedColors();
+  syncColorPickerUI();
+}
+function syncColorPickerUI(){
+  const color=_colorPickerState.color;
+  const cur=document.getElementById('color-current-preview');
+  const hex=document.getElementById('color-hex-input');
+  const hue=document.getElementById('color-hue-slider');
+  const op=document.getElementById('color-opacity-slider');
+  const opLbl=document.getElementById('color-opacity-label');
+  const wheel=document.getElementById('color-wheel-area');
+  const cursor=document.getElementById('color-wheel-cursor');
+  if(cur)cur.style.background=color;
+  if(hex)hex.value=color;
+  if(hue)hue.value=_colorPickerState.h;
+  if(op)op.value=_colorPickerState.opacity;
+  if(opLbl)opLbl.textContent=_colorPickerState.opacity+'%';
+  if(wheel)wheel.style.background=
+    `linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,hsl(${_colorPickerState.h},100%,50%))`;
+  if(cursor){
+    cursor.style.left=(_colorPickerState.s*100)+'%';
+    cursor.style.top=((1-_colorPickerState.v)*100)+'%';
+    cursor.style.borderColor=_colorPickerState.v<.45?'#fff':'#000';
+  }
+}
+function setPickerFromHSV(){
+  const{r,g,b}=hsvToRgb(_colorPickerState.h,_colorPickerState.s,_colorPickerState.v);
+  const color=rgbToHex(r,g,b);
+  _colorPickerState.color=color;
+  if(typeof _colorPickerState.onPick==='function')_colorPickerState.onPick(color);
+  syncColorPickerUI();
+}
+function renderStandardColors(){
+  const grid=document.getElementById('standard-color-grid');
+  if(!grid)return;
+  grid.innerHTML=STANDARD_COLORS.map(c=>`<button class="picker-color-cell" style="--c:${c}" onclick="applyPickerColor('${c}')"></button>`).join('');
+}
+function renderSavedColors(){
+  const grid=document.getElementById('saved-color-grid');
+  if(!grid)return;
+  const colors=getSavedColors();
+  if(!colors.length){grid.innerHTML='<div class="saved-color-empty">No saved colors yet.</div>';return;}
+  grid.innerHTML=colors.map(c=>`<button class="picker-color-cell saved" style="--c:${c}" onclick="applyPickerColor('${c}',false)"></button>`).join('');
+}
+function saveCurrentPickerColor(){
+  saveColorToHistory(_colorPickerState.color);
+  renderSavedColors();
+}
+function showColorPresets(){
+  document.getElementById('color-presets-view').style.display='';
+  document.getElementById('color-advanced-view').style.display='none';
+  const tab=document.getElementById('color-tab-presets');
+  if(tab)tab.classList.add('on');
+}
+function showColorAdvanced(){
+  document.getElementById('color-presets-view').style.display='none';
+  document.getElementById('color-advanced-view').style.display='';
+  const tab=document.getElementById('color-tab-presets');
+  if(tab)tab.classList.remove('on');
+  syncColorPickerUI();
+}
+function openColorPickerForMarker(fileId,markerIndex,initialColor){
+  openColorPicker({
+    initialColor,
+    title:'Marker Color',
+    onPick:color=>changeMkrColor(fileId,markerIndex,color)
+  });
+}
+function openColorPickerForCurrentTrace(){
+  const{fileId,traceKey}=_traceStyleEditor;
+  if(!fileId||!traceKey)return;
+  const fs=fileById(fileId); if(!fs)return;
+  const st=getTraceStyle(fs,traceKey);
+  openColorPicker({initialColor:st.color,title:'Trace Color',onPick:color=>applyTraceStyleFromEditor('color',color)});
+}
+function updateTraceStyleColorButton(color){
+  const btn=document.getElementById('trace-style-color-btn');
+  if(btn)btn.style.setProperty('--swatch',normalizeHexColor(color));
+}
+
+// ── modal wiring (after DOM is ready) ────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  const colorEl=document.getElementById('trace-style-color');
+  // trace style: width + dash
   const widthRangeEl=document.getElementById('trace-style-width-range');
   const widthNumberEl=document.getElementById('trace-style-width-number');
   const dashBtns=document.querySelectorAll('#trace-style-dash-options button');
-  if(colorEl)colorEl.addEventListener('input',e=>applyTraceStyleFromEditor('color',e.target.value));
   if(widthRangeEl)widthRangeEl.addEventListener('input',e=>applyTraceStyleFromEditor('width',e.target.value));
   if(widthNumberEl)widthNumberEl.addEventListener('input',e=>applyTraceStyleFromEditor('width',e.target.value));
   dashBtns.forEach(btn=>btn.addEventListener('click',()=>applyTraceStyleFromEditor('dash',btn.dataset.dash)));
+
+  // color picker: hex, hue, opacity, SV wheel
+  const hexInput=document.getElementById('color-hex-input');
+  if(hexInput)hexInput.addEventListener('change',e=>applyPickerColor(e.target.value));
+
+  const hueSlider=document.getElementById('color-hue-slider');
+  if(hueSlider)hueSlider.addEventListener('input',e=>{
+    _colorPickerState.h=Number(e.target.value);
+    setPickerFromHSV();
+  });
+
+  const opacitySlider=document.getElementById('color-opacity-slider');
+  if(opacitySlider)opacitySlider.addEventListener('input',e=>{
+    _colorPickerState.opacity=Number(e.target.value);
+    syncColorPickerUI();
+  });
+
+  const wheel=document.getElementById('color-wheel-area');
+  if(wheel){
+    let dragging=false;
+    const updateFromPointer=e=>{
+      const rect=wheel.getBoundingClientRect();
+      _colorPickerState.s=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+      _colorPickerState.v=Math.max(0,Math.min(1,1-(e.clientY-rect.top)/rect.height));
+      setPickerFromHSV();
+    };
+    wheel.addEventListener('mousedown',e=>{dragging=true;updateFromPointer(e);e.preventDefault();});
+    document.addEventListener('mousemove',e=>{if(dragging)updateFromPointer(e);});
+    document.addEventListener('mouseup',()=>{
+      if(dragging){dragging=false;saveColorToHistory(_colorPickerState.color);renderSavedColors();}
+    });
+  }
 });
 
 // ── lab report ────────────────────────────────────────────────────────────────
@@ -3273,7 +3521,11 @@ async function generateReport(){
         <div class="trace-style-preview-line" id="trace-style-preview-line"></div>
       </div>
       <label class="trace-style-label">Color</label>
-      <input type="color" id="trace-style-color" class="trace-style-color">
+      <button id="trace-style-color-btn" class="trace-style-big-color-btn"
+        onclick="event.stopPropagation();openColorPickerForCurrentTrace()">
+        <span></span>
+        <b>Choose Color</b>
+      </button>
       <label class="trace-style-label">Line Style</label>
       <div class="trace-style-options" id="trace-style-dash-options">
         <button type="button" data-dash="solid">Solid</button>
@@ -3290,6 +3542,56 @@ async function generateReport(){
     <div class="trace-style-footer">
       <button class="btn btn-ghost" onclick="resetTraceStyleFromEditor()">Reset</button>
       <button class="btn btn-pri" onclick="closeTraceStyleEditor()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ COLOR PICKER MODAL -->
+<div id="color-picker-modal" onclick="closeColorPicker()">
+  <div class="color-picker-box" onclick="event.stopPropagation()">
+    <div class="color-picker-hdr">
+      <div>
+        <div class="color-picker-title" id="color-picker-title">Color</div>
+        <div class="color-picker-sub">Choose a color or open the color wheel.</div>
+      </div>
+      <button class="btn btn-ghost" style="padding:2px 8px;font-size:.82rem" onclick="closeColorPicker()">×</button>
+    </div>
+    <div class="color-picker-body">
+      <div class="color-current-row">
+        <div class="color-current-preview" id="color-current-preview"></div>
+        <div class="color-current-meta">
+          <div class="color-current-label">Current Color</div>
+          <input id="color-hex-input" class="color-hex-input" value="#000000">
+        </div>
+      </div>
+      <div class="color-tabs">
+        <button class="color-tab on" id="color-tab-presets" onclick="showColorPresets()">Presets</button>
+        <button class="color-wheel-btn" onclick="showColorAdvanced()" title="Color wheel">🌈</button>
+      </div>
+      <div id="color-presets-view">
+        <div class="color-grid" id="standard-color-grid"></div>
+      </div>
+      <div id="color-advanced-view" style="display:none">
+        <div class="color-wheel-area" id="color-wheel-area">
+          <div class="color-wheel-cursor" id="color-wheel-cursor"></div>
+        </div>
+        <input type="range" id="color-hue-slider" class="color-hue-slider" min="0" max="360" step="1">
+        <div class="opacity-row">
+          <span>Opacity</span>
+          <input type="range" id="color-opacity-slider" min="0" max="100" step="1" value="100">
+          <b id="color-opacity-label">100%</b>
+        </div>
+      </div>
+      <div class="saved-color-section">
+        <div class="saved-color-hdr">
+          <span>Saved Colors</span>
+          <button class="mini-text-btn" onclick="saveCurrentPickerColor()">+ Save</button>
+        </div>
+        <div class="saved-color-grid" id="saved-color-grid"></div>
+      </div>
+    </div>
+    <div class="color-picker-footer">
+      <button class="btn btn-ghost" onclick="closeColorPicker()">Done</button>
     </div>
   </div>
 </div>
