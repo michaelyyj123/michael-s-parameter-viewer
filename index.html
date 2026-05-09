@@ -412,10 +412,20 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 .preview-tool-group select:focus,.preview-tool-group input[type=number]:focus{border-color:var(--accent)}
 .preview-tool-group label{display:flex;align-items:center;gap:5px;cursor:pointer}
 .preview-drag-hint{font-size:.72rem;color:var(--text4);margin-left:auto}
-#preview-plot-wrap{width:100%;height:min(580px,calc(90vh - 160px));background:var(--bg3);
-  border:1px solid var(--border);border-radius:6px;overflow:hidden;position:relative}
-#preview-plot{width:100%;height:100%}
-#preview-plot .legend,#preview-plot .annotation-text-g{cursor:move}
+#preview-plot-wrap{width:100%;max-width:1050px;aspect-ratio:1050/540;height:auto;
+  margin:0 auto;background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  overflow:visible;position:relative}
+#preview-plot-wrap.smith-preview{max-width:660px;aspect-ratio:1/1}
+#preview-plot{width:100%;height:100%;pointer-events:none}
+#preview-overlay-layer{position:absolute;inset:0;pointer-events:none;z-index:10}
+.preview-box-hit{position:absolute;border:1.5px dashed var(--accent);border-radius:4px;
+  pointer-events:auto;cursor:move;background:rgba(88,166,255,.04)}
+.preview-box-hit:hover{background:rgba(88,166,255,.10)}
+.preview-box-hit .resize-handle{position:absolute;width:11px;height:11px;right:-6px;bottom:-6px;
+  border-radius:50%;background:var(--accent);border:2px solid var(--bg2);cursor:nwse-resize}
+.preview-box-label{position:absolute;top:-18px;left:0;font-size:10px;color:var(--accent);
+  background:var(--bg2);border:1px solid var(--border);border-radius:3px;
+  padding:1px 4px;white-space:nowrap;pointer-events:none}
 
 @media(max-width:860px){
   .plots-grid{grid-template-columns:1fr}
@@ -1315,13 +1325,15 @@ function buildExportAnnotations(fs,divId,opts={}){
     });
   }
   if(!lines.length)return[];
-  return[{
+  const ann={
     x:mb.x,y:mb.y,xref:'paper',yref:'paper',
     xanchor:mb.xanchor||'right',yanchor:mb.yanchor||'top',
     text:lines.join('<br>'),showarrow:false,
     font:{size:11,color:th.text},bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,
     align:'left',
-  }];
+  };
+  if(mb.width)ann.width=mb.width;
+  return[ann];
 }
 
 // Build stable paper-coord marker annotations for Smith Chart PNG export
@@ -1346,10 +1358,12 @@ function buildSmithExportAnnotations(fs,opts={}){
     if(traceName==='S11'||traceName==='S22')lines.push(`VSWR ${fmtVSWR(gammaToVSWR(gammaRaw))}`);
   });
   if(!lines.length)return[];
-  return[{x:mb.x,y:mb.y,xref:'paper',yref:'paper',
+  const ann={x:mb.x,y:mb.y,xref:'paper',yref:'paper',
     xanchor:mb.xanchor||'right',yanchor:mb.yanchor||'top',
     text:lines.join('<br>'),showarrow:false,
-    font:{size:11,color:th.text},bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left'}];
+    font:{size:11,color:th.text},bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left'};
+  if(mb.width)ann.width=mb.width;
+  return[ann];
 }
 
 // ── markers ───────────────────────────────────────────────────────────────────
@@ -1798,7 +1812,8 @@ function getLegendExportOptions(fs){
     xanchor: fs.legendXAnchor||'left',
     yanchor: fs.legendYAnchor||'top',
     fontFamily: fs.legendFontFamily||fs.axisFont||'Helvetica',
-    fontSize: fs.legendFontSize||11
+    fontSize: fs.legendFontSize||11,
+    width: fs.legendWidth||null
   };
 }
 
@@ -1807,7 +1822,8 @@ function getMarkerBoxExportOptions(fs){
     x: fs.markerBoxX??0.98,
     y: fs.markerBoxY??0.97,
     xanchor: fs.markerBoxXAnchor||'right',
-    yanchor: fs.markerBoxYAnchor||'top'
+    yanchor: fs.markerBoxYAnchor||'top',
+    width: fs.markerBoxWidth||null
   };
 }
 
@@ -1877,6 +1893,7 @@ function buildExportPlotSpec(divId,opts={}){
       xanchor:legendOpts.xanchor||'left',
       yanchor:legendOpts.yanchor||'top',
       bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,
+      ...(legendOpts.width?{itemwidth:legendOpts.width}:{}),
       font:{color:th.text,family:legendOpts.fontFamily||'Helvetica',size:Number(legendOpts.fontSize)||11}
     },
     annotations:fs&&fs.kind==='compare'?[]:buildExportAnnotations(fs,divId,{markerBox:markerBoxOpts}),
@@ -1896,13 +1913,13 @@ async function _plotImage(divId,opts={}){
   }finally{Plotly.purge(tmp);tmp.remove();}
 }
 
-// ── preview state & drag ──────────────────────────────────────────────────────
+// ── preview state & overlay drag/resize ──────────────────────────────────────
 let _previewDrag=null;
 
 let _previewState={
   divId:null,filename:null,
-  legend:{show:true,x:0.01,y:0.99,xanchor:'left',yanchor:'top',fontFamily:'Helvetica',fontSize:11},
-  markerBox:{x:0.98,y:0.97,xanchor:'right',yanchor:'top'}
+  legend:{show:true,x:0.01,y:0.99,xanchor:'left',yanchor:'top',fontFamily:'Helvetica',fontSize:11,width:null},
+  markerBox:{x:0.98,y:0.97,xanchor:'right',yanchor:'top',width:null}
 };
 
 function syncPreviewLegendControls(){
@@ -1925,25 +1942,188 @@ function persistPreviewDragState(){
   fs.legendYAnchor=_previewState.legend.yanchor||'top';
   fs.legendFontFamily=_previewState.legend.fontFamily||'Helvetica';
   fs.legendFontSize=_previewState.legend.fontSize||11;
+  fs.legendWidth=_previewState.legend.width||null;
   fs.markerBoxX=_previewState.markerBox.x;
   fs.markerBoxY=_previewState.markerBox.y;
   fs.markerBoxXAnchor=_previewState.markerBox.xanchor||'right';
   fs.markerBoxYAnchor=_previewState.markerBox.yanchor||'top';
+  fs.markerBoxWidth=_previewState.markerBox.width||null;
 }
+
+function previewHasMarkerBox(){
+  const id=_previewState.divId?.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
+  const fs=fileById(id);
+  return!!(fs&&fs.mkrs&&fs.mkrs.length);
+}
+
+function estimateMarkerBoxHeight(){
+  const id=_previewState.divId?.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
+  const fs=fileById(id);
+  if(!fs||!fs.mkrs)return 70;
+  return Math.min(220,42+fs.mkrs.length*42);
+}
+
+function refreshPreviewAnnotationsOnly(){
+  const previewDiv=document.getElementById('preview-plot');
+  if(!previewDiv||!_previewState.divId)return;
+  const spec=buildExportPlotSpec(_previewState.divId,{
+    legend:_previewState.legend,markerBox:_previewState.markerBox
+  });
+  Plotly.relayout(previewDiv,{annotations:spec.layout.annotations});
+}
+
+function renderPreviewOverlayBoxes(){
+  const layer=document.getElementById('preview-overlay-layer');
+  const previewDiv=document.getElementById('preview-plot');
+  if(!layer||!previewDiv)return;
+  const fl=previewDiv._fullLayout;
+  if(!fl){layer.innerHTML='';return;}
+
+  const w=previewDiv.clientWidth||fl.width||1050;
+  const h=previewDiv.clientHeight||fl.height||540;
+  layer.innerHTML='';
+
+  if(_previewState.legend.show!==false){
+    const lxPx=(_previewState.legend.x??0.01)*w;
+    const lyPx=(1-(_previewState.legend.y??0.99))*h;
+    const lw=_previewState.legend.width||140;
+    const lh=Math.max(32,Number(_previewState.legend.fontSize||11)*2.6);
+    layer.insertAdjacentHTML('beforeend',
+      `<div class="preview-box-hit" data-preview-box="legend"
+        style="left:${lxPx}px;top:${lyPx}px;width:${lw}px;height:${lh}px">
+        <div class="preview-box-label">Legend</div>
+        <div class="resize-handle" data-preview-resize="legend"></div>
+      </div>`);
+  }
+
+  if(previewHasMarkerBox()){
+    const mx=(_previewState.markerBox.x??0.98)*w;
+    const my=(1-(_previewState.markerBox.y??0.97))*h;
+    const mw=_previewState.markerBox.width||180;
+    const mh=estimateMarkerBoxHeight();
+    layer.insertAdjacentHTML('beforeend',
+      `<div class="preview-box-hit" data-preview-box="markerBox"
+        style="left:${mx-mw}px;top:${my}px;width:${mw}px;height:${mh}px">
+        <div class="preview-box-label">Marker Box</div>
+        <div class="resize-handle" data-preview-resize="markerBox"></div>
+      </div>`);
+  }
+}
+
+function attachPreviewOverlayHandlers(){
+  const layer=document.getElementById('preview-overlay-layer');
+  if(!layer||layer._handlersAttached)return;
+  layer._handlersAttached=true;
+
+  layer.addEventListener('mousedown',e=>{
+    const resizeTarget=e.target.closest('[data-preview-resize]');
+    const boxTarget=e.target.closest('[data-preview-box]');
+    if(resizeTarget){startPreviewResize(e,resizeTarget.dataset.previewResize);return;}
+    if(boxTarget){startPreviewDrag(e,boxTarget.dataset.previewBox);return;}
+  },true);
+}
+
+function startPreviewDrag(e,type){
+  const previewDiv=document.getElementById('preview-plot');
+  const rect=previewDiv.getBoundingClientRect();
+  const obj=type==='legend'?_previewState.legend:_previewState.markerBox;
+  _previewDrag={
+    mode:'move',type,
+    startX:e.clientX,startY:e.clientY,
+    startObjX:obj.x??(type==='legend'?0.01:0.98),
+    startObjY:obj.y??(type==='legend'?0.99:0.97),
+    plotW:rect.width,plotH:rect.height
+  };
+  document.body.style.cursor='move';
+  e.preventDefault();e.stopPropagation();
+}
+
+function startPreviewResize(e,type){
+  const previewDiv=document.getElementById('preview-plot');
+  const rect=previewDiv.getBoundingClientRect();
+  const obj=type==='legend'?_previewState.legend:_previewState.markerBox;
+  _previewDrag={
+    mode:'resize',type,
+    startX:e.clientX,startY:e.clientY,
+    startWidth:obj.width||(type==='legend'?140:180),
+    plotW:rect.width,plotH:rect.height
+  };
+  document.body.style.cursor='nwse-resize';
+  e.preventDefault();e.stopPropagation();
+}
+
+document.addEventListener('mousemove',e=>{
+  if(!_previewDrag)return;
+  const previewDiv=document.getElementById('preview-plot');
+  if(!previewDiv)return;
+
+  if(_previewDrag.mode==='move'){
+    const dx=e.clientX-_previewDrag.startX;
+    const dy=e.clientY-_previewDrag.startY;
+    const nx=Math.max(0,Math.min(1,_previewDrag.startObjX+dx/_previewDrag.plotW));
+    const ny=Math.max(0,Math.min(1,_previewDrag.startObjY-dy/_previewDrag.plotH));
+    if(_previewDrag.type==='legend'){
+      _previewState.legend.x=nx;_previewState.legend.y=ny;
+      Plotly.relayout(previewDiv,{'legend.x':nx,'legend.y':ny});
+    } else {
+      _previewState.markerBox.x=nx;_previewState.markerBox.y=ny;
+      refreshPreviewAnnotationsOnly();
+    }
+  } else if(_previewDrag.mode==='resize'){
+    const dx=e.clientX-_previewDrag.startX;
+    const nw=Math.max(80,Math.min(420,_previewDrag.startWidth+dx));
+    if(_previewDrag.type==='legend'){
+      _previewState.legend.width=nw;
+      Plotly.relayout(previewDiv,{'legend.itemwidth':nw});
+    } else {
+      _previewState.markerBox.width=nw;
+      refreshPreviewAnnotationsOnly();
+    }
+  }
+
+  renderPreviewOverlayBoxes();
+  e.preventDefault();
+},true);
+
+document.addEventListener('mouseup',()=>{
+  if(!_previewDrag)return;
+  persistPreviewDragState();
+  _previewDrag=null;
+  document.body.style.cursor='';
+  renderPreviewOverlayBoxes();
+},true);
 
 async function refreshPreviewPlot(){
   if(!_previewState.divId)return;
+  const isSmith=_previewState.divId.startsWith('sc-');
+
+  const wrap=document.getElementById('preview-plot-wrap');
+  if(wrap)wrap.classList.toggle('smith-preview',isSmith);
+
   const spec=buildExportPlotSpec(_previewState.divId,{
-    legend:_previewState.legend,
-    markerBox:_previewState.markerBox
+    legend:_previewState.legend,markerBox:_previewState.markerBox
   });
+
+  // Lock all axes so the chart area cannot be panned/zoomed
+  if(spec.layout.xaxis)spec.layout.xaxis.fixedrange=true;
+  if(spec.layout.yaxis)spec.layout.yaxis.fixedrange=true;
+  spec.layout.dragmode=false;
+  spec.layout.hovermode=false;
+
   const previewDiv=document.getElementById('preview-plot');
   if(!previewDiv)return;
   await Plotly.react(previewDiv,spec.data,spec.layout,{
-    responsive:true,displaylogo:false,
-    modeBarButtonsToRemove:['select2d','lasso2d','toImage']
+    staticPlot:false,
+    responsive:false,
+    displayModeBar:false,
+    scrollZoom:false,
+    doubleClick:false,
+    displaylogo:false
   });
-  attachPreviewDragHandlers();
+
+  attachPreviewOverlayHandlers();
+  renderPreviewOverlayBoxes();
+  setTimeout(renderPreviewOverlayBoxes,60);
 }
 
 async function refreshPreviewFromControls(){
@@ -1968,89 +2148,15 @@ async function savePreviewPNG(){
 }
 
 function resetPreviewOverlayPositions(){
-  _previewState.legend.x=0.01;
-  _previewState.legend.y=0.99;
-  _previewState.legend.xanchor='left';
-  _previewState.legend.yanchor='top';
-  _previewState.markerBox.x=0.98;
-  _previewState.markerBox.y=0.97;
-  _previewState.markerBox.xanchor='right';
-  _previewState.markerBox.yanchor='top';
+  _previewState.legend.x=0.01;_previewState.legend.y=0.99;
+  _previewState.legend.xanchor='left';_previewState.legend.yanchor='top';
+  _previewState.legend.width=null;
+  _previewState.markerBox.x=0.98;_previewState.markerBox.y=0.97;
+  _previewState.markerBox.xanchor='right';_previewState.markerBox.yanchor='top';
+  _previewState.markerBox.width=null;
   persistPreviewDragState();
   refreshPreviewPlot();
 }
-
-function attachPreviewDragHandlers(){
-  const previewDiv=document.getElementById('preview-plot');
-  if(!previewDiv||previewDiv._previewDragAttached)return;
-  previewDiv._previewDragAttached=true;
-
-  previewDiv.addEventListener('mousedown',e=>{
-    const legendEl=e.target.closest('.legend');
-    const annotEl=e.target.closest('.annotation-text-g');
-
-    if(legendEl){
-      _startPreviewDrag(e,'legend');
-      return;
-    }
-    if(annotEl){
-      const txt=annotEl.textContent||'';
-      // Only drag the marker annotation box (contains frequency units or M1/M2 style labels)
-      if(/M\d|MHz|GHz|kHz|dB|VSWR|Re\s|Im\s/.test(txt)){
-        _startPreviewDrag(e,'markerBox');
-      }
-    }
-  },true);
-}
-
-function _startPreviewDrag(e,type){
-  const previewDiv=document.getElementById('preview-plot');
-  const fl=previewDiv._fullLayout;
-  if(!fl)return;
-  const plotW=fl.width||previewDiv.getBoundingClientRect().width;
-  const plotH=fl.height||previewDiv.getBoundingClientRect().height;
-  const obj=type==='legend'?_previewState.legend:_previewState.markerBox;
-  _previewDrag={
-    type,
-    startX:e.clientX,startY:e.clientY,
-    startObjX:obj.x??(type==='legend'?0.01:0.98),
-    startObjY:obj.y??(type==='legend'?0.99:0.97),
-    plotW,plotH
-  };
-  document.body.style.cursor='move';
-  e.preventDefault();e.stopPropagation();
-}
-
-document.addEventListener('mousemove',e=>{
-  if(!_previewDrag)return;
-  const previewDiv=document.getElementById('preview-plot');
-  if(!previewDiv)return;
-  const dx=e.clientX-_previewDrag.startX;
-  const dy=e.clientY-_previewDrag.startY;
-  let nx=Math.max(-0.15,Math.min(1.15,_previewDrag.startObjX+dx/_previewDrag.plotW));
-  let ny=Math.max(-0.15,Math.min(1.15,_previewDrag.startObjY-dy/_previewDrag.plotH));
-
-  if(_previewDrag.type==='legend'){
-    _previewState.legend.x=nx;
-    _previewState.legend.y=ny;
-    Plotly.relayout(previewDiv,{'legend.x':nx,'legend.y':ny});
-  } else {
-    _previewState.markerBox.x=nx;
-    _previewState.markerBox.y=ny;
-    const spec=buildExportPlotSpec(_previewState.divId,{
-      legend:_previewState.legend,markerBox:_previewState.markerBox
-    });
-    Plotly.relayout(previewDiv,{annotations:spec.layout.annotations});
-  }
-  e.preventDefault();
-},true);
-
-document.addEventListener('mouseup',()=>{
-  if(!_previewDrag)return;
-  persistPreviewDragState();
-  _previewDrag=null;
-  document.body.style.cursor='';
-},true);
 
 async function previewPlot(divId,filename){
   _previewState.divId=divId;
@@ -2061,12 +2167,11 @@ async function previewPlot(divId,filename){
     _previewState.legend=getLegendExportOptions(fs);
     _previewState.markerBox=getMarkerBoxExportOptions(fs);
   } else {
-    _previewState.legend={show:true,x:0.01,y:0.99,xanchor:'left',yanchor:'top',fontFamily:'Helvetica',fontSize:11};
-    _previewState.markerBox={x:0.98,y:0.97,xanchor:'right',yanchor:'top'};
+    _previewState.legend={show:true,x:0.01,y:0.99,xanchor:'left',yanchor:'top',fontFamily:'Helvetica',fontSize:11,width:null};
+    _previewState.markerBox={x:0.98,y:0.97,xanchor:'right',yanchor:'top',width:null};
   }
-  // Reset drag attachment so handlers re-attach after Plotly.react()
-  const pd=document.getElementById('preview-plot');
-  if(pd)pd._previewDragAttached=false;
+  const layer=document.getElementById('preview-overlay-layer');
+  if(layer){layer.innerHTML='';layer._handlersAttached=false;}
   document.getElementById('preview-modal').classList.add('open');
   syncPreviewLegendControls();
   await refreshPreviewPlot();
@@ -2074,8 +2179,12 @@ async function previewPlot(divId,filename){
 
 function closePreview(){
   document.getElementById('preview-modal').classList.remove('open');
+  const layer=document.getElementById('preview-overlay-layer');
+  if(layer){layer.innerHTML='';layer._handlersAttached=false;}
   const pd=document.getElementById('preview-plot');
-  if(pd){Plotly.purge(pd);pd._previewDragAttached=false;}
+  if(pd)Plotly.purge(pd);
+  _previewDrag=null;
+  document.body.style.cursor='';
 }
 
 // ── trace comparison ──────────────────────────────────────────────────────────
@@ -3860,11 +3969,12 @@ async function generateReport(){
         <span>Size</span>
         <input type="number" id="preview-legend-size" min="6" max="32" step="1" value="11">
       </div>
-      <button class="btn btn-ghost" onclick="resetPreviewOverlayPositions()">Reset Layout</button>
-      <span class="preview-drag-hint">Drag legend or marker box directly on the preview.</span>
+      <button class="btn btn-ghost" onclick="resetPreviewOverlayPositions()">Reset Boxes</button>
+      <span class="preview-drag-hint">Drag boxes to reposition · drag corner to resize.</span>
     </div>
     <div id="preview-plot-wrap">
       <div id="preview-plot"></div>
+      <div id="preview-overlay-layer"></div>
     </div>
   </div>
 </div>
