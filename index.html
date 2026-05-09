@@ -414,16 +414,18 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 /* ── plot shell (chart + side panel) ─────────────────────────────────────── */
 .plot-shell{display:flex;overflow:hidden}
 .plot-main{flex:1;min-width:0}
-.plot-side{width:162px;flex-shrink:0;border-left:1px solid var(--border);
+.plot-side{width:220px;flex-shrink:0;border-left:1px solid var(--border);
   background:color-mix(in srgb,var(--bg3) 70%,var(--bg2));
   padding:10px 9px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
 .side-section{display:flex;flex-direction:column;gap:4px}
 .side-title{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   color:var(--text4);padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:1px}
-.trace-row{display:flex;align-items:center;gap:6px;padding:3px 5px;border-radius:4px;
+.trace-row{display:flex;flex-direction:column;gap:3px;padding:4px 5px;border-radius:4px;
   cursor:pointer;transition:background .1s;user-select:none}
 .trace-row:hover{background:color-mix(in srgb,var(--accent) 8%,var(--bg3))}
 .trace-row.trace-hidden{opacity:.38}
+.trace-row-top{display:flex;align-items:center;gap:6px}
+.trace-row-btm{display:flex;align-items:center;gap:5px;padding-left:2px}
 .trace-swatch{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .trace-name{font-size:.76rem;color:var(--text2);letter-spacing:.01em}
 .trace-name-input{background:transparent;border:1px solid transparent;border-radius:3px;
@@ -433,6 +435,13 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 .trace-color-input{width:18px;height:18px;padding:1px;border:1px solid var(--border);
   border-radius:4px;background:transparent;cursor:pointer;flex-shrink:0}
 .trace-color-input:hover{border-color:var(--accent)}
+.trace-style-select{background:var(--bg3);border:1px solid var(--border);border-radius:4px;
+  color:var(--text3);font-size:.63rem;padding:1px 2px;max-width:68px;
+  cursor:pointer;outline:none;flex-shrink:0}
+.trace-style-select:focus{border-color:var(--accent)}
+.trace-width-input{width:44px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:4px;color:var(--text2);font-size:.63rem;padding:1px 3px;outline:none;flex-shrink:0}
+.trace-width-input:focus{border-color:var(--accent)}
 .marker-card{padding:5px 5px 5px 8px;border-left:2px solid;border-radius:0 4px 4px 0;
   display:flex;flex-direction:column;gap:2px;
   background:color-mix(in srgb,var(--bg2) 50%,transparent)}
@@ -862,11 +871,12 @@ function renderMag(divId,data,mkrs,xr,yr){
   const fs=fileById(id);
   // Use fs.traceVisible as source of truth so toggleTrace() is immediately reflected
   const vis=fs?.traceVisible||Object.fromEntries(names.map(n=>[n,true]));
-  const traces=names.map(nm=>({
-    x:data.freqs,y:data.sp[nm].db,name:getTraceDisplayName(fs,nm),mode:'lines',
-    line:{color:getTraceColor(fs,nm),width:1.9},
-    visible:vis[nm]?true:'legendonly',
-  }));
+  const traces=names.map(nm=>{
+    const st=getTraceStyle(fs,nm);
+    return{x:data.freqs,y:data.sp[nm].db,name:getTraceDisplayName(fs,nm),mode:'lines',
+      line:{color:st.color,width:st.width,dash:st.dash},
+      visible:vis[nm]?true:'legendonly'};
+  });
   const shapes=[];
   mkrs.forEach((mk,i)=>{
     const idx=nearest(data.freqs,mk.freq);
@@ -920,8 +930,9 @@ function renderSmith(divId,data,paramName,mkrs){
   const s=data.sp[paramName];
   const isRefl=paramName==='S11'||paramName==='S22';
   const trs=[...smithGrid()];
+  const st=getTraceStyle(fs,paramName);
   const lineTrace={x:s.re,y:s.im,name:getTraceDisplayName(fs,paramName),mode:'lines',
-    line:{color:getTraceColor(fs,paramName),width:2.2}};
+    line:{color:st.color,width:st.width,dash:st.dash}};
   if(isRefl){
     lineTrace.customdata=s.re.map((re,i)=>{
       const gamma=Math.sqrt(re*re+s.im[i]*s.im[i]);
@@ -962,10 +973,11 @@ function renderSmith(divId,data,paramName,mkrs){
 // ── render spectrum (CSV) ─────────────────────────────────────────────────────
 function renderSpectrum(divId,data,mkrs,xr,yr,fs){
   const th=TH();
-  const specColor=getTraceColor(fs,'Spectrum');
+  const st=getTraceStyle(fs,'Spectrum');
+  const specColor=st.color;
   const traces=[{
     x:data.freqsMHz,y:data.dbm,name:getTraceDisplayName(fs,'Spectrum'),mode:'lines',
-    line:{color:specColor,width:1.6},
+    line:{color:st.color,width:st.width,dash:st.dash},
   }];
   const shapes=[];
   mkrs.forEach((mk,i)=>{
@@ -1035,16 +1047,19 @@ function renderSParamSidePanel(id,fs){
   let html='<div class="side-section"><div class="side-title">Traces</div>';
   names.forEach(nm=>{
     const dispNm=getTraceDisplayName(fs,nm);
-    const col=getTraceColor(fs,nm);
+    const st=getTraceStyle(fs,nm);
     html+=`<div class="trace-row${vis[nm]?'':' trace-hidden'}" onclick="toggleTrace('${id}','${nm}')">
-      <span class="trace-swatch" style="background:${col}"></span>
-      <input type="color" class="trace-color-input" value="${col}"
-        onclick="event.stopPropagation()"
-        onchange="setTraceColor('${id}','${nm}',this.value)">
-      <input type="text" class="trace-name-input" value="${htmlEsc(dispNm)}"
-        onclick="event.stopPropagation()"
-        onkeydown="if(event.key==='Enter')this.blur()"
-        onblur="renameTrace('${id}','${nm}',this.value)">
+      <div class="trace-row-top">
+        <span class="trace-swatch" style="background:${st.color}"></span>
+        <input type="color" class="trace-color-input" value="${st.color}"
+          onclick="event.stopPropagation()"
+          onchange="setTraceStyle('${id}','${nm}','color',this.value)">
+        <input type="text" class="trace-name-input" value="${htmlEsc(dispNm)}"
+          onclick="event.stopPropagation()"
+          onkeydown="if(event.key==='Enter')this.blur()"
+          onblur="renameTrace('${id}','${nm}',this.value)">
+      </div>
+      <div class="trace-row-btm">${traceStyleControls(id,nm,st)}</div>
     </div>`;
   });
   html+='</div>';
@@ -1071,18 +1086,22 @@ function renderSParamSidePanel(id,fs){
 
 function renderSpectrumSidePanel(id,fs){
   const el=document.getElementById('side-sp-'+id); if(!el)return;
-  const specColor=getTraceColor(fs,'Spectrum');
+  const st=getTraceStyle(fs,'Spectrum');
+  const specColor=st.color;
 
   let html=`<div class="side-section"><div class="side-title">Trace</div>
     <div class="trace-row">
-      <span class="trace-swatch" style="background:${specColor}"></span>
-      <input type="color" class="trace-color-input" value="${specColor}"
-        onclick="event.stopPropagation()"
-        onchange="setTraceColor('${id}','Spectrum',this.value)">
-      <input type="text" class="trace-name-input" value="${htmlEsc(getTraceDisplayName(fs,'Spectrum'))}"
-        onclick="event.stopPropagation()"
-        onkeydown="if(event.key==='Enter')this.blur()"
-        onblur="renameTrace('${id}','Spectrum',this.value)">
+      <div class="trace-row-top">
+        <span class="trace-swatch" style="background:${specColor}"></span>
+        <input type="color" class="trace-color-input" value="${specColor}"
+          onclick="event.stopPropagation()"
+          onchange="setTraceStyle('${id}','Spectrum','color',this.value)">
+        <input type="text" class="trace-name-input" value="${htmlEsc(getTraceDisplayName(fs,'Spectrum'))}"
+          onclick="event.stopPropagation()"
+          onkeydown="if(event.key==='Enter')this.blur()"
+          onblur="renameTrace('${id}','Spectrum',this.value)">
+      </div>
+      <div class="trace-row-btm">${traceStyleControls(id,'Spectrum',st)}</div>
     </div>
   </div>`;
 
@@ -1108,20 +1127,24 @@ function renderSmithSidePanel(id,fs){
   if(!fs.data){el.innerHTML='';return;}
   const traceName=fs.sp||'S11';
   const s=fs.data.sp[traceName]; if(!s){el.innerHTML='';return;}
-  const traceCol=getTraceColor(fs,traceName);
+  const trSt=getTraceStyle(fs,traceName);
+  const traceCol=trSt.color;
 
   // Trace section — always visible so the user knows which trace is plotted
   let html=`<div class="side-section">
     <div class="side-title">Trace</div>
     <div class="trace-row">
-      <span class="trace-swatch" style="background:${traceCol}"></span>
-      <input type="color" class="trace-color-input" value="${traceCol}"
-        onclick="event.stopPropagation()"
-        onchange="setTraceColor('${id}','${traceName}',this.value)">
-      <input type="text" class="trace-name-input" value="${htmlEsc(getTraceDisplayName(fs,traceName))}"
-        onclick="event.stopPropagation()"
-        onkeydown="if(event.key==='Enter')this.blur()"
-        onblur="renameTrace('${id}','${traceName}',this.value)">
+      <div class="trace-row-top">
+        <span class="trace-swatch" style="background:${traceCol}"></span>
+        <input type="color" class="trace-color-input" value="${traceCol}"
+          onclick="event.stopPropagation()"
+          onchange="setTraceStyle('${id}','${traceName}','color',this.value)">
+        <input type="text" class="trace-name-input" value="${htmlEsc(getTraceDisplayName(fs,traceName))}"
+          onclick="event.stopPropagation()"
+          onkeydown="if(event.key==='Enter')this.blur()"
+          onblur="renameTrace('${id}','${traceName}',this.value)">
+      </div>
+      <div class="trace-row-btm">${traceStyleControls(id,traceName,trSt)}</div>
     </div>
   </div>`;
 
@@ -1383,26 +1406,57 @@ function renameTrace(id,rawName,newName){
   renderAll(id); renderMkrList(id);
 }
 
-function getTraceColor(fs,rawNameOrLabel){
-  if(!fs)return'#888888';
+function getTraceStyle(fs,rawNameOrLabel){
+  if(!fs)return{color:'#888888',width:1.8,dash:'solid'};
   if(fs.kind==='compare'){
     const t=fs.data?.traces.find(t=>t.label===rawNameOrLabel);
-    return t?.color||'#888888';
+    return{color:t?.color||'#888888',width:t?.width||1.8,dash:t?.dash||'solid'};
   }
-  if(fs.kind==='spectrum')return fs.traceColors?.Spectrum||(isLight()?'#0969da':'#58a6ff');
-  return fs.traceColors?.[rawNameOrLabel]||PC()[rawNameOrLabel]||'#888888';
+  if(fs.kind==='spectrum'){
+    const s=fs.traceStyles?.Spectrum||{};
+    return{color:s.color||(isLight()?'#0969da':'#58a6ff'),width:s.width||1.6,dash:s.dash||'solid'};
+  }
+  const s=fs.traceStyles?.[rawNameOrLabel]||{};
+  return{color:s.color||PC()[rawNameOrLabel]||'#888888',width:s.width||1.9,dash:s.dash||'solid'};
+}
+
+function getTraceColor(fs,rawNameOrLabel){
+  return getTraceStyle(fs,rawNameOrLabel).color;
+}
+
+function setTraceStyle(id,rawNameOrLabel,key,value){
+  const fs=fileById(id); if(!fs)return;
+  if(fs.kind==='compare'){
+    const t=fs.data?.traces.find(t=>t.label===rawNameOrLabel);
+    if(!t)return;
+    if(key==='color')t.color=value;
+    else if(key==='width')t.width=Math.max(0.5,Math.min(8,parseFloat(value)||1.5));
+    else if(key==='dash')t.dash=value||'solid';
+  } else {
+    if(!fs.traceStyles)fs.traceStyles={};
+    if(!fs.traceStyles[rawNameOrLabel])fs.traceStyles[rawNameOrLabel]=getTraceStyle(fs,rawNameOrLabel);
+    if(key==='color')fs.traceStyles[rawNameOrLabel].color=value;
+    else if(key==='width')fs.traceStyles[rawNameOrLabel].width=Math.max(0.5,Math.min(8,parseFloat(value)||1.8));
+    else if(key==='dash')fs.traceStyles[rawNameOrLabel].dash=value||'solid';
+  }
+  renderAll(id); renderMkrList(id);
 }
 
 function setTraceColor(id,rawNameOrLabel,color){
-  const fs=fileById(id); if(!fs||!color)return;
-  if(fs.kind==='compare'){
-    const t=fs.data?.traces.find(t=>t.label===rawNameOrLabel);
-    if(t)t.color=color;
-  } else {
-    if(!fs.traceColors)fs.traceColors={};
-    fs.traceColors[rawNameOrLabel]=color;
-  }
-  renderAll(id); renderMkrList(id);
+  setTraceStyle(id,rawNameOrLabel,'color',color);
+}
+
+function traceStyleControls(id,key,st){
+  return `<select class="trace-style-select" onclick="event.stopPropagation()"
+    onchange="setTraceStyle('${id}','${key}','dash',this.value)">
+    <option value="solid"${st.dash==='solid'?' selected':''}>Solid</option>
+    <option value="dash"${st.dash==='dash'?' selected':''}>Dashed</option>
+    <option value="dot"${st.dash==='dot'?' selected':''}>Dotted</option>
+    <option value="dashdot"${st.dash==='dashdot'?' selected':''}>Dash-dot</option>
+  </select>
+  <input type="number" class="trace-width-input" value="${st.width}" min="0.5" max="8" step="0.5"
+    title="Line width" onclick="event.stopPropagation()"
+    onchange="setTraceStyle('${id}','${key}','width',this.value)">`;
 }
 
 // ── drag markers ──────────────────────────────────────────────────────────────
@@ -1689,11 +1743,11 @@ function buildCompareTraces(selections){
     const displayName=`${shortName(fs.name)} — ${s.trace}`;
     if(s.kind==='spectrum'){
       traces.push({sourceFileId:fs.id,sourceFileName:fs.name,traceName:s.trace,kind:'spectrum',
-        x:[...fs.data.freqsMHz],y:[...fs.data.dbm],unit:'dBm',label,displayName,color});
+        x:[...fs.data.freqsMHz],y:[...fs.data.dbm],unit:'dBm',label,displayName,color,width:1.5,dash:'solid'});
     } else {
       const sp=fs.data.sp[s.trace]; if(!sp)return;
       traces.push({sourceFileId:fs.id,sourceFileName:fs.name,traceName:s.trace,kind:'sparameter',
-        x:[...fs.data.freqs],y:[...sp.db],unit:'dB',label,displayName,color});
+        x:[...fs.data.freqs],y:[...sp.db],unit:'dB',label,displayName,color,width:1.5,dash:'solid'});
     }
   });
   return traces;
@@ -1815,7 +1869,7 @@ function renderCompareTabPlot(id,fs){
     const vis=fs.traceVisible[t.label]!==false;
     const dn=t.displayName||t.label;
     return{x:t.x,y:t.y,type:'scatter',mode:'lines',name:htmlEsc(dn),
-      line:{color:t.color,width:1.5},visible:vis?true:'legendonly',
+      line:{color:t.color||'#888888',width:t.width||1.5,dash:t.dash||'solid'},visible:vis?true:'legendonly',
       hovertemplate:`%{x:.4f} MHz<br>%{y:.2f} ${t.unit}<extra>${htmlEsc(dn)}</extra>`};
   });
 
@@ -1872,15 +1926,19 @@ function renderCompareSidePanel(id,fs){
   fs.data.traces.forEach((t,idx)=>{
     const vis=fs.traceVisible[t.label]!==false;
     const dn=t.displayName||t.label;
+    const tst=getTraceStyle(fs,t.label);
     html+=`<div class="trace-row${vis?'':' trace-hidden'}" onclick="toggleCompareTrace('${id}',${idx})">
-      <span class="trace-swatch" style="background:${t.color}"></span>
-      <input type="color" class="trace-color-input" value="${t.color}"
-        onclick="event.stopPropagation()"
-        onchange="setTraceColor('${id}','${t.label}',this.value)">
-      <input type="text" class="trace-name-input" value="${htmlEsc(dn)}"
-        onclick="event.stopPropagation()"
-        onkeydown="if(event.key==='Enter')this.blur()"
-        onblur="renameTrace('${id}','${t.label}',this.value)">
+      <div class="trace-row-top">
+        <span class="trace-swatch" style="background:${tst.color}"></span>
+        <input type="color" class="trace-color-input" value="${tst.color}"
+          onclick="event.stopPropagation()"
+          onchange="setTraceStyle('${id}','${t.label}','color',this.value)">
+        <input type="text" class="trace-name-input" value="${htmlEsc(dn)}"
+          onclick="event.stopPropagation()"
+          onkeydown="if(event.key==='Enter')this.blur()"
+          onblur="renameTrace('${id}','${t.label}',this.value)">
+      </div>
+      <div class="trace-row-btm">${traceStyleControls(id,t.label,tst)}</div>
     </div>`;
   });
   html+='</div>';
@@ -2540,11 +2598,11 @@ function loadFiles(fileList,hint){
           if(kind==='sparameter'){
             fs.traceVisible=Object.fromEntries(Object.keys(d.sp).map(n=>[n,true]));
             fs.traceNames=Object.fromEntries(Object.keys(d.sp).map(n=>[n,n]));
-            const defaultColors=PC();
-            fs.traceColors=Object.fromEntries(Object.keys(d.sp).map(n=>[n,defaultColors[n]||'#888888']));
+            const dc=PC();
+            fs.traceStyles=Object.fromEntries(Object.keys(d.sp).map(n=>[n,{color:dc[n]||'#888888',width:1.9,dash:'solid'}]));
           } else {
             fs.traceNames={Spectrum:'Spectrum'};
-            fs.traceColors={Spectrum:isLight()?'#0969da':'#58a6ff'};
+            fs.traceStyles={Spectrum:{color:isLight()?'#0969da':'#58a6ff',width:1.6,dash:'solid'}};
           }
 
           // create appropriate panel
