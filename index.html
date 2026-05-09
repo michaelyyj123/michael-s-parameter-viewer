@@ -398,8 +398,6 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 #preview-modal.open{display:flex}
 .preview-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;
   padding:16px;display:flex;flex-direction:column;gap:10px;width:min(1120px,94vw);max-height:92vh}
-.preview-box img{max-width:100%;max-height:calc(90vh - 140px);object-fit:contain;
-  border-radius:4px;display:block}
 .preview-hdr{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .preview-title{font-size:.9rem;font-weight:600;color:var(--text2)}
 .preview-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 10px;
@@ -413,6 +411,11 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 .preview-tool-group input[type=number]{width:58px}
 .preview-tool-group select:focus,.preview-tool-group input[type=number]:focus{border-color:var(--accent)}
 .preview-tool-group label{display:flex;align-items:center;gap:5px;cursor:pointer}
+.preview-drag-hint{font-size:.72rem;color:var(--text4);margin-left:auto}
+#preview-plot-wrap{width:100%;height:min(580px,calc(90vh - 160px));background:var(--bg3);
+  border:1px solid var(--border);border-radius:6px;overflow:hidden;position:relative}
+#preview-plot{width:100%;height:100%}
+#preview-plot .legend,#preview-plot .annotation-text-g{cursor:move}
 
 @media(max-width:860px){
   .plots-grid{grid-template-columns:1fr}
@@ -1284,9 +1287,10 @@ function toggleTrace(id,nm){
 }
 
 // Build stable inside-plot marker annotations for PNG export
-function buildExportAnnotations(fs,divId){
+function buildExportAnnotations(fs,divId,opts={}){
   const th=TH(),pc=PC();
   if(!fs||!fs.mkrs.length)return[];
+  const mb=opts.markerBox||{x:0.98,y:0.97,xanchor:'right',yanchor:'top'};
   const lines=[];
   if(fs.kind==='spectrum'){
     const data=fs.data;
@@ -1312,7 +1316,8 @@ function buildExportAnnotations(fs,divId){
   }
   if(!lines.length)return[];
   return[{
-    x:0.98,y:0.97,xref:'paper',yref:'paper',xanchor:'right',yanchor:'top',
+    x:mb.x,y:mb.y,xref:'paper',yref:'paper',
+    xanchor:mb.xanchor||'right',yanchor:mb.yanchor||'top',
     text:lines.join('<br>'),showarrow:false,
     font:{size:11,color:th.text},bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,
     align:'left',
@@ -1320,9 +1325,10 @@ function buildExportAnnotations(fs,divId){
 }
 
 // Build stable paper-coord marker annotations for Smith Chart PNG export
-function buildSmithExportAnnotations(fs){
+function buildSmithExportAnnotations(fs,opts={}){
   const th=TH();
   if(!fs||!fs.mkrs.length)return[];
+  const mb=opts.markerBox||{x:0.98,y:0.97,xanchor:'right',yanchor:'top'};
   const traceName=fs.sp||'S11';
   const s=fs.data?.sp[traceName]; if(!s)return[];
   const lines=[];
@@ -1340,7 +1346,8 @@ function buildSmithExportAnnotations(fs){
     if(traceName==='S11'||traceName==='S22')lines.push(`VSWR ${fmtVSWR(gammaToVSWR(gammaRaw))}`);
   });
   if(!lines.length)return[];
-  return[{x:0.98,y:0.97,xref:'paper',yref:'paper',xanchor:'right',yanchor:'top',
+  return[{x:mb.x,y:mb.y,xref:'paper',yref:'paper',
+    xanchor:mb.xanchor||'right',yanchor:mb.yanchor||'top',
     text:lines.join('<br>'),showarrow:false,
     font:{size:11,color:th.text},bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,align:'left'}];
 }
@@ -1782,46 +1789,43 @@ function setAxisFontSize(id,val){
 }
 
 // ── save / preview ────────────────────────────────────────────────────────────
-function legendPositionToLayout(pos){
-  switch(pos){
-    case 'top-right':    return{x:0.99,y:0.99,xanchor:'right',yanchor:'top'};
-    case 'bottom-left':  return{x:0.01,y:0.01,xanchor:'left',yanchor:'bottom'};
-    case 'bottom-right': return{x:0.99,y:0.01,xanchor:'right',yanchor:'bottom'};
-    case 'top-center':   return{x:0.5,y:0.99,xanchor:'center',yanchor:'top'};
-    case 'bottom-center':return{x:0.5,y:0.01,xanchor:'center',yanchor:'bottom'};
-    case 'outside-right':return{x:1.02,y:0.99,xanchor:'left',yanchor:'top'};
-    default:             return{x:0.01,y:0.99,xanchor:'left',yanchor:'top'};
-  }
-}
-
+// ── export helpers ────────────────────────────────────────────────────────────
 function getLegendExportOptions(fs){
   return{
     show: fs.legendShow!==false,
-    position: fs.legendPosition||'top-left',
+    x: fs.legendX??0.01,
+    y: fs.legendY??0.99,
+    xanchor: fs.legendXAnchor||'left',
+    yanchor: fs.legendYAnchor||'top',
     fontFamily: fs.legendFontFamily||fs.axisFont||'Helvetica',
     fontSize: fs.legendFontSize||11
   };
 }
 
-let _previewState={
-  divId:null,filename:null,imgUrl:null,
-  legend:{show:true,position:'top-left',fontFamily:'Helvetica',fontSize:11}
-};
+function getMarkerBoxExportOptions(fs){
+  return{
+    x: fs.markerBoxX??0.98,
+    y: fs.markerBoxY??0.97,
+    xanchor: fs.markerBoxXAnchor||'right',
+    yanchor: fs.markerBoxYAnchor||'top'
+  };
+}
 
-async function _plotImage(divId,opts={}){
-  const legendOpts=opts.legend||{show:true,position:'top-left',fontFamily:'Helvetica',fontSize:11};
+function buildExportPlotSpec(divId,opts={}){
   const isSmith=divId.startsWith('sc-');
   const W=isSmith?660:1050,H=isSmith?660:540;
   const div=document.getElementById(divId);
+  const id=divId.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
+  const fs=fileById(id);
+  const th=TH();
 
-  // Smith chart: use temp div so we can inject stable marker annotations
-  // without mutating the interactive plot
+  const legendOpts=opts.legend||(fs?getLegendExportOptions(fs):{show:true,x:0.01,y:0.99,xanchor:'left',yanchor:'top',fontFamily:'Helvetica',fontSize:11});
+  const markerBoxOpts=opts.markerBox||(fs?getMarkerBoxExportOptions(fs):{x:0.98,y:0.97,xanchor:'right',yanchor:'top'});
+
   if(isSmith){
-    const id=divId.replace(/^sc-/,'');
-    const fs=fileById(id);
     const dl=div.layout||{};
-    const smithExportAnnotations=[...(dl.annotations||[]),...buildSmithExportAnnotations(fs)];
-    const exportLayout={
+    const smithExportAnnotations=[...(dl.annotations||[]),...buildSmithExportAnnotations(fs,{markerBox:markerBoxOpts})];
+    const layout={
       paper_bgcolor:dl.paper_bgcolor,plot_bgcolor:dl.plot_bgcolor,
       font:dl.font,margin:dl.margin,hovermode:false,
       xaxis:{range:[-1.15,1.15],scaleanchor:'y',scaleratio:1,
@@ -1834,36 +1838,23 @@ async function _plotImage(divId,opts={}){
         tickfont:dl.yaxis?.tickfont,title:dl.yaxis?.title},
       annotations:smithExportAnnotations,showlegend:false,
     };
-    const tmp=document.createElement('div');
-    tmp.style.cssText=`position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;pointer-events:none`;
-    document.body.appendChild(tmp);
-    try{
-      await Plotly.newPlot(tmp,div.data||[],exportLayout,{staticPlot:true,responsive:false});
-      return await Plotly.toImage(tmp,{format:'png',width:W,height:H,scale:4});
-    }finally{Plotly.purge(tmp);tmp.remove();}
+    return{data:div.data||[],layout,width:W,height:H,isSmith:true};
   }
 
-  // For magnitude/spectrum/compare: render into a temporary off-screen div so we never
-  // mutate the interactive plot.  Only truly-visible traces are included, so
-  // hidden traces are absent from the exported legend entirely.
-  const id=divId.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
-  const fs=fileById(id);
-  const th=TH();
   const dl=div.layout||{};
   const lx=dl.xaxis||{},ly=dl.yaxis||{};
 
-  const legendPos=legendPositionToLayout(legendOpts.position||'top-left');
-
-  // Keep only visible traces (drop legendonly; keep showlegend:false marker dots)
   const exportData=(div.data||[])
     .filter(t=>t.visible!=='legendonly')
     .map(t=>Object.assign({},t));
 
-  const exportLayout={
+  const margin={...(dl.margin||{})};
+
+  const layout={
     paper_bgcolor:dl.paper_bgcolor,
     plot_bgcolor:dl.plot_bgcolor,
     font:dl.font,
-    margin:{...(dl.margin||{})},
+    margin,
     hovermode:false,
     xaxis:{
       title:lx.title,
@@ -1881,72 +1872,185 @@ async function _plotImage(divId,opts={}){
     shapes:dl.shapes?[...dl.shapes]:[],
     showlegend:legendOpts.show!==false,
     legend:{
-      ...legendPos,
+      x:legendOpts.x??0.01,
+      y:legendOpts.y??0.99,
+      xanchor:legendOpts.xanchor||'left',
+      yanchor:legendOpts.yanchor||'top',
       bgcolor:th.legBg,bordercolor:th.legBd,borderwidth:1,
       font:{color:th.text,family:legendOpts.fontFamily||'Helvetica',size:Number(legendOpts.fontSize)||11}
     },
-    annotations:fs.kind==='compare'?[]:buildExportAnnotations(fs,divId),
+    annotations:fs&&fs.kind==='compare'?[]:buildExportAnnotations(fs,divId,{markerBox:markerBoxOpts}),
   };
 
-  if((legendOpts.position||'').includes('outside')){
-    exportLayout.margin.r=Math.max(exportLayout.margin.r||20,180);
-  }
+  return{data:exportData,layout,width:W,height:H,isSmith:false};
+}
 
+async function _plotImage(divId,opts={}){
+  const spec=buildExportPlotSpec(divId,opts);
   const tmp=document.createElement('div');
-  tmp.style.cssText=`position:fixed;left:-9999px;top:0;width:${W}px;height:${H}px;pointer-events:none`;
+  tmp.style.cssText=`position:fixed;left:-9999px;top:0;width:${spec.width}px;height:${spec.height}px;pointer-events:none`;
   document.body.appendChild(tmp);
   try{
-    await Plotly.newPlot(tmp,exportData,exportLayout,{staticPlot:true,responsive:false});
-    return await Plotly.toImage(tmp,{format:'png',width:W,height:H,scale:4});
-  }finally{
-    Plotly.purge(tmp);
-    tmp.remove();
-  }
+    await Plotly.newPlot(tmp,spec.data,spec.layout,{staticPlot:true,responsive:false});
+    return await Plotly.toImage(tmp,{format:'png',width:spec.width,height:spec.height,scale:4});
+  }finally{Plotly.purge(tmp);tmp.remove();}
 }
 
-async function refreshPreviewImage(){
-  if(!_previewState.divId)return;
-  const url=await _plotImage(_previewState.divId,{legend:_previewState.legend});
-  _previewState.imgUrl=url;
-  document.getElementById('preview-img').src=url;
-  document.getElementById('preview-dl-btn').onclick=()=>{
-    const a=document.createElement('a');
-    a.href=_previewState.imgUrl;
-    a.download=(_previewState.filename||'plot')+'.png';
-    a.click();
-  };
-}
+// ── preview state & drag ──────────────────────────────────────────────────────
+let _previewDrag=null;
+
+let _previewState={
+  divId:null,filename:null,
+  legend:{show:true,x:0.01,y:0.99,xanchor:'left',yanchor:'top',fontFamily:'Helvetica',fontSize:11},
+  markerBox:{x:0.98,y:0.97,xanchor:'right',yanchor:'top'}
+};
 
 function syncPreviewLegendControls(){
   const show=document.getElementById('preview-legend-show');
-  const pos=document.getElementById('preview-legend-position');
   const font=document.getElementById('preview-legend-font');
   const size=document.getElementById('preview-legend-size');
   if(show)show.checked=_previewState.legend.show!==false;
-  if(pos)pos.value=_previewState.legend.position||'top-left';
   if(font)font.value=_previewState.legend.fontFamily||'Helvetica';
   if(size)size.value=_previewState.legend.fontSize||11;
 }
 
+function persistPreviewDragState(){
+  if(!_previewState.divId)return;
+  const id=_previewState.divId.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
+  const fs=fileById(id); if(!fs)return;
+  fs.legendShow=_previewState.legend.show!==false;
+  fs.legendX=_previewState.legend.x;
+  fs.legendY=_previewState.legend.y;
+  fs.legendXAnchor=_previewState.legend.xanchor||'left';
+  fs.legendYAnchor=_previewState.legend.yanchor||'top';
+  fs.legendFontFamily=_previewState.legend.fontFamily||'Helvetica';
+  fs.legendFontSize=_previewState.legend.fontSize||11;
+  fs.markerBoxX=_previewState.markerBox.x;
+  fs.markerBoxY=_previewState.markerBox.y;
+  fs.markerBoxXAnchor=_previewState.markerBox.xanchor||'right';
+  fs.markerBoxYAnchor=_previewState.markerBox.yanchor||'top';
+}
+
+async function refreshPreviewPlot(){
+  if(!_previewState.divId)return;
+  const spec=buildExportPlotSpec(_previewState.divId,{
+    legend:_previewState.legend,
+    markerBox:_previewState.markerBox
+  });
+  const previewDiv=document.getElementById('preview-plot');
+  if(!previewDiv)return;
+  await Plotly.react(previewDiv,spec.data,spec.layout,{
+    responsive:true,displaylogo:false,
+    modeBarButtonsToRemove:['select2d','lasso2d','toImage']
+  });
+  attachPreviewDragHandlers();
+}
+
 async function refreshPreviewFromControls(){
   const show=document.getElementById('preview-legend-show');
-  const pos=document.getElementById('preview-legend-position');
   const font=document.getElementById('preview-legend-font');
   const size=document.getElementById('preview-legend-size');
   _previewState.legend.show=show?show.checked:true;
-  _previewState.legend.position=pos?pos.value:'top-left';
   _previewState.legend.fontFamily=font?font.value:'Helvetica';
   _previewState.legend.fontSize=size?Number(size.value)||11:11;
-  const id=_previewState.divId.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
-  const fs=fileById(id);
-  if(fs){
-    fs.legendShow=_previewState.legend.show;
-    fs.legendPosition=_previewState.legend.position;
-    fs.legendFontFamily=_previewState.legend.fontFamily;
-    fs.legendFontSize=_previewState.legend.fontSize;
-  }
-  await refreshPreviewImage();
+  persistPreviewDragState();
+  await refreshPreviewPlot();
 }
+
+async function savePreviewPNG(){
+  const previewDiv=document.getElementById('preview-plot');
+  if(!previewDiv||!_previewState.divId)return;
+  const isSmith=_previewState.divId.startsWith('sc-');
+  const W=isSmith?660:1050,H=isSmith?660:540;
+  const url=await Plotly.toImage(previewDiv,{format:'png',width:W,height:H,scale:4});
+  const a=document.createElement('a');
+  a.href=url;a.download=(_previewState.filename||'plot')+'.png';a.click();
+}
+
+function resetPreviewOverlayPositions(){
+  _previewState.legend.x=0.01;
+  _previewState.legend.y=0.99;
+  _previewState.legend.xanchor='left';
+  _previewState.legend.yanchor='top';
+  _previewState.markerBox.x=0.98;
+  _previewState.markerBox.y=0.97;
+  _previewState.markerBox.xanchor='right';
+  _previewState.markerBox.yanchor='top';
+  persistPreviewDragState();
+  refreshPreviewPlot();
+}
+
+function attachPreviewDragHandlers(){
+  const previewDiv=document.getElementById('preview-plot');
+  if(!previewDiv||previewDiv._previewDragAttached)return;
+  previewDiv._previewDragAttached=true;
+
+  previewDiv.addEventListener('mousedown',e=>{
+    const legendEl=e.target.closest('.legend');
+    const annotEl=e.target.closest('.annotation-text-g');
+
+    if(legendEl){
+      _startPreviewDrag(e,'legend');
+      return;
+    }
+    if(annotEl){
+      const txt=annotEl.textContent||'';
+      // Only drag the marker annotation box (contains frequency units or M1/M2 style labels)
+      if(/M\d|MHz|GHz|kHz|dB|VSWR|Re\s|Im\s/.test(txt)){
+        _startPreviewDrag(e,'markerBox');
+      }
+    }
+  },true);
+}
+
+function _startPreviewDrag(e,type){
+  const previewDiv=document.getElementById('preview-plot');
+  const fl=previewDiv._fullLayout;
+  if(!fl)return;
+  const plotW=fl.width||previewDiv.getBoundingClientRect().width;
+  const plotH=fl.height||previewDiv.getBoundingClientRect().height;
+  const obj=type==='legend'?_previewState.legend:_previewState.markerBox;
+  _previewDrag={
+    type,
+    startX:e.clientX,startY:e.clientY,
+    startObjX:obj.x??(type==='legend'?0.01:0.98),
+    startObjY:obj.y??(type==='legend'?0.99:0.97),
+    plotW,plotH
+  };
+  document.body.style.cursor='move';
+  e.preventDefault();e.stopPropagation();
+}
+
+document.addEventListener('mousemove',e=>{
+  if(!_previewDrag)return;
+  const previewDiv=document.getElementById('preview-plot');
+  if(!previewDiv)return;
+  const dx=e.clientX-_previewDrag.startX;
+  const dy=e.clientY-_previewDrag.startY;
+  let nx=Math.max(-0.15,Math.min(1.15,_previewDrag.startObjX+dx/_previewDrag.plotW));
+  let ny=Math.max(-0.15,Math.min(1.15,_previewDrag.startObjY-dy/_previewDrag.plotH));
+
+  if(_previewDrag.type==='legend'){
+    _previewState.legend.x=nx;
+    _previewState.legend.y=ny;
+    Plotly.relayout(previewDiv,{'legend.x':nx,'legend.y':ny});
+  } else {
+    _previewState.markerBox.x=nx;
+    _previewState.markerBox.y=ny;
+    const spec=buildExportPlotSpec(_previewState.divId,{
+      legend:_previewState.legend,markerBox:_previewState.markerBox
+    });
+    Plotly.relayout(previewDiv,{annotations:spec.layout.annotations});
+  }
+  e.preventDefault();
+},true);
+
+document.addEventListener('mouseup',()=>{
+  if(!_previewDrag)return;
+  persistPreviewDragState();
+  _previewDrag=null;
+  document.body.style.cursor='';
+},true);
 
 async function previewPlot(divId,filename){
   _previewState.divId=divId;
@@ -1954,21 +2058,24 @@ async function previewPlot(divId,filename){
   const id=divId.replace(/^(?:cmp-plot-|md-|sc-|sp-)/,'');
   const fs=fileById(id);
   if(fs){
-    _previewState.legend.fontFamily=fs.legendFontFamily||fs.axisFont||'Helvetica';
-    _previewState.legend.fontSize=fs.legendFontSize||11;
-    _previewState.legend.position=fs.legendPosition||'top-left';
-    _previewState.legend.show=fs.legendShow!==false;
+    _previewState.legend=getLegendExportOptions(fs);
+    _previewState.markerBox=getMarkerBoxExportOptions(fs);
   } else {
-    _previewState.legend={show:true,position:'top-left',fontFamily:'Helvetica',fontSize:11};
+    _previewState.legend={show:true,x:0.01,y:0.99,xanchor:'left',yanchor:'top',fontFamily:'Helvetica',fontSize:11};
+    _previewState.markerBox={x:0.98,y:0.97,xanchor:'right',yanchor:'top'};
   }
-  syncPreviewLegendControls();
-  await refreshPreviewImage();
+  // Reset drag attachment so handlers re-attach after Plotly.react()
+  const pd=document.getElementById('preview-plot');
+  if(pd)pd._previewDragAttached=false;
   document.getElementById('preview-modal').classList.add('open');
+  syncPreviewLegendControls();
+  await refreshPreviewPlot();
 }
 
 function closePreview(){
   document.getElementById('preview-modal').classList.remove('open');
-  document.getElementById('preview-img').src='';
+  const pd=document.getElementById('preview-plot');
+  if(pd){Plotly.purge(pd);pd._previewDragAttached=false;}
 }
 
 // ── trace comparison ──────────────────────────────────────────────────────────
@@ -3241,8 +3348,8 @@ function updateTraceStyleColorButton(color){
 
 // ── modal wiring (after DOM is ready) ────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  // preview legend controls — auto-update on change
-  ['preview-legend-show','preview-legend-position','preview-legend-font','preview-legend-size'].forEach(eid=>{
+  // preview legend controls — auto-update on change (font, size, show only; position is now drag-based)
+  ['preview-legend-show','preview-legend-font','preview-legend-size'].forEach(eid=>{
     const el=document.getElementById(eid);
     if(el)el.addEventListener('change',refreshPreviewFromControls);
   });
@@ -3564,12 +3671,12 @@ async function generateReport(){
   try{
     let magImg=null,smithImg=null,specImg=null,cmpImg=null;
     if(fs.kind==='sparameter'){
-      magImg=await _plotImage('md-'+fs.id,{legend:getLegendExportOptions(fs)});
-      smithImg=await _plotImage('sc-'+fs.id);
+      magImg=await _plotImage('md-'+fs.id,{legend:getLegendExportOptions(fs),markerBox:getMarkerBoxExportOptions(fs)});
+      smithImg=await _plotImage('sc-'+fs.id,{markerBox:getMarkerBoxExportOptions(fs)});
     } else if(fs.kind==='spectrum'){
-      specImg=await _plotImage('sp-'+fs.id,{legend:getLegendExportOptions(fs)});
+      specImg=await _plotImage('sp-'+fs.id,{legend:getLegendExportOptions(fs),markerBox:getMarkerBoxExportOptions(fs)});
     } else if(fs.kind==='compare'){
-      cmpImg=await _plotImage('cmp-plot-'+fs.id,{legend:getLegendExportOptions(fs)});
+      cmpImg=await _plotImage('cmp-plot-'+fs.id,{legend:getLegendExportOptions(fs),markerBox:getMarkerBoxExportOptions(fs)});
     }
     const analysisHtml=_rptAnalysisHTML(fs.id,fs);
     const html=_buildReportHTML(fs,{dut,operator,setup,notes,magImg,smithImg,specImg,cmpImg,analysisHtml});
@@ -3726,9 +3833,9 @@ async function generateReport(){
 <div id="preview-modal" onclick="closePreview()">
   <div class="preview-box" onclick="event.stopPropagation()">
     <div class="preview-hdr">
-      <span class="preview-title">PNG Preview (4× resolution)</span>
+      <span class="preview-title">Preview</span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-save" id="preview-dl-btn">Download PNG</button>
+        <button class="btn btn-save" onclick="savePreviewPNG()">Save PNG</button>
         <button class="btn btn-ghost" onclick="closePreview()">Close</button>
       </div>
     </div>
@@ -3738,18 +3845,6 @@ async function generateReport(){
           <input type="checkbox" id="preview-legend-show" checked>
           Legend
         </label>
-      </div>
-      <div class="preview-tool-group">
-        <span>Position</span>
-        <select id="preview-legend-position">
-          <option value="top-left">Top Left</option>
-          <option value="top-right">Top Right</option>
-          <option value="bottom-left">Bottom Left</option>
-          <option value="bottom-right">Bottom Right</option>
-          <option value="top-center">Top Center</option>
-          <option value="bottom-center">Bottom Center</option>
-          <option value="outside-right">Outside Right</option>
-        </select>
       </div>
       <div class="preview-tool-group">
         <span>Font</span>
@@ -3765,9 +3860,12 @@ async function generateReport(){
         <span>Size</span>
         <input type="number" id="preview-legend-size" min="6" max="32" step="1" value="11">
       </div>
-      <button class="btn btn-ghost" id="preview-refresh-btn" onclick="refreshPreviewFromControls()">Update Preview</button>
+      <button class="btn btn-ghost" onclick="resetPreviewOverlayPositions()">Reset Layout</button>
+      <span class="preview-drag-hint">Drag legend or marker box directly on the preview.</span>
     </div>
-    <img id="preview-img" src="" alt="preview">
+    <div id="preview-plot-wrap">
+      <div id="preview-plot"></div>
+    </div>
   </div>
 </div>
 </body>
