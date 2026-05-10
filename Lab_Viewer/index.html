@@ -524,6 +524,10 @@ input[type=number]::placeholder{color:var(--text4)}
 .marker-chip-list::-webkit-scrollbar{width:5px}
 .marker-chip-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
 .marker-chip-list::-webkit-scrollbar-track{background:transparent}
+.side-marker-list{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;padding-right:3px;overscroll-behavior:contain}
+.side-marker-list::-webkit-scrollbar{width:5px}
+.side-marker-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
+.side-marker-list::-webkit-scrollbar-track{background:transparent}
 .marker-chip{display:flex;align-items:center;gap:5px;
   background:var(--bg3);border:1px solid var(--border);border-left-width:3px;
   border-radius:5px;padding:4px 8px;cursor:pointer;transition:background .1s}
@@ -1575,7 +1579,7 @@ function renderSParamSidePanel(id,fs){
   html+='</div>';
 
   if(fs.mkrs.length){
-    html+='<div class="side-section"><div class="side-title">Markers</div>';
+    html+='<div class="side-section"><div class="side-title">Markers</div><div class="side-marker-list">';
     fs.mkrs.forEach((mk,i)=>{
       const idx=nearest(fs.data.freqs,mk.freq);
       const mf=fs.data.freqs[idx];
@@ -1589,7 +1593,7 @@ function renderSParamSidePanel(id,fs){
       });
       html+='</div>';
     });
-    html+='</div>';
+    html+='</div></div>';
   }
   const _afn=fs.axisFont||'Helvetica';
   const _afs=fs.axisFontSize||'';
@@ -1620,7 +1624,7 @@ function renderSpectrumSidePanel(id,fs){
   </div>`;
 
   if(fs.mkrs.length){
-    html+='<div class="side-section"><div class="side-title">Markers</div>';
+    html+='<div class="side-section"><div class="side-title">Markers</div><div class="side-marker-list">';
     fs.mkrs.forEach((mk,i)=>{
       const idx=nearest(fs.data.freqsMHz,mk.freq);
       const mf=fs.data.freqsMHz[idx];
@@ -1631,7 +1635,7 @@ function renderSpectrumSidePanel(id,fs){
         <div class="marker-value" style="color:${specColor}">${fs.data.dbm[idx].toFixed(2)} dBm</div>
       </div>`;
     });
-    html+='</div>';
+    html+='</div></div>';
   }
   const _afn=fs.axisFont||'Helvetica';
   const _afs=fs.axisFontSize||'';
@@ -1667,7 +1671,7 @@ function renderSmithSidePanel(id,fs){
   </div>`;
 
   if(fs.mkrs.length){
-    html+='<div class="side-section"><div class="side-title">Markers</div>';
+    html+='<div class="side-section"><div class="side-title">Markers</div><div class="side-marker-list">';
     fs.mkrs.forEach((mk,i)=>{
       const idx=nearest(fs.data.freqs,mk.freq);
       const mf=fs.data.freqs[idx];
@@ -1691,7 +1695,7 @@ function renderSmithSidePanel(id,fs){
         ${vswrLine}
       </div>`;
     });
-    html+='</div>';
+    html+='</div></div>';
   }
   el.innerHTML=html;
 }
@@ -1801,7 +1805,7 @@ function buildSmithExportAnnotations(fs,opts={}){
 
 // ── markers ───────────────────────────────────────────────────────────────────
 function addMkr(id){
-  const fs=fileById(id); if(!fs||fs.mkrs.length>=6)return;
+  const fs=fileById(id); if(!fs||fs.mkrs.length>=20)return;
   const f=parseFloat(document.getElementById('mk-inp-'+id).value);
   if(isNaN(f))return;
   fs.mkrs.push({freq:f,color:MC()[fs.mkrs.length%6],name:`M${fs.mkrs.length+1}`,showLine:true,trace:null});
@@ -2805,7 +2809,7 @@ function renderCompareSidePanel(id,fs){
   });
   html+='</div>';
   if(fs.mkrs.length){
-    html+='<div class="side-section"><div class="side-title">Markers</div>';
+    html+='<div class="side-section"><div class="side-title">Markers</div><div class="side-marker-list">';
     fs.mkrs.forEach((mk,i)=>{
       const mkName=mk.name||`M${i+1}`;
       html+=`<div class="marker-card" style="border-left-color:${mk.color}">
@@ -2817,7 +2821,7 @@ function renderCompareSidePanel(id,fs){
       });
       html+='</div>';
     });
-    html+='</div>';
+    html+='</div></div>';
   }
   const _afn=fs.axisFont||'Helvetica';
   const _afs=fs.axisFontSize||'';
