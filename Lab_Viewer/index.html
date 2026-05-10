@@ -1805,7 +1805,13 @@ function buildSmithExportAnnotations(fs,opts={}){
 
 // ── markers ───────────────────────────────────────────────────────────────────
 function addMkr(id){
-  const fs=fileById(id); if(!fs||fs.mkrs.length>=20)return;
+  if(!fileById(id))return;
+  const fs=fileById(id);
+  if(fs.mkrs.length>=20){
+    const el=document.getElementById('hint-'+id);
+    if(el){el.textContent='Marker limit reached (20)';setTimeout(()=>{if(el.textContent==='Marker limit reached (20)')updateHint(id);},2500);}
+    return;
+  }
   const f=parseFloat(document.getElementById('mk-inp-'+id).value);
   if(isNaN(f))return;
   fs.mkrs.push({freq:f,color:MC()[fs.mkrs.length%6],name:`M${fs.mkrs.length+1}`,showLine:true,trace:null});
