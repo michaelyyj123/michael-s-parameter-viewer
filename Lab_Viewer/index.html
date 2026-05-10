@@ -246,19 +246,37 @@ body.light .vna-img{
   filter:drop-shadow(0 8px 28px rgba(0,0,0,.22)) drop-shadow(0 0 1px rgba(9,105,218,.14))}
 /* Screen-only drop zone — positioned over the VNA display in the image */
 .vna-screen-dropzone{
-  position:absolute;left:6%;top:7%;width:55%;height:76%;
-  border-radius:6px;cursor:pointer;
+  position:absolute;left:9.4%;top:9.2%;width:49.8%;height:50.8%;
+  border-radius:5px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   flex-direction:column;gap:6px;
-  background:transparent;border:1px solid transparent;
-  transition:background .25s,border-color .25s,box-shadow .25s}
+  background:radial-gradient(circle at center,rgba(88,166,255,.10),rgba(2,8,18,.58) 58%,rgba(2,8,18,.72));
+  border:1px solid rgba(88,166,255,.38);
+  box-shadow:inset 0 0 28px rgba(88,166,255,.10),inset 0 0 0 1px rgba(255,255,255,.04);
+  transition:all .25s ease}
 .vna-screen-dropzone:hover,.vna-screen-dropzone.drag-over{
-  background:rgba(2,8,18,.58);border-color:rgba(88,166,255,.7);
-  box-shadow:inset 0 0 30px rgba(88,166,255,.2),0 0 28px rgba(88,166,255,.25)}
+  background:radial-gradient(circle at center,rgba(88,166,255,.18),rgba(2,8,18,.68) 58%,rgba(2,8,18,.82));
+  border-color:rgba(88,166,255,.82);
+  box-shadow:inset 0 0 34px rgba(88,166,255,.24),0 0 28px rgba(88,166,255,.28)}
+body.light .vna-screen-dropzone{
+  background:radial-gradient(circle at center,rgba(9,105,218,.08),rgba(4,15,30,.55) 58%,rgba(4,15,30,.68));
+  border-color:rgba(9,105,218,.35)}
 body.light .vna-screen-dropzone:hover,body.light .vna-screen-dropzone.drag-over{
-  background:rgba(4,15,30,.52);border-color:rgba(9,105,218,.6);
-  box-shadow:inset 0 0 28px rgba(9,105,218,.15),0 0 20px rgba(9,105,218,.18)}
+  background:radial-gradient(circle at center,rgba(9,105,218,.16),rgba(4,15,30,.65) 58%,rgba(4,15,30,.78));
+  border-color:rgba(9,105,218,.75);
+  box-shadow:inset 0 0 28px rgba(9,105,218,.18),0 0 20px rgba(9,105,218,.22)}
 .bench-device.file-loaded .vna-screen-dropzone{opacity:0;pointer-events:none}
+/* Icon and text clarity inside VNA screen dropzone */
+.vna-screen-dropzone .dz-ring{
+  width:48px;height:48px;border-color:rgba(88,166,255,.65);
+  background:rgba(88,166,255,.08)}
+.vna-screen-dropzone .dz-icon-svg{width:22px;height:22px;opacity:.95}
+.vna-screen-dropzone .dz-text{
+  font-size:.76rem;font-weight:600;color:rgba(226,232,240,.82);
+  line-height:1.45;text-shadow:0 1px 8px rgba(0,0,0,.65);max-width:none}
+.vna-screen-dropzone .dz-fmt{
+  margin-top:4px;font-size:.62rem;color:rgba(121,192,255,.95);
+  background:rgba(88,166,255,.13);border-color:rgba(88,166,255,.34)}
 
 /* Drop zone on screen */
 .screen-dz{
