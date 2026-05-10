@@ -120,11 +120,11 @@ body.light .lab-theme-btn:hover{background:rgba(0,0,0,.08);border-color:rgba(0,0
   flex:1;position:relative;z-index:1;
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  padding:0 18px 12px;gap:16px;min-height:0;overflow:hidden}
+  padding:0 18px 18px;gap:18px;min-height:0;overflow:hidden}
 
 /* ── Hero copy ── */
 .lab-hero-copy{
-  text-align:center;
+  text-align:center;flex-shrink:0;
   animation:labHeroIn .88s cubic-bezier(.16,1,.3,1) both}
 @keyframes labHeroIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 .lab-eyebrow{
@@ -145,8 +145,9 @@ body.light .lab-title{
 
 /* ── Bench layout (3-column: selector · device · info) ── */
 .lab-bench-wrap{
-  display:flex;gap:18px;align-items:flex-end;
+  display:flex;gap:18px;align-items:center;
   justify-content:center;width:100%;max-width:1300px;
+  flex:1;min-height:0;
   animation:labHeroIn .88s .12s cubic-bezier(.16,1,.3,1) both}
 
 /* ── Instrument selector panel (left) ── */
@@ -202,11 +203,12 @@ body.light .model-sel{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.1);col
 .model-sel-arr{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--text4);font-size:.62rem;pointer-events:none}
 
 /* ── Center bench ── */
-.lab-bench{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;max-width:720px}
+.lab-bench{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;max-width:720px;min-height:0}
 
 /* Device visual */
 .bench-device{
-  position:relative;width:100%;max-width:680px;
+  position:relative;width:100%;max-width:620px;max-height:58vh;
+  display:flex;align-items:center;justify-content:center;
   opacity:0;transform:translateY(14px) scale(.97);
   transition:opacity .55s cubic-bezier(.16,1,.3,1),transform .55s cubic-bezier(.16,1,.3,1)}
 .bench-device.visible{opacity:1;transform:translateY(0) scale(1)}
@@ -237,10 +239,12 @@ body.light .device-screen{background:#040f1e}
   border-color:rgba(88,166,255,.75);
   box-shadow:0 0 0 2px rgba(88,166,255,.18),0 0 24px rgba(88,166,255,.32)}
 
+/* Shared image + dropzone wrapper — provides the positioning context for absolute overlays */
+.inst-img-wrap{position:relative;display:inline-block;max-height:58vh;line-height:0}
 /* VNA real-image view */
-.vna-view{position:relative;width:100%;overflow:visible}
+.vna-view{position:relative;width:100%;max-height:58vh;display:flex;align-items:center;justify-content:center;overflow:visible}
 .vna-img{
-  display:block;width:100%;height:auto;border-radius:10px;
+  display:block;width:auto;max-width:100%;max-height:58vh;height:auto;border-radius:10px;
   filter:drop-shadow(0 14px 48px rgba(0,0,0,.65)) drop-shadow(0 0 1px rgba(88,166,255,.18))}
 body.light .vna-img{
   filter:drop-shadow(0 8px 28px rgba(0,0,0,.22)) drop-shadow(0 0 1px rgba(9,105,218,.14))}
@@ -278,9 +282,9 @@ body.light .vna-screen-dropzone:hover,body.light .vna-screen-dropzone.drag-over{
   background:rgba(88,166,255,.14);border-color:rgba(88,166,255,.38)}
 
 /* Spectrum Analyzer real-image view */
-.spec-view{position:relative;width:100%;max-width:340px;overflow:visible}
+.spec-view{position:relative;width:100%;max-height:58vh;display:flex;align-items:center;justify-content:center;overflow:visible}
 .spec-img{
-  display:block;width:100%;height:auto;border-radius:10px;
+  display:block;width:auto;max-width:100%;max-height:58vh;height:auto;border-radius:10px;
   filter:drop-shadow(0 14px 48px rgba(0,0,0,.65)) drop-shadow(0 0 1px rgba(88,166,255,.18))}
 body.light .spec-img{
   filter:drop-shadow(0 8px 28px rgba(0,0,0,.22)) drop-shadow(0 0 1px rgba(9,105,218,.14))}
@@ -1041,44 +1045,48 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
         <div class="bench-device" id="bench-device">
           <!-- VNA: real instrument image + screen-only drop zone overlay -->
           <div class="vna-view" id="vna-view">
-            <img src="assets/VNA.png" class="vna-img" alt="Vector Network Analyzer" draggable="false">
-            <div class="vna-screen-dropzone" id="vna-screen-dropzone"
-                 onclick="labClickBrowse()"
-                 ondragover="labDragOver(event)"
-                 ondragleave="labDragLeave(event)"
-                 ondrop="labDrop(event)">
-              <div class="dz-ring">
-                <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
-                     stroke="rgba(88,166,255,.78)" stroke-width="1.8"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="16 16 12 12 8 16"/>
-                  <line x1="12" y1="12" x2="12" y2="21"/>
-                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-                </svg>
+            <div class="inst-img-wrap">
+              <img src="assets/VNA.png" class="vna-img" alt="Vector Network Analyzer" draggable="false">
+              <div class="vna-screen-dropzone" id="vna-screen-dropzone"
+                   onclick="labClickBrowse()"
+                   ondragover="labDragOver(event)"
+                   ondragleave="labDragLeave(event)"
+                   ondrop="labDrop(event)">
+                <div class="dz-ring">
+                  <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
+                       stroke="rgba(88,166,255,.78)" stroke-width="1.8"
+                       stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 16 12 12 8 16"/>
+                    <line x1="12" y1="12" x2="12" y2="21"/>
+                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                  </svg>
+                </div>
+                <div class="dz-text" id="dz-text">Drop files here<br>or click to browse</div>
+                <div class="dz-fmt" id="dz-fmt">.s1p · .s2p</div>
               </div>
-              <div class="dz-text" id="dz-text">Drop files here<br>or click to browse</div>
-              <div class="dz-fmt" id="dz-fmt">.s1p · .s2p</div>
             </div>
           </div>
           <!-- Spectrum: real instrument image + screen-only drop zone overlay -->
           <div class="spec-view" id="spec-view" style="display:none">
-            <img src="assets/SPEC.png" class="spec-img" alt="Spectrum Analyzer" draggable="false">
-            <div class="spec-screen-dropzone" id="spec-screen-dropzone"
-                 onclick="labClickBrowse()"
-                 ondragover="labDragOver(event)"
-                 ondragleave="labDragLeave(event)"
-                 ondrop="labDrop(event)">
-              <div class="dz-ring">
-                <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
-                     stroke="rgba(88,166,255,.78)" stroke-width="1.8"
-                     stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="16 16 12 12 8 16"/>
-                  <line x1="12" y1="12" x2="12" y2="21"/>
-                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-                </svg>
+            <div class="inst-img-wrap">
+              <img src="assets/SPEC.png" class="spec-img" alt="Spectrum Analyzer" draggable="false">
+              <div class="spec-screen-dropzone" id="spec-screen-dropzone"
+                   onclick="labClickBrowse()"
+                   ondragover="labDragOver(event)"
+                   ondragleave="labDragLeave(event)"
+                   ondrop="labDrop(event)">
+                <div class="dz-ring">
+                  <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
+                       stroke="rgba(88,166,255,.78)" stroke-width="1.8"
+                       stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 16 12 12 8 16"/>
+                    <line x1="12" y1="12" x2="12" y2="21"/>
+                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                  </svg>
+                </div>
+                <div class="dz-text">Drop files here<br>or click to browse</div>
+                <div class="dz-fmt">.csv</div>
               </div>
-              <div class="dz-text">Drop files here<br>or click to browse</div>
-              <div class="dz-fmt">.csv</div>
             </div>
           </div>
         </div>
