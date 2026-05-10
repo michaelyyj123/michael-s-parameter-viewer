@@ -237,6 +237,24 @@ body.light .device-screen{background:#040f1e}
   border-color:rgba(88,166,255,.75);
   box-shadow:0 0 0 2px rgba(88,166,255,.18),0 0 24px rgba(88,166,255,.32)}
 
+/* VNA real-image view */
+.vna-view{
+  position:relative;width:100%;border-radius:10px;overflow:hidden;cursor:pointer;
+  box-shadow:0 0 0 1px rgba(88,166,255,.18),0 14px 44px rgba(0,0,0,.65),
+    0 0 36px rgba(88,166,255,.1);
+  transition:box-shadow .35s}
+.vna-view.drag-active{
+  box-shadow:0 0 0 2px rgba(88,166,255,.6),0 14px 44px rgba(0,0,0,.65),
+    0 0 44px rgba(88,166,255,.3)}
+body.light .vna-view{
+  box-shadow:0 0 0 1px rgba(9,105,218,.14),0 8px 28px rgba(0,0,0,.16),
+    0 0 18px rgba(9,105,218,.07)}
+body.light .vna-view.drag-active{
+  box-shadow:0 0 0 2px rgba(9,105,218,.45),0 8px 28px rgba(0,0,0,.16)}
+.vna-img{display:block;width:100%;height:auto;border-radius:10px}
+.vna-view .screen-dz{background:rgba(2,8,18,.72);border-radius:9px}
+body.light .vna-view .screen-dz{background:rgba(4,15,30,.6)}
+
 /* Drop zone on screen */
 .screen-dz{
   position:absolute;inset:0;z-index:5;
@@ -960,15 +978,34 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
       <!-- CENTER — Instrument device + bench surface + status -->
       <div class="lab-bench">
         <div class="bench-device" id="bench-device">
-          <div class="device-body">
-            <!-- Animated screen — also the drag-drop target -->
-            <div class="device-screen device-screen-vna" id="device-screen"
+          <!-- VNA: real instrument image + drop zone overlay -->
+          <div class="vna-view" id="vna-view"
+               ondragover="labDragOver(event)"
+               ondragleave="labDragLeave(event)"
+               ondrop="labDrop(event)">
+            <img src="assets/VNA.png" class="vna-img" alt="Vector Network Analyzer" draggable="false">
+            <div class="screen-dz" id="screen-dz" onclick="labClickBrowse()">
+              <div class="dz-ring">
+                <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
+                     stroke="rgba(88,166,255,.78)" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="16 16 12 12 8 16"/>
+                  <line x1="12" y1="12" x2="12" y2="21"/>
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                </svg>
+              </div>
+              <div class="dz-text" id="dz-text">Drop measurement files here<br>or click to browse</div>
+              <div class="dz-fmt" id="dz-fmt">.s1p · .s2p</div>
+            </div>
+          </div>
+          <!-- Spectrum: animated CSS device mockup (hidden by default) -->
+          <div class="device-body" id="device-body" style="display:none">
+            <div class="device-screen device-screen-spec" id="device-screen"
                  ondragover="labDragOver(event)"
                  ondragleave="labDragLeave(event)"
                  ondrop="labDrop(event)">
               <canvas id="device-screen-canvas"></canvas>
-              <!-- Drop zone overlay; hidden once a file is loaded via .file-loaded on parent -->
-              <div class="screen-dz" id="screen-dz" onclick="labClickBrowse()">
+              <div class="screen-dz" id="screen-dz-spec" onclick="labClickBrowse()">
                 <div class="dz-ring">
                   <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
                        stroke="rgba(88,166,255,.78)" stroke-width="1.8"
@@ -978,11 +1015,10 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
                     <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
                   </svg>
                 </div>
-                <div class="dz-text" id="dz-text">Drop measurement files here<br>or click to browse</div>
-                <div class="dz-fmt" id="dz-fmt">.s1p · .s2p</div>
+                <div class="dz-text">Drop measurement files here<br>or click to browse</div>
+                <div class="dz-fmt">.csv</div>
               </div>
             </div>
-            <!-- Controls strip (knobs, ports, model label, LED) -->
             <div class="device-controls">
               <div class="device-knob"></div>
               <div class="device-knob"></div>
@@ -990,7 +1026,7 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
               <div class="device-port"></div>
               <div class="device-label-area">
                 <div class="device-brand" id="device-brand">RF Lab Viewer</div>
-                <div class="device-model-name" id="device-model-name">VNA</div>
+                <div class="device-model-name" id="device-model-name">SA</div>
               </div>
               <div class="device-led"></div>
             </div>
@@ -3537,11 +3573,10 @@ function selectInstrument(inst){
     });
   }
 
-  const screen=document.getElementById('device-screen');
-  if(screen){
-    screen.classList.toggle('device-screen-vna',inst==='vna');
-    screen.classList.toggle('device-screen-spec',inst==='spectrum');
-  }
+  const vnaView=document.getElementById('vna-view');
+  const deviceBody=document.getElementById('device-body');
+  if(vnaView)vnaView.style.display=inst==='vna'?'':'none';
+  if(deviceBody)deviceBody.style.display=inst==='spectrum'?'':'none';
   const fmt=document.getElementById('dz-fmt');
   if(fmt)fmt.textContent=inst==='vna'?'.s1p · .s2p':'.csv';
 
@@ -3592,21 +3627,25 @@ function _labShowError(msg){
 }
 
 /* Drag / drop / click handlers wired via HTML attributes */
+function _labDragTargets(){
+  return[document.getElementById('vna-view'),document.getElementById('device-screen')].filter(Boolean);
+}
 function labDragOver(e){
   e.preventDefault();
-  document.getElementById('screen-dz')?.classList.add('drag-over');
-  document.getElementById('device-screen')?.classList.add('drag-active');
+  document.querySelectorAll('.screen-dz').forEach(el=>el.classList.add('drag-over'));
+  _labDragTargets().forEach(el=>el.classList.add('drag-active'));
 }
 function labDragLeave(e){
-  if(!document.getElementById('screen-dz')?.contains(e.relatedTarget)){
-    document.getElementById('screen-dz')?.classList.remove('drag-over');
-    document.getElementById('device-screen')?.classList.remove('drag-active');
+  const zones=[...document.querySelectorAll('.screen-dz'),..._labDragTargets()];
+  if(!zones.some(el=>el.contains(e.relatedTarget))){
+    document.querySelectorAll('.screen-dz').forEach(el=>el.classList.remove('drag-over'));
+    _labDragTargets().forEach(el=>el.classList.remove('drag-active'));
   }
 }
 function labDrop(e){
   e.preventDefault();
-  document.getElementById('screen-dz')?.classList.remove('drag-over');
-  document.getElementById('device-screen')?.classList.remove('drag-active');
+  document.querySelectorAll('.screen-dz').forEach(el=>el.classList.remove('drag-over'));
+  _labDragTargets().forEach(el=>el.classList.remove('drag-active'));
   _labTryLoad(e.dataTransfer.files);
 }
 function labClickBrowse(){
@@ -3637,8 +3676,8 @@ function _labTryLoad(fileList){
     landing.addEventListener('drop',e=>{
       if(!e.dataTransfer.files.length)return;
       e.preventDefault();
-      document.getElementById('screen-dz')?.classList.remove('drag-over');
-      document.getElementById('device-screen')?.classList.remove('drag-active');
+      document.querySelectorAll('.screen-dz').forEach(el=>el.classList.remove('drag-over'));
+      _labDragTargets().forEach(el=>el.classList.remove('drag-active'));
       _labTryLoad(e.dataTransfer.files);
     });
   }
@@ -3664,9 +3703,10 @@ if(localStorage.getItem('spv-theme')==='light'){
 
 // ── Device screen canvas (animated traces on the instrument) ──────────────────
 function initDeviceScreenCanvas(){
+  if(_lab.screenRaf){cancelAnimationFrame(_lab.screenRaf);_lab.screenRaf=null;}
+  if(_lab.inst==='vna')return;
   const canvas=document.getElementById('device-screen-canvas');
   if(!canvas)return;
-  if(_lab.screenRaf){cancelAnimationFrame(_lab.screenRaf);_lab.screenRaf=null;}
   const ctx=canvas.getContext('2d');
   const isSpec=_lab.inst==='spectrum';
   const light=isLight();
