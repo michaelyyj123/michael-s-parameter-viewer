@@ -246,7 +246,7 @@ body.light .vna-img{
   filter:drop-shadow(0 8px 28px rgba(0,0,0,.22)) drop-shadow(0 0 1px rgba(9,105,218,.14))}
 /* Screen-only drop zone — positioned over the VNA display in the image */
 .vna-screen-dropzone{
-  position:absolute;left:8.9%;top:7.0%;width:57.1%;height:65.6%;
+  position:absolute;left:9.6%;top:7.0%;width:57.1%;height:69.6%;
   border-radius:6px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   flex-direction:column;gap:8px;
@@ -275,6 +275,45 @@ body.light .vna-screen-dropzone:hover,body.light .vna-screen-dropzone.drag-over{
   line-height:1.45;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.65);max-width:none}
 .vna-screen-dropzone .dz-fmt{
   margin-top:4px;font-size:.72rem;color:rgba(121,192,255,.98);
+  background:rgba(88,166,255,.14);border-color:rgba(88,166,255,.38)}
+
+/* Spectrum Analyzer real-image view */
+.spec-view{position:relative;width:100%;max-width:340px;overflow:visible}
+.spec-img{
+  display:block;width:100%;height:auto;border-radius:10px;
+  filter:drop-shadow(0 14px 48px rgba(0,0,0,.65)) drop-shadow(0 0 1px rgba(88,166,255,.18))}
+body.light .spec-img{
+  filter:drop-shadow(0 8px 28px rgba(0,0,0,.22)) drop-shadow(0 0 1px rgba(9,105,218,.14))}
+.spec-screen-dropzone{
+  position:absolute;left:9%;top:8%;width:80%;height:44%;
+  border-radius:5px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:6px;
+  background:radial-gradient(circle at center,rgba(88,166,255,.14),rgba(2,8,18,.62) 58%,rgba(2,8,18,.78));
+  border:1px solid rgba(88,166,255,.45);
+  box-shadow:inset 0 0 30px rgba(88,166,255,.14),inset 0 0 0 1px rgba(255,255,255,.05);
+  transition:all .25s ease}
+.spec-screen-dropzone:hover,.spec-screen-dropzone.drag-over{
+  background:radial-gradient(circle at center,rgba(88,166,255,.22),rgba(2,8,18,.72) 58%,rgba(2,8,18,.86));
+  border-color:rgba(88,166,255,.88);
+  box-shadow:inset 0 0 38px rgba(88,166,255,.22),0 0 28px rgba(88,166,255,.26)}
+body.light .spec-screen-dropzone{
+  background:radial-gradient(circle at center,rgba(9,105,218,.10),rgba(4,15,30,.58) 58%,rgba(4,15,30,.72));
+  border-color:rgba(9,105,218,.4)}
+body.light .spec-screen-dropzone:hover,body.light .spec-screen-dropzone.drag-over{
+  background:radial-gradient(circle at center,rgba(9,105,218,.18),rgba(4,15,30,.68) 58%,rgba(4,15,30,.82));
+  border-color:rgba(9,105,218,.78);
+  box-shadow:inset 0 0 34px rgba(9,105,218,.18),0 0 22px rgba(9,105,218,.22)}
+.bench-device.file-loaded .spec-screen-dropzone{opacity:0;pointer-events:none}
+.spec-screen-dropzone .dz-ring{
+  width:48px;height:48px;border-color:rgba(88,166,255,.7);
+  background:rgba(88,166,255,.09)}
+.spec-screen-dropzone .dz-icon-svg{width:22px;height:22px;opacity:1}
+.spec-screen-dropzone .dz-text{
+  font-size:.76rem;font-weight:600;color:rgba(226,232,240,.88);
+  line-height:1.45;text-align:center;text-shadow:0 1px 8px rgba(0,0,0,.65);max-width:none}
+.spec-screen-dropzone .dz-fmt{
+  margin-top:4px;font-size:.62rem;color:rgba(121,192,255,.98);
   background:rgba(88,166,255,.14);border-color:rgba(88,166,255,.38)}
 
 /* Drop zone on screen */
@@ -1021,37 +1060,25 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
               <div class="dz-fmt" id="dz-fmt">.s1p · .s2p</div>
             </div>
           </div>
-          <!-- Spectrum: animated CSS device mockup (hidden by default) -->
-          <div class="device-body" id="device-body" style="display:none">
-            <div class="device-screen device-screen-spec" id="device-screen"
+          <!-- Spectrum: real instrument image + screen-only drop zone overlay -->
+          <div class="spec-view" id="spec-view" style="display:none">
+            <img src="assets/SPEC.png" class="spec-img" alt="Spectrum Analyzer" draggable="false">
+            <div class="spec-screen-dropzone" id="spec-screen-dropzone"
+                 onclick="labClickBrowse()"
                  ondragover="labDragOver(event)"
                  ondragleave="labDragLeave(event)"
                  ondrop="labDrop(event)">
-              <canvas id="device-screen-canvas"></canvas>
-              <div class="screen-dz" id="screen-dz-spec" onclick="labClickBrowse()">
-                <div class="dz-ring">
-                  <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
-                       stroke="rgba(88,166,255,.78)" stroke-width="1.8"
-                       stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="16 16 12 12 8 16"/>
-                    <line x1="12" y1="12" x2="12" y2="21"/>
-                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-                  </svg>
-                </div>
-                <div class="dz-text">Drop measurement files here<br>or click to browse</div>
-                <div class="dz-fmt">.csv</div>
+              <div class="dz-ring">
+                <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
+                     stroke="rgba(88,166,255,.78)" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="16 16 12 12 8 16"/>
+                  <line x1="12" y1="12" x2="12" y2="21"/>
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                </svg>
               </div>
-            </div>
-            <div class="device-controls">
-              <div class="device-knob"></div>
-              <div class="device-knob"></div>
-              <div class="device-port"></div>
-              <div class="device-port"></div>
-              <div class="device-label-area">
-                <div class="device-brand" id="device-brand">RF Lab Viewer</div>
-                <div class="device-model-name" id="device-model-name">SA</div>
-              </div>
-              <div class="device-led"></div>
+              <div class="dz-text">Drop files here<br>or click to browse</div>
+              <div class="dz-fmt">.csv</div>
             </div>
           </div>
         </div>
@@ -3597,9 +3624,9 @@ function selectInstrument(inst){
   }
 
   const vnaView=document.getElementById('vna-view');
-  const deviceBody=document.getElementById('device-body');
+  const specView=document.getElementById('spec-view');
   if(vnaView)vnaView.style.display=inst==='vna'?'':'none';
-  if(deviceBody)deviceBody.style.display=inst==='spectrum'?'':'none';
+  if(specView)specView.style.display=inst==='spectrum'?'':'none';
   const fmt=document.getElementById('dz-fmt');
   if(fmt)fmt.textContent=inst==='vna'?'.s1p · .s2p':'.csv';
 
@@ -3651,17 +3678,14 @@ function _labShowError(msg){
 
 /* Drag / drop / click handlers wired via HTML attributes */
 function _labClearDragState(){
-  document.querySelectorAll('.vna-screen-dropzone,.screen-dz').forEach(el=>el.classList.remove('drag-over'));
-  document.getElementById('device-screen')?.classList.remove('drag-active');
+  document.querySelectorAll('.vna-screen-dropzone,.spec-screen-dropzone,.screen-dz').forEach(el=>el.classList.remove('drag-over'));
 }
 function labDragOver(e){
   e.preventDefault();
-  document.querySelectorAll('.vna-screen-dropzone,.screen-dz').forEach(el=>el.classList.add('drag-over'));
-  document.getElementById('device-screen')?.classList.add('drag-active');
+  document.querySelectorAll('.vna-screen-dropzone,.spec-screen-dropzone,.screen-dz').forEach(el=>el.classList.add('drag-over'));
 }
 function labDragLeave(e){
-  const zones=[...document.querySelectorAll('.vna-screen-dropzone,.screen-dz'),
-               document.getElementById('device-screen')].filter(Boolean);
+  const zones=[...document.querySelectorAll('.vna-screen-dropzone,.spec-screen-dropzone,.screen-dz')];
   if(!zones.some(el=>el.contains(e.relatedTarget)))_labClearDragState();
 }
 function labDrop(e){
@@ -3722,7 +3746,7 @@ if(localStorage.getItem('spv-theme')==='light'){
 // ── Device screen canvas (animated traces on the instrument) ──────────────────
 function initDeviceScreenCanvas(){
   if(_lab.screenRaf){cancelAnimationFrame(_lab.screenRaf);_lab.screenRaf=null;}
-  if(_lab.inst==='vna')return;
+  if(_lab.inst==='vna'||_lab.inst==='spectrum')return;
   const canvas=document.getElementById('device-screen-canvas');
   if(!canvas)return;
   const ctx=canvas.getContext('2d');
