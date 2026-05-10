@@ -520,7 +520,10 @@ input[type=number]::placeholder{color:var(--text4)}
 .ana-val{font-variant-numeric:tabular-nums;text-align:right;color:var(--text2);font-size:.71rem}
 
 /* ── marker chips ─────────────────────────────────────────────────────────── */
-.marker-chip-list{display:flex;flex-direction:column;gap:3px}
+.marker-chip-list{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto;padding-right:3px;overscroll-behavior:contain}
+.marker-chip-list::-webkit-scrollbar{width:5px}
+.marker-chip-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
+.marker-chip-list::-webkit-scrollbar-track{background:transparent}
 .marker-chip{display:flex;align-items:center;gap:5px;
   background:var(--bg3);border:1px solid var(--border);border-left-width:3px;
   border-radius:5px;padding:4px 8px;cursor:pointer;transition:background .1s}
