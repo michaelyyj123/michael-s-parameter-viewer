@@ -146,7 +146,7 @@ body.light .lab-title{
 /* ── Bench layout (3-column: selector · device · info) ── */
 .lab-bench-wrap{
   display:flex;gap:18px;align-items:flex-end;
-  justify-content:center;width:100%;max-width:920px;
+  justify-content:center;width:100%;max-width:1300px;
   animation:labHeroIn .88s .12s cubic-bezier(.16,1,.3,1) both}
 
 /* ── Instrument selector panel (left) ── */
@@ -202,11 +202,11 @@ body.light .model-sel{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.1);col
 .model-sel-arr{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--text4);font-size:.62rem;pointer-events:none}
 
 /* ── Center bench ── */
-.lab-bench{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;max-width:440px}
+.lab-bench{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;max-width:720px}
 
 /* Device visual */
 .bench-device{
-  position:relative;width:100%;max-width:370px;
+  position:relative;width:100%;max-width:680px;
   opacity:0;transform:translateY(14px) scale(.97);
   transition:opacity .55s cubic-bezier(.16,1,.3,1),transform .55s cubic-bezier(.16,1,.3,1)}
 .bench-device.visible{opacity:1;transform:translateY(0) scale(1)}
@@ -238,22 +238,27 @@ body.light .device-screen{background:#040f1e}
   box-shadow:0 0 0 2px rgba(88,166,255,.18),0 0 24px rgba(88,166,255,.32)}
 
 /* VNA real-image view */
-.vna-view{
-  position:relative;width:100%;border-radius:10px;overflow:hidden;cursor:pointer;
-  box-shadow:0 0 0 1px rgba(88,166,255,.18),0 14px 44px rgba(0,0,0,.65),
-    0 0 36px rgba(88,166,255,.1);
-  transition:box-shadow .35s}
-.vna-view.drag-active{
-  box-shadow:0 0 0 2px rgba(88,166,255,.6),0 14px 44px rgba(0,0,0,.65),
-    0 0 44px rgba(88,166,255,.3)}
-body.light .vna-view{
-  box-shadow:0 0 0 1px rgba(9,105,218,.14),0 8px 28px rgba(0,0,0,.16),
-    0 0 18px rgba(9,105,218,.07)}
-body.light .vna-view.drag-active{
-  box-shadow:0 0 0 2px rgba(9,105,218,.45),0 8px 28px rgba(0,0,0,.16)}
-.vna-img{display:block;width:100%;height:auto;border-radius:10px}
-.vna-view .screen-dz{background:rgba(2,8,18,.72);border-radius:9px}
-body.light .vna-view .screen-dz{background:rgba(4,15,30,.6)}
+.vna-view{position:relative;width:100%;overflow:visible}
+.vna-img{
+  display:block;width:100%;height:auto;border-radius:10px;
+  filter:drop-shadow(0 14px 48px rgba(0,0,0,.65)) drop-shadow(0 0 1px rgba(88,166,255,.18))}
+body.light .vna-img{
+  filter:drop-shadow(0 8px 28px rgba(0,0,0,.22)) drop-shadow(0 0 1px rgba(9,105,218,.14))}
+/* Screen-only drop zone — positioned over the VNA display in the image */
+.vna-screen-dropzone{
+  position:absolute;left:6%;top:7%;width:55%;height:76%;
+  border-radius:6px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:6px;
+  background:transparent;border:1px solid transparent;
+  transition:background .25s,border-color .25s,box-shadow .25s}
+.vna-screen-dropzone:hover,.vna-screen-dropzone.drag-over{
+  background:rgba(2,8,18,.58);border-color:rgba(88,166,255,.7);
+  box-shadow:inset 0 0 30px rgba(88,166,255,.2),0 0 28px rgba(88,166,255,.25)}
+body.light .vna-screen-dropzone:hover,body.light .vna-screen-dropzone.drag-over{
+  background:rgba(4,15,30,.52);border-color:rgba(9,105,218,.6);
+  box-shadow:inset 0 0 28px rgba(9,105,218,.15),0 0 20px rgba(9,105,218,.18)}
+.bench-device.file-loaded .vna-screen-dropzone{opacity:0;pointer-events:none}
 
 /* Drop zone on screen */
 .screen-dz{
@@ -978,13 +983,14 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
       <!-- CENTER — Instrument device + bench surface + status -->
       <div class="lab-bench">
         <div class="bench-device" id="bench-device">
-          <!-- VNA: real instrument image + drop zone overlay -->
-          <div class="vna-view" id="vna-view"
-               ondragover="labDragOver(event)"
-               ondragleave="labDragLeave(event)"
-               ondrop="labDrop(event)">
+          <!-- VNA: real instrument image + screen-only drop zone overlay -->
+          <div class="vna-view" id="vna-view">
             <img src="assets/VNA.png" class="vna-img" alt="Vector Network Analyzer" draggable="false">
-            <div class="screen-dz" id="screen-dz" onclick="labClickBrowse()">
+            <div class="vna-screen-dropzone" id="vna-screen-dropzone"
+                 onclick="labClickBrowse()"
+                 ondragover="labDragOver(event)"
+                 ondragleave="labDragLeave(event)"
+                 ondrop="labDrop(event)">
               <div class="dz-ring">
                 <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
                      stroke="rgba(88,166,255,.78)" stroke-width="1.8"
@@ -994,7 +1000,7 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
                   <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
                 </svg>
               </div>
-              <div class="dz-text" id="dz-text">Drop measurement files here<br>or click to browse</div>
+              <div class="dz-text" id="dz-text">Drop files here<br>or click to browse</div>
               <div class="dz-fmt" id="dz-fmt">.s1p · .s2p</div>
             </div>
           </div>
@@ -3627,26 +3633,22 @@ function _labShowError(msg){
 }
 
 /* Drag / drop / click handlers wired via HTML attributes */
-function _labDragTargets(){
-  return[document.getElementById('vna-view'),document.getElementById('device-screen')].filter(Boolean);
+function _labClearDragState(){
+  document.querySelectorAll('.vna-screen-dropzone,.screen-dz').forEach(el=>el.classList.remove('drag-over'));
+  document.getElementById('device-screen')?.classList.remove('drag-active');
 }
 function labDragOver(e){
   e.preventDefault();
-  document.querySelectorAll('.screen-dz').forEach(el=>el.classList.add('drag-over'));
-  _labDragTargets().forEach(el=>el.classList.add('drag-active'));
+  document.querySelectorAll('.vna-screen-dropzone,.screen-dz').forEach(el=>el.classList.add('drag-over'));
+  document.getElementById('device-screen')?.classList.add('drag-active');
 }
 function labDragLeave(e){
-  const zones=[...document.querySelectorAll('.screen-dz'),..._labDragTargets()];
-  if(!zones.some(el=>el.contains(e.relatedTarget))){
-    document.querySelectorAll('.screen-dz').forEach(el=>el.classList.remove('drag-over'));
-    _labDragTargets().forEach(el=>el.classList.remove('drag-active'));
-  }
+  const zones=[...document.querySelectorAll('.vna-screen-dropzone,.screen-dz'),
+               document.getElementById('device-screen')].filter(Boolean);
+  if(!zones.some(el=>el.contains(e.relatedTarget)))_labClearDragState();
 }
 function labDrop(e){
-  e.preventDefault();
-  document.querySelectorAll('.screen-dz').forEach(el=>el.classList.remove('drag-over'));
-  _labDragTargets().forEach(el=>el.classList.remove('drag-active'));
-  _labTryLoad(e.dataTransfer.files);
+  e.preventDefault();_labClearDragState();_labTryLoad(e.dataTransfer.files);
 }
 function labClickBrowse(){
   const fi=document.getElementById(_lab.inst==='vna'?'fi-vna':'fi-spectrum');
@@ -3676,8 +3678,7 @@ function _labTryLoad(fileList){
     landing.addEventListener('drop',e=>{
       if(!e.dataTransfer.files.length)return;
       e.preventDefault();
-      document.querySelectorAll('.screen-dz').forEach(el=>el.classList.remove('drag-over'));
-      _labDragTargets().forEach(el=>el.classList.remove('drag-active'));
+      _labClearDragState();
       _labTryLoad(e.dataTransfer.files);
     });
   }
