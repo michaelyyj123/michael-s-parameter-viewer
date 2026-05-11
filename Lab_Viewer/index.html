@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RF Lab Viewer</title>
+<title>BenchAlly — Hardware Measurement Analysis</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -935,6 +935,433 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 .rpt-inp:focus,.rpt-ta:focus{border-color:var(--accent)}
 .report-modal-footer{padding:11px 16px;border-top:1px solid var(--border);
   display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BENCHALLY — VERCEL-INSPIRED DESIGN SYSTEM OVERRIDES
+   All rules below override the original stylesheet via CSS cascade.
+   No functionality is changed — CSS only.
+══════════════════════════════════════════════════════════════════════ */
+
+/* ── Base: antialiasing + font stack ── */
+*{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',system-ui,sans-serif;
+  font-feature-settings:"kern" 1;
+  letter-spacing:-.005em
+}
+
+/* ── Landing: Navigation bar ── */
+.lab-nav{
+  padding:13px 28px;
+  background:rgba(6,9,15,.82);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.05)
+}
+body.light .lab-nav{
+  background:rgba(255,255,255,.92);
+  border-bottom:1px solid rgba(0,0,0,.07)
+}
+
+/* ── Logo mark ── */
+.lab-logo-mark{
+  width:28px;height:28px;border-radius:6px;
+  background:var(--text);
+  box-shadow:0 1px 3px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.06);
+  font-size:.62rem;font-weight:800;color:#fff;letter-spacing:-.04em
+}
+body.light .lab-logo-mark{
+  background:#171717;
+  box-shadow:0 1px 4px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.15)
+}
+
+/* ── Logo text ── */
+.lab-logo-name{font-size:.86rem;font-weight:700;letter-spacing:-.03em}
+.lab-logo-tag{font-size:.54rem;letter-spacing:.08em;opacity:.45}
+
+/* ── Theme toggle ── */
+.lab-theme-btn{
+  border-radius:6px;font-size:.72rem;font-weight:500;
+  letter-spacing:-.01em;padding:5px 14px
+}
+
+/* ── Resume session button ── */
+.lab-resume-btn{border-radius:8px;font-size:.71rem}
+
+/* ── Hero eyebrow ── */
+.lab-eyebrow{
+  font-size:.57rem;font-weight:700;letter-spacing:.18em;
+  color:var(--text4);margin-bottom:12px
+}
+.lab-eyebrow::before,.lab-eyebrow::after{opacity:.2;width:18px}
+
+/* ── Hero title ── */
+.lab-title{
+  font-size:clamp(1.65rem,3.6vw,2.9rem);
+  font-weight:800;letter-spacing:-1.8px;line-height:1.06;
+  margin-bottom:12px
+}
+body.light .lab-title{letter-spacing:-1.8px}
+
+/* ── Hero subtitle ── */
+.lab-subtitle{
+  font-size:.81rem;line-height:1.72;letter-spacing:-.01em;
+  color:var(--text3);max-width:400px;margin:0 auto
+}
+
+/* ── Instrument panel labels ── */
+.inst-panel-lbl,.model-lbl{
+  font-size:.56rem;font-weight:700;letter-spacing:.13em
+}
+
+/* ── Instrument type buttons ── */
+.inst-type-btn{
+  border-radius:9px;
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.07);
+  transition:all .18s ease
+}
+body.light .inst-type-btn{
+  background:rgba(255,255,255,.72);
+  border-color:rgba(0,0,0,.09);
+  box-shadow:0 1px 3px rgba(0,0,0,.06)
+}
+.inst-type-btn:hover:not(.placeholder){
+  background:rgba(255,255,255,.05);
+  border-color:rgba(255,255,255,.13);
+  transform:translateY(-1px);
+  box-shadow:0 4px 14px rgba(0,0,0,.2)
+}
+body.light .inst-type-btn:hover:not(.placeholder){
+  background:#fff;border-color:rgba(0,0,0,.13);
+  box-shadow:0 4px 12px rgba(0,0,0,.09)
+}
+.inst-type-btn.active{
+  background:rgba(88,166,255,.07);
+  border-color:rgba(88,166,255,.36);
+  box-shadow:0 0 0 1px rgba(88,166,255,.14),0 4px 16px rgba(88,166,255,.08);
+  transform:none
+}
+body.light .inst-type-btn.active{
+  background:#fff;
+  border-color:rgba(9,105,218,.32);
+  box-shadow:0 0 0 1px rgba(9,105,218,.14),0 4px 12px rgba(9,105,218,.08)
+}
+.inst-type-btn.active::after{opacity:.8}
+.inst-name{font-size:.76rem;font-weight:600;letter-spacing:-.015em}
+.inst-abbr{font-size:.59rem;letter-spacing:.035em}
+.inst-check{border-radius:50%;width:15px;height:15px;border-width:1.5px}
+
+/* ── Model selector ── */
+.model-sel{
+  border-radius:7px;font-size:.75rem;font-weight:500;
+  padding:6px 28px 6px 10px
+}
+
+/* ── Right info panel sections ── */
+.binfo-lbl{font-size:.55rem;font-weight:700;letter-spacing:.13em}
+.binfo-val{font-size:.79rem;font-weight:600;letter-spacing:-.01em}
+.binfo-tag{font-size:.57rem;letter-spacing:.02em}
+
+/* ── Bench status text ── */
+.bench-status{font-size:.63rem;font-weight:500;letter-spacing:.05em}
+
+/* ── Privacy footnote ── */
+.lab-privacy{font-size:.6rem;letter-spacing:.02em}
+
+/* ── Error toast ── */
+.lab-err-toast{border-radius:9px;font-size:.74rem;font-weight:500;letter-spacing:-.01em}
+
+/* ── Viewer: Page header ── */
+.pg-header{
+  background:color-mix(in srgb,var(--bg) 97%,transparent);
+  border-bottom:1px solid var(--border);
+  padding:9px 16px;gap:8px;min-height:46px
+}
+body.light .pg-header{background:rgba(255,255,255,.97)}
+
+/* ── Tabs ── */
+.tab{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:6px;font-size:.76rem;font-weight:500;
+  letter-spacing:-.01em;padding:4px 10px 4px 12px
+}
+.tab.active{
+  background:color-mix(in srgb,var(--accent) 8%,var(--bg3));
+  border-color:var(--accent);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 12%,transparent),
+    0 2px 10px color-mix(in srgb,var(--accent) 10%,transparent)
+}
+body.light .tab.active{
+  background:#fff;
+  box-shadow:0 0 0 1px rgba(9,105,218,.2),0 2px 8px rgba(9,105,218,.08)
+}
+.tab-badge{font-size:.59rem;font-weight:700;letter-spacing:.03em;border-radius:4px}
+.tab.active .tab-badge{
+  background:color-mix(in srgb,var(--accent) 18%,var(--bg));
+  border-color:color-mix(in srgb,var(--accent) 40%,var(--border))
+}
+body.light .tab.active .tab-badge{
+  background:rgba(9,105,218,.1);border-color:rgba(9,105,218,.28)
+}
+
+/* ── Buttons ── */
+.btn{font-weight:500;letter-spacing:-.01em;border-radius:6px}
+.btn-back{font-size:.77rem;padding:5px 12px}
+.btn-add{border-radius:6px;font-size:.75rem;font-weight:500;padding:4px 10px}
+.btn-compare{border-radius:6px;font-size:.77rem;font-weight:500;padding:5px 11px}
+.btn-report{border-radius:6px;font-size:.77rem;font-weight:500;padding:5px 11px;margin-left:4px}
+.btn-theme{border-radius:6px;font-size:.75rem;font-weight:500;padding:5px 12px}
+.btn-save{border-radius:5px;font-size:.73rem;font-weight:500;padding:4px 10px}
+.btn-preset{border-radius:5px;font-size:.71rem;font-weight:500}
+
+/* ── Info bar ── */
+.info-bar{border-radius:9px;padding:10px 20px;gap:20px}
+body.light .info-bar{background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.04)}
+.ii .lbl{font-size:.63rem;font-weight:700;letter-spacing:.1em}
+.ii .val{font-weight:700;letter-spacing:-.01em}
+
+/* ── Plot cards ── */
+.plot-card{
+  border:1px solid color-mix(in srgb,var(--accent) 16%,var(--border));
+  border-radius:10px;
+  box-shadow:0 4px 18px rgba(0,0,0,.18),0 1px 4px rgba(0,0,0,.12)
+}
+body.light .plot-card{
+  background:#fff;
+  border-color:rgba(0,0,0,.08);
+  box-shadow:0 0 0 1px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.04)
+}
+.plot-card:hover{
+  border-color:color-mix(in srgb,var(--accent) 30%,var(--border));
+  box-shadow:0 6px 24px rgba(0,0,0,.24),0 2px 8px rgba(0,0,0,.14),0 0 20px color-mix(in srgb,var(--accent) 6%,transparent)
+}
+.plot-card-hdr{padding:10px 16px}
+.pch-title{font-size:.83rem;font-weight:600;letter-spacing:-.015em}
+
+/* ── Control dock ── */
+.control-dock{border-radius:9px;padding:11px 16px}
+.dock-sec-lbl{font-size:.59rem;font-weight:700;letter-spacing:.1em}
+
+/* ── Ana box + cards ── */
+.ana-box{border-radius:8px;padding:7px 10px}
+.ana-title{font-size:.57rem;font-weight:700;letter-spacing:.1em}
+.ana-card{border-radius:6px;padding:6px 9px}
+.ana-card-value,.ana-card-muted{font-size:.82rem;font-weight:700;letter-spacing:-.01em}
+.ana-card-freq{font-size:.68rem;letter-spacing:-.005em}
+
+/* ── Settings panel ── */
+.settings-toggle{border-radius:6px;font-size:.74rem;font-weight:500;letter-spacing:-.01em}
+.sp-lbl{font-size:.59rem;font-weight:700;letter-spacing:.1em}
+
+/* ── Plot side panel ── */
+.plot-side{width:196px;padding:11px 10px}
+body.light .plot-side{background:color-mix(in srgb,#f5f7fa 85%,var(--bg3))}
+.side-title{font-size:.57rem;font-weight:700;letter-spacing:.13em}
+
+/* ── Trace style button ── */
+.trace-style-btn{border-radius:4px;font-size:.62rem;font-weight:500}
+
+/* ── Marker chips ── */
+.marker-chip{border-radius:6px;padding:5px 9px}
+.chip-name{font-size:.75rem;font-weight:600;letter-spacing:-.01em}
+.chip-freq{font-size:.74rem;letter-spacing:-.01em}
+
+/* ── S-param selector buttons ── */
+.s-sel button{border-radius:5px;font-size:.73rem;font-weight:500}
+
+/* ── Input fields ── */
+input[type=number],select.cg-sel{border-radius:5px}
+input[type=number]:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent)
+}
+
+/* ── Loading overlay ── */
+.loading-text{font-size:.72rem;font-weight:600;letter-spacing:.12em}
+
+/* ── Error box ── */
+.err-box{border-radius:7px;font-size:.83rem}
+
+/* ── Compare modal ── */
+.cmp-box{
+  border-radius:12px;
+  box-shadow:0 0 0 1px var(--border),0 24px 64px rgba(0,0,0,.55),0 4px 20px rgba(0,0,0,.28)
+}
+body.light .cmp-box{
+  background:#fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08),0 20px 56px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.08)
+}
+.cmp-title{font-size:.9rem;font-weight:700;letter-spacing:-.02em}
+.cmp-sec-lbl{font-size:.58rem;font-weight:700;letter-spacing:.13em}
+.cmp-file-group{border-radius:8px}
+body.light .cmp-file-group{background:#fafafa;border-color:rgba(0,0,0,.08)}
+.cmp-file-name{font-size:.71rem;font-weight:600;letter-spacing:-.01em}
+.cmp-plot-title{font-size:.83rem;font-weight:600;letter-spacing:-.015em}
+.cmp-error{font-size:.77rem}
+
+/* ── Preview modal ── */
+.preview-box{
+  border-radius:12px;
+  box-shadow:0 0 0 1px var(--border),0 24px 64px rgba(0,0,0,.55),0 4px 20px rgba(0,0,0,.28)
+}
+body.light .preview-box{
+  background:#fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08),0 20px 56px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.08)
+}
+.preview-title{font-size:.88rem;font-weight:600;letter-spacing:-.02em}
+.preview-tools{border-radius:8px}
+body.light .preview-tools{background:#fafafa;border-color:rgba(0,0,0,.08)}
+.preview-tool-row-title{font-size:.63rem;letter-spacing:.1em}
+.preview-drag-hint{font-size:.71rem;letter-spacing:-.005em}
+#preview-plot-wrap{border-radius:8px}
+body.light #preview-plot-wrap{background:#f9f9f9;border-color:rgba(0,0,0,.09)}
+
+/* ── Report modal ── */
+.report-modal-box{
+  border-radius:12px;
+  box-shadow:0 0 0 1px var(--border),0 24px 64px rgba(0,0,0,.55),0 4px 20px rgba(0,0,0,.28)
+}
+body.light .report-modal-box{
+  background:#fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08),0 20px 56px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.08)
+}
+.report-modal-title{font-size:.9rem;font-weight:700;letter-spacing:-.02em}
+.report-modal-file{font-size:.76rem;letter-spacing:-.005em}
+.rpt-lbl{font-size:.67rem;font-weight:700;letter-spacing:.1em}
+.rpt-inp,.rpt-ta{border-radius:6px;font-size:.83rem;font-weight:400}
+body.light .rpt-inp,body.light .rpt-ta{background:#fafafa;border-color:rgba(0,0,0,.1)}
+
+/* ── Trace style modal ── */
+.trace-style-box{
+  border-radius:12px;
+  box-shadow:0 0 0 1px var(--border),0 24px 64px rgba(0,0,0,.55),0 4px 20px rgba(0,0,0,.28)
+}
+body.light .trace-style-box{
+  background:#fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08),0 20px 56px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.08)
+}
+.trace-style-title{font-size:.9rem;font-weight:700;letter-spacing:-.02em}
+.trace-style-sub{font-size:.71rem;letter-spacing:-.005em}
+.trace-style-preview-wrap{border-radius:8px}
+body.light .trace-style-preview-wrap{background:#fafafa;border-color:rgba(0,0,0,.08)}
+.trace-style-label{font-size:.64rem;font-weight:700;letter-spacing:.09em}
+.trace-style-options button{border-radius:6px;font-size:.75rem;font-weight:500;padding:7px 8px}
+.trace-style-options button.on{border-color:var(--accent)}
+
+/* ── Color picker modal ── */
+.color-picker-box{
+  border-radius:13px;
+  box-shadow:0 0 0 1px var(--border),0 24px 64px rgba(0,0,0,.55),0 4px 20px rgba(0,0,0,.28)
+}
+body.light .color-picker-box{
+  background:#fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08),0 20px 56px rgba(0,0,0,.14),0 4px 16px rgba(0,0,0,.08)
+}
+.color-picker-title{font-size:.9rem;font-weight:700;letter-spacing:-.02em}
+.color-picker-sub{font-size:.71rem;letter-spacing:-.005em}
+.color-current-label{font-size:.64rem;font-weight:700;letter-spacing:.09em}
+.color-hex-input{border-radius:6px;font-size:.83rem}
+body.light .color-hex-input{background:#fafafa;border-color:rgba(0,0,0,.1)}
+.color-tab,.color-wheel-btn{border-radius:6px;font-size:.75rem;font-weight:500;padding:6px 11px}
+.color-grid{border-radius:9px}
+body.light .color-grid{background:#f9f9f9;border-color:rgba(0,0,0,.08)}
+.saved-color-hdr{font-size:.64rem;font-weight:700;letter-spacing:.09em}
+.saved-color-empty{font-size:.71rem}
+
+/* ── Marker card (side panel) ── */
+.marker-title{font-size:.73rem;font-weight:700;letter-spacing:-.01em;line-height:1.3}
+.marker-value{font-size:.7rem;letter-spacing:-.005em}
+
+/* ── Trace row (side panel) ── */
+.trace-name{font-size:.75rem;letter-spacing:-.01em}
+.trace-name-input{font-size:.73rem;letter-spacing:-.01em}
+
+/* ── Bench surface ── */
+body.light .bench-surface{
+  background:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.03) 15%,rgba(0,0,0,.05) 50%,rgba(0,0,0,.03) 85%,transparent 100%)
+}
+body.light .bench-surface::after{
+  background:linear-gradient(90deg,transparent,rgba(9,105,218,.1),transparent)
+}
+
+/* ── Dock section label ── */
+.dock-sec-lbl{margin-bottom:1px}
+
+/* ── Tab close button ── */
+.tab-close{border-radius:4px;font-size:.78rem}
+
+/* ── Three.js VNA stage ── */
+.vna-three-stage{
+  position:relative;
+  width:100%;
+  height:min(500px,56vh);
+  border-radius:10px;
+  overflow:hidden;
+  background:transparent
+}
+.vna-view{border-radius:10px;overflow:hidden;background:transparent}
+#vna-three-canvas{display:block;background:transparent}
+
+/* ── Three.js Spectrum Analyzer stage ── */
+.spec-three-stage{
+  position:relative;
+  width:100%;
+  height:min(500px,56vh);
+  border-radius:10px;
+  overflow:hidden;
+  background:transparent
+}
+#spec-three-canvas{display:block;background:transparent}
+
+/* Three.js VNA screen HTML overlay / drop zone — icon-only */
+.vna-html-dropzone{
+  position:absolute;
+  cursor:pointer;
+  pointer-events:auto;
+  display:flex;align-items:center;justify-content:center;
+  padding:0;gap:0;
+  background:rgba(2,8,18,.55);
+  border:1px solid rgba(88,166,255,.42);
+  box-shadow:inset 0 0 18px rgba(88,166,255,.12),0 0 16px rgba(88,166,255,.18);
+  transition:background .22s ease,border-color .22s ease,box-shadow .22s ease,opacity .3s ease;
+  z-index:2
+}
+.vna-html-dropzone:hover,
+.vna-html-dropzone.drag-over{
+  background:rgba(2,8,18,.76);
+  border-color:rgba(88,166,255,.9);
+  box-shadow:inset 0 0 24px rgba(88,166,255,.22),0 0 26px rgba(88,166,255,.3)
+}
+body.light .vna-html-dropzone{
+  background:rgba(4,15,30,.52);
+  border-color:rgba(9,105,218,.44)
+}
+body.light .vna-html-dropzone:hover,
+body.light .vna-html-dropzone.drag-over{
+  background:rgba(4,15,30,.74);
+  border-color:rgba(9,105,218,.82)
+}
+/* Hide when VNA screen faces away from camera */
+.vna-html-dropzone.vna-dz-back{opacity:0;pointer-events:none}
+/* Hide once a file is loaded */
+.bench-device.file-loaded .vna-html-dropzone,
+.bench-device.file-loaded .vna-screen-dropzone{opacity:0;pointer-events:none}
+/* Icon ring */
+.vna-html-dropzone .dz-ring{
+  width:52px;height:52px;
+  border-radius:999px;
+  border:1.5px solid rgba(88,166,255,.72);
+  background:rgba(88,166,255,.10);
+  box-shadow:inset 0 0 18px rgba(88,166,255,.16),0 0 18px rgba(88,166,255,.22);
+  display:flex;align-items:center;justify-content:center
+}
+.vna-html-dropzone .dz-icon-svg{width:24px;height:24px;opacity:.95}
+.vna-html-dropzone:hover .dz-ring,
+.vna-html-dropzone.drag-over .dz-ring{
+  border-color:rgba(88,166,255,.95);
+  background:rgba(88,166,255,.18);
+  box-shadow:inset 0 0 24px rgba(88,166,255,.24),0 0 26px rgba(88,166,255,.32)
+}
 </style>
 </head>
 <body>
@@ -953,10 +1380,10 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
   <!-- Top navigation bar -->
   <nav class="lab-nav">
     <div class="lab-logo">
-      <div class="lab-logo-mark">⟁</div>
+      <div class="lab-logo-mark">BA</div>
       <div class="lab-logo-text">
-        <div class="lab-logo-name">RF Lab Viewer</div>
-        <div class="lab-logo-tag">Interactive RF Analysis</div>
+        <div class="lab-logo-name">BenchAlly</div>
+        <div class="lab-logo-tag">Hardware Measurement Analysis</div>
       </div>
     </div>
     <div class="lab-nav-actions">
@@ -977,9 +1404,9 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
 
     <!-- Hero headline -->
     <div class="lab-hero-copy">
-      <div class="lab-eyebrow">RF &nbsp;·&nbsp; VNA &nbsp;·&nbsp; Spectrum Analyzer</div>
-      <h1 class="lab-title">Bring Your RF Measurements<br>to Life</h1>
-      <p class="lab-subtitle">Load VNA and spectrum data into a cinematic, browser-based lab workspace for fast interactive analysis.</p>
+      <div class="lab-eyebrow">VNA &nbsp;·&nbsp; Spectrum Analyzer &nbsp;·&nbsp; RF Analysis</div>
+      <h1 class="lab-title">Professional Hardware<br>Measurement Analysis</h1>
+      <p class="lab-subtitle">Upload VNA and spectrum data. Visualize traces, place markers, inspect Smith charts, and export publication-ready plots — all in the browser.</p>
     </div>
 
     <!-- Three-column bench: selector · device · info -->
@@ -1043,50 +1470,20 @@ input[type=range].ys-track::-moz-range-thumb{width:14px;height:14px;border-radiu
       <!-- CENTER — Instrument device + bench surface + status -->
       <div class="lab-bench">
         <div class="bench-device" id="bench-device">
-          <!-- VNA: real instrument image + screen-only drop zone overlay -->
+          <!-- VNA: Three.js GLB model. Drop zone is an HTML overlay projected onto the screen surface. -->
           <div class="vna-view" id="vna-view">
-            <div class="inst-img-wrap">
-              <img src="assets/VNA.png" class="vna-img" alt="Vector Network Analyzer" draggable="false">
-              <div class="vna-screen-dropzone" id="vna-screen-dropzone"
-                   onclick="labClickBrowse()"
-                   ondragover="labDragOver(event)"
-                   ondragleave="labDragLeave(event)"
-                   ondrop="labDrop(event)">
-                <div class="dz-ring">
-                  <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
-                       stroke="rgba(88,166,255,.78)" stroke-width="1.8"
-                       stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="16 16 12 12 8 16"/>
-                    <line x1="12" y1="12" x2="12" y2="21"/>
-                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-                  </svg>
-                </div>
-                <div class="dz-text" id="dz-text">Drop files here<br>or click to browse</div>
-                <div class="dz-fmt" id="dz-fmt">.s1p · .s2p</div>
-              </div>
+            <div class="vna-three-stage" id="vna-three-stage">
+              <canvas id="vna-three-canvas"></canvas>
+              <!-- HTML overlay hidden: upload icon + drag-over state are now 3D textures on the screen plane -->
+              <div class="vna-screen-dropzone" id="vna-screen-dropzone" style="display:none" aria-hidden="true"></div>
             </div>
           </div>
-          <!-- Spectrum: real instrument image + screen-only drop zone overlay -->
+          <!-- Spectrum: Three.js GLB model. Drop zone is a 3D texture plane on the screen surface. -->
           <div class="spec-view" id="spec-view" style="display:none">
-            <div class="inst-img-wrap">
-              <img src="assets/SPEC.png" class="spec-img" alt="Spectrum Analyzer" draggable="false">
-              <div class="spec-screen-dropzone" id="spec-screen-dropzone"
-                   onclick="labClickBrowse()"
-                   ondragover="labDragOver(event)"
-                   ondragleave="labDragLeave(event)"
-                   ondrop="labDrop(event)">
-                <div class="dz-ring">
-                  <svg class="dz-icon-svg" viewBox="0 0 24 24" fill="none"
-                       stroke="rgba(88,166,255,.78)" stroke-width="1.8"
-                       stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="16 16 12 12 8 16"/>
-                    <line x1="12" y1="12" x2="12" y2="21"/>
-                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
-                  </svg>
-                </div>
-                <div class="dz-text">Drop files here<br>or click to browse</div>
-                <div class="dz-fmt">.csv</div>
-              </div>
+            <div class="spec-three-stage" id="spec-three-stage">
+              <canvas id="spec-three-canvas"></canvas>
+              <!-- Hidden: drag/drop handled on canvas; kept for _labClearDragState selector -->
+              <div class="spec-screen-dropzone" id="spec-screen-dropzone" style="display:none" aria-hidden="true"></div>
             </div>
           </div>
         </div>
@@ -3660,7 +4057,7 @@ function _labUpdateDeviceLabels(){
   const mname=document.getElementById('device-model-name');
   if(mname)mname.textContent=_lab.model||(_lab.inst==='vna'?'VNA':'SA');
   const brand=document.getElementById('device-brand');
-  if(brand)brand.textContent=_lab.model?_lab.model.substring(0,12).toUpperCase():'RF Lab Viewer';
+  if(brand)brand.textContent=_lab.model?_lab.model.substring(0,12).toUpperCase():'BenchAlly';
 }
 
 function _labSetStatus(state,msg){
@@ -4305,7 +4702,7 @@ figcaption{font-size:.76rem;color:#777;margin-top:7px;font-style:italic}
 <div class="rpt-top">
   <div>
     <div class="rpt-title">RF Measurement Report</div>
-    <div class="rpt-sub">RF Lab Viewer &nbsp;·&nbsp; Local browser export</div>
+    <div class="rpt-sub">BenchAlly &nbsp;·&nbsp; Local browser export</div>
   </div>
   <div class="rpt-stamp">Generated<br>${now}</div>
 </div>
@@ -4367,6 +4764,633 @@ async function generateReport(){
     btn.disabled=false;
     if(prog)prog.innerHTML='';
   }
+}
+
+</script>
+
+<!-- ════════ THREE.JS VNA SCENE ════════════════════════════════════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── Screen plane calibration — tweak until it aligns with the black VNA screen ──
+// All units are in GLB local space (Y-up, +Z = toward camera when front-facing).
+// GLB bounding box: X[-0.95, 0.95]  Y[-0.47, 0.47]  Z[-0.54, 0.54]
+// Front face is at Z ≈ 0.54. Screen is on the LEFT portion of the front face.
+const SCREEN_CONFIG = {
+  position: { x: -0.265, y: 0.03, z: 0.54 }, // screen-area centre in model local space
+  rotation: { x: 0, y: 0, z: 0 },             // keep 0 unless the screen is angled
+  size:     { width: 1.10, height: 0.75 },     // screen dimensions in model units
+  offset:   -0.16                             // negative = move in local -Z (into the VNA screen face)
+};
+
+// Set true to show a semi-transparent green overlay so you can verify alignment.
+// Flip false once the plane sits exactly on the black VNA screen.
+const VNA_SCREEN_DEBUG = false;
+
+let renderer, scene, camera, controls, vnaModel, animId;
+let screenMesh = null, screenGroup = null;
+let iconTex = null, dragTex = null, chartTex = null;
+let isDraggingOver = false;
+
+// ── Canvas textures ───────────────────────────────────────────────────────────
+function makeIconTex() {
+  const W = 512, H = Math.round(W * SCREEN_CONFIG.size.height / SCREEN_CONFIG.size.width);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#040e1c';
+  g.fillRect(0, 0, W, H);
+  // Subtle oscilloscope grid
+  g.strokeStyle = 'rgba(88,166,255,.07)';
+  g.lineWidth = 1;
+  for (let x = W/8; x < W; x += W/8) { g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+  for (let y = H/6; y < H; y += H/6) { g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+  // Icon + text share a common vertical anchor shifted up from centre
+  const cx = W/2, iy = H/2 - 80, r = 30; // iy = icon centre, shifted up
+  // Ring
+  g.strokeStyle = 'rgba(88,166,255,.78)';
+  g.lineWidth = 2.5;
+  g.beginPath(); g.arc(cx, iy, r, 0, Math.PI*2); g.stroke();
+  // Upload arrow (pointing up)
+  g.strokeStyle = 'rgba(88,166,255,.92)';
+  g.lineWidth = 2.5; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(cx, iy+13); g.lineTo(cx, iy-12); g.stroke();
+  g.beginPath(); g.moveTo(cx-10, iy-2); g.lineTo(cx, iy-14); g.lineTo(cx+10, iy-2); g.stroke();
+  g.beginPath(); g.moveTo(cx-13, iy+16); g.lineTo(cx+13, iy+16); g.stroke();
+  // Text — same wording as the Spectrum Analyzer drop zone
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = 'rgba(226,232,240,.88)';
+  g.font = '600 30px -apple-system, BlinkMacSystemFont, Inter, sans-serif';
+  g.fillText('Drop files here', cx, iy + 62);
+  g.fillText('or click to browse', cx, iy + 98);
+  g.fillStyle = 'rgba(121,192,255,.92)';
+  g.font = '500 24px -apple-system, BlinkMacSystemFont, Inter, sans-serif';
+  g.fillText('.s1p · .s2p', cx, iy + 132);
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeDragOverTex() {
+  const W = 512, H = Math.round(W * SCREEN_CONFIG.size.height / SCREEN_CONFIG.size.width);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#041628';
+  g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(88,166,255,.12)';
+  g.lineWidth = 1;
+  for (let x = W/8; x < W; x += W/8) { g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+  for (let y = H/6; y < H; y += H/6) { g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+  // Dashed border
+  const p = 14;
+  g.strokeStyle = 'rgba(88,166,255,.88)'; g.lineWidth = 3; g.setLineDash([14,9]);
+  g.strokeRect(p, p, W-p*2, H-p*2); g.setLineDash([]);
+  // Arrow down (drop here)
+  const cx = W/2, cy = H/2;
+  g.strokeStyle = 'rgba(88,166,255,.95)';
+  g.lineWidth = 3.2; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(cx, cy-22); g.lineTo(cx, cy+20); g.stroke();
+  g.beginPath(); g.moveTo(cx-17, cy+5); g.lineTo(cx, cy+24); g.lineTo(cx+17, cy+5); g.stroke();
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+// ── Screen plane (child of vnaModel → rotates with the GLB) ──────────────────
+function createScreenPlane(model) {
+  iconTex = makeIconTex();
+  dragTex = makeDragOverTex();
+
+  // screenGroup anchors everything at the screen centre.
+  // Adjust SCREEN_CONFIG above to move/resize the plane.
+  screenGroup = new THREE.Group();
+  const cfg = SCREEN_CONFIG;
+  screenGroup.position.set(
+    cfg.position.x,
+    cfg.position.y,
+    cfg.position.z + cfg.offset   // float above the surface
+  );
+  screenGroup.rotation.set(cfg.rotation.x, cfg.rotation.y, cfg.rotation.z);
+  model.add(screenGroup);
+
+  // Image plane — PlaneGeometry faces +Z, matching the VNA front-face normal
+  const geo = new THREE.PlaneGeometry(cfg.size.width, cfg.size.height);
+  const mat = VNA_SCREEN_DEBUG
+    // Semi-transparent green overlay so alignment is easy to see
+    ? new THREE.MeshBasicMaterial({ color: 0x00ff55, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+    : new THREE.MeshBasicMaterial({ map: iconTex });
+
+  screenMesh = new THREE.Mesh(geo, mat);
+  screenGroup.add(screenMesh);
+
+  if (VNA_SCREEN_DEBUG) {
+    // Orange bounding-box outline of the whole VNA model (world space)
+    const boxHelper = new THREE.BoxHelper(model, 0xff8800);
+    scene.add(boxHelper);
+    // RGB axes at world origin (R=X  G=Y  B=Z)
+    scene.add(new THREE.AxesHelper(2));
+    // Small local axes at the screenGroup so you can see exactly where it sits
+    screenGroup.add(new THREE.AxesHelper(0.25));
+    console.log('[BenchAlly] VNA_SCREEN_DEBUG is ON — green plane = screen position. Tune SCREEN_CONFIG to align it with the black VNA screen, then set VNA_SCREEN_DEBUG = false.');
+  }
+}
+
+function setScreenTexture(tex) {
+  if (!screenMesh) return;
+  screenMesh.material.map = tex;
+  screenMesh.material.needsUpdate = true;
+}
+
+function applyImageTexture(url) {
+  if (!screenMesh) return;
+  new THREE.TextureLoader().load(url, tex => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    if (chartTex) chartTex.dispose();
+    chartTex = tex;
+    setScreenTexture(chartTex);
+  });
+}
+
+// ── Capture the most recent Plotly chart and apply as screen texture ──────────
+function captureChart(panelEl) {
+  if (!window.Plotly) return;
+  // VNA only: s-parameter plots use md- prefix; ignore spectrum (sp-) panels
+  const plotDiv = panelEl.querySelector('[id^="md-"]');
+  if (!plotDiv) return;
+  const W = 512, H = Math.round(W * SCREEN_CONFIG.size.height / SCREEN_CONFIG.size.width);
+  window.Plotly.toImage(plotDiv, { format: 'png', width: W, height: H })
+    .then(url => applyImageTexture(url))
+    .catch(e => console.warn('[BenchAlly] VNA chart capture failed:', e));
+}
+
+function watchForFileLoad() {
+  const tabPanels = document.getElementById('tab-panels');
+  if (!tabPanels) return;
+  new MutationObserver(mutations => {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        // Wait for Plotly to finish rendering before screenshotting
+        setTimeout(() => captureChart(node), 1200);
+      }
+    }
+  }).observe(tabPanels, { childList: true });
+}
+
+// ── Raycast to check if a pointer event hit the screen plane ─────────────────
+const _raycaster = new THREE.Raycaster();
+const _ndc       = new THREE.Vector2();
+
+function pointerHitsScreen(e) {
+  if (!screenMesh || !renderer || !camera) return false;
+  const rect = renderer.domElement.getBoundingClientRect();
+  _ndc.set(
+    ((e.clientX - rect.left)  / rect.width)  * 2 - 1,
+    -((e.clientY - rect.top) / rect.height) * 2 + 1
+  );
+  _raycaster.setFromCamera(_ndc, camera);
+  return _raycaster.intersectObject(screenMesh, false).length > 0;
+}
+
+// ── Canvas / stage event wiring ───────────────────────────────────────────────
+function setupCanvasEvents(canvas) {
+  const stage = canvas.parentElement;
+  let ptrDownX = 0, ptrDownY = 0;
+
+  // Click → open file browser only if cursor barely moved AND hit the screen plane
+  canvas.addEventListener('pointerdown', e => { ptrDownX = e.clientX; ptrDownY = e.clientY; });
+  canvas.addEventListener('pointerup', e => {
+    const d = Math.hypot(e.clientX - ptrDownX, e.clientY - ptrDownY);
+    if (d < 5 && pointerHitsScreen(e) && typeof window.labClickBrowse === 'function') {
+      window.labClickBrowse();
+    }
+  });
+
+  // Drag/drop: forward to existing global handlers; also swap 3D texture
+  stage.addEventListener('dragenter', e => e.preventDefault());
+  stage.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (!isDraggingOver) {
+      isDraggingOver = true;
+      setScreenTexture(dragTex);
+      if (typeof window.labDragOver === 'function') window.labDragOver(e);
+    }
+  });
+  stage.addEventListener('dragleave', e => {
+    if (!stage.contains(e.relatedTarget)) {
+      isDraggingOver = false;
+      setScreenTexture(chartTex || iconTex);
+      if (typeof window.labDragLeave === 'function') window.labDragLeave(e);
+    }
+  });
+  stage.addEventListener('drop', e => {
+    e.preventDefault();
+    isDraggingOver = false;
+    setScreenTexture(chartTex || iconTex);
+    if (typeof window.labDrop === 'function') window.labDrop(e);
+  });
+}
+
+// ── Three.js scene ────────────────────────────────────────────────────────────
+function initThreeVNA() {
+  console.log('[BenchAlly] Three.js VNA initializing...');
+  const stage = document.getElementById('vna-three-stage');
+  if (!stage) return;
+  const canvas = document.getElementById('vna-three-canvas');
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(stage.clientWidth, stage.clientHeight);
+  renderer.setClearColor(0x000000, 0); // fully transparent background
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  scene = new THREE.Scene(); // no scene.background — stays transparent
+
+  camera = new THREE.PerspectiveCamera(35, stage.clientWidth / stage.clientHeight, 0.01, 100);
+  camera.position.set(0, 0.3, 4);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+  sun.position.set(2, 4, 3);
+  scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x8090ff, 0.8);
+  fill.position.set(-3, 1, -2);
+  scene.add(fill);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0, 0);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.autoRotate = false;
+  controls.autoRotateSpeed = 2.5;
+  controls.enablePan = false;
+  controls.minDistance = 1.5;
+  controls.maxDistance = 8;
+
+  const loader = new GLTFLoader();
+  loader.load(
+    'assets/vna.glb',
+    (gltf) => {
+      console.log('[BenchAlly] assets/vna.glb loaded successfully');
+      vnaModel = gltf.scene;
+      const box    = new THREE.Box3().setFromObject(vnaModel);
+      const size   = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const scale  = 2 / Math.max(size.x, size.y, size.z);
+      vnaModel.scale.setScalar(scale);
+      vnaModel.position.sub(center.multiplyScalar(scale));
+      scene.add(vnaModel);
+      // Screen plane is a child of vnaModel → rotates with it as camera orbits
+      createScreenPlane(vnaModel);
+    },
+    undefined,
+    (error) => {
+      console.error('[BenchAlly] Failed to load assets/vna.glb:', error);
+      loadFallback(stage);
+    }
+  );
+
+  setupCanvasEvents(canvas);
+  watchForFileLoad();
+  new ResizeObserver(onVnaResize).observe(stage);
+  animate();
+}
+
+function animate() {
+  animId = requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function onVnaResize() {
+  const stage = document.getElementById('vna-three-stage');
+  if (!stage || !renderer) return;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+function loadFallback(stage) {
+  console.warn('[BenchAlly] vna.glb load failed — falling back to VNA.png');
+  const canvas = document.getElementById('vna-three-canvas');
+  if (canvas) canvas.remove();
+  if (animId) cancelAnimationFrame(animId);
+  const img = document.createElement('img');
+  img.src = 'assets/VNA.png';
+  img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;border-radius:inherit;position:absolute;inset:0';
+  stage.insertBefore(img, stage.firstChild);
+}
+
+// Pause auto-rotate when user switches to Spectrum Analyzer panel
+(function wireSelectInstrument() {
+  const _orig = window.selectInstrument;
+  if (typeof _orig !== 'function') return;
+  window.selectInstrument = function(name) {
+    _orig.apply(this, arguments);
+    if (controls) controls.autoRotate = false;
+  };
+})();
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initThreeVNA);
+} else {
+  initThreeVNA();
+}
+</script>
+
+<!-- ════════ THREE.JS SPECTRUM SCENE ══════════════════════════════════════════ -->
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── Screen plane calibration for the Spectrum Analyzer ───────────────────────
+// Start with SPEC_SCREEN_DEBUG = true to see the green overlay and tune these values.
+const SPEC_SCREEN_CONFIG = {
+  position: { x: 0, y: 0.32, z: 0.54 },  // screen centre in GLB local space
+  rotation: { x: 0, y: 0, z: 0 },
+  size:     { width: 0.90, height: 0.65 }, // adjust to cover the black screen area
+  offset:   -0.15                         // negative = push into the surface
+};
+
+const SPEC_SCREEN_DEBUG = false; // flip true to re-enable debug overlay
+
+let renderer, scene, camera, controls, specModel, animId;
+let screenMesh = null, screenGroup = null;
+let iconTex = null, dragTex = null, chartTex = null;
+let isDraggingOver = false;
+
+// ── Canvas textures ───────────────────────────────────────────────────────────
+function makeIconTex() {
+  const W = 512, H = Math.round(W * SPEC_SCREEN_CONFIG.size.height / SPEC_SCREEN_CONFIG.size.width);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#040e1c';
+  g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(88,166,255,.07)'; g.lineWidth = 1;
+  for (let x = W/8; x < W; x += W/8) { g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+  for (let y = H/6; y < H; y += H/6) { g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+  const cx = W/2, iy = H/2 - 80, r = 30;
+  g.strokeStyle = 'rgba(88,166,255,.78)'; g.lineWidth = 2.5;
+  g.beginPath(); g.arc(cx, iy, r, 0, Math.PI*2); g.stroke();
+  g.strokeStyle = 'rgba(88,166,255,.92)'; g.lineWidth = 2.5; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(cx, iy+13); g.lineTo(cx, iy-12); g.stroke();
+  g.beginPath(); g.moveTo(cx-10, iy-2); g.lineTo(cx, iy-14); g.lineTo(cx+10, iy-2); g.stroke();
+  g.beginPath(); g.moveTo(cx-13, iy+16); g.lineTo(cx+13, iy+16); g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = 'rgba(226,232,240,.88)';
+  g.font = '600 30px -apple-system, BlinkMacSystemFont, Inter, sans-serif';
+  g.fillText('Drop files here', cx, iy + 62);
+  g.fillText('or click to browse', cx, iy + 98);
+  g.fillStyle = 'rgba(121,192,255,.92)';
+  g.font = '500 24px -apple-system, BlinkMacSystemFont, Inter, sans-serif';
+  g.fillText('.csv', cx, iy + 132);
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeDragOverTex() {
+  const W = 512, H = Math.round(W * SPEC_SCREEN_CONFIG.size.height / SPEC_SCREEN_CONFIG.size.width);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#041628'; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(88,166,255,.12)'; g.lineWidth = 1;
+  for (let x = W/8; x < W; x += W/8) { g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+  for (let y = H/6; y < H; y += H/6) { g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+  const p = 14;
+  g.strokeStyle = 'rgba(88,166,255,.88)'; g.lineWidth = 3; g.setLineDash([14,9]);
+  g.strokeRect(p, p, W-p*2, H-p*2); g.setLineDash([]);
+  const cx = W/2, cy = H/2;
+  g.strokeStyle = 'rgba(88,166,255,.95)'; g.lineWidth = 3.2; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(cx, cy-22); g.lineTo(cx, cy+20); g.stroke();
+  g.beginPath(); g.moveTo(cx-17, cy+5); g.lineTo(cx, cy+24); g.lineTo(cx+17, cy+5); g.stroke();
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+// ── Screen plane ──────────────────────────────────────────────────────────────
+function createScreenPlane(model) {
+  iconTex = makeIconTex();
+  dragTex = makeDragOverTex();
+  screenGroup = new THREE.Group();
+  const cfg = SPEC_SCREEN_CONFIG;
+  screenGroup.position.set(cfg.position.x, cfg.position.y, cfg.position.z + cfg.offset);
+  screenGroup.rotation.set(cfg.rotation.x, cfg.rotation.y, cfg.rotation.z);
+  model.add(screenGroup);
+  const geo = new THREE.PlaneGeometry(cfg.size.width, cfg.size.height);
+  const mat = SPEC_SCREEN_DEBUG
+    ? new THREE.MeshBasicMaterial({ color: 0x00ff55, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+    : new THREE.MeshBasicMaterial({ map: iconTex });
+  screenMesh = new THREE.Mesh(geo, mat);
+  screenGroup.add(screenMesh);
+  if (SPEC_SCREEN_DEBUG) {
+    const boxHelper = new THREE.BoxHelper(model, 0xff8800);
+    scene.add(boxHelper);
+    scene.add(new THREE.AxesHelper(2));
+    screenGroup.add(new THREE.AxesHelper(0.25));
+    console.log('[BenchAlly] SPEC_SCREEN_DEBUG ON — tune SPEC_SCREEN_CONFIG then set false.');
+  }
+}
+
+function setScreenTexture(tex) {
+  if (!screenMesh) return;
+  screenMesh.material.map = tex;
+  screenMesh.material.needsUpdate = true;
+}
+
+function applyImageTexture(url) {
+  if (!screenMesh) return;
+  new THREE.TextureLoader().load(url, tex => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    if (chartTex) chartTex.dispose();
+    chartTex = tex;
+    if (!SPEC_SCREEN_DEBUG) setScreenTexture(chartTex);
+  });
+}
+
+// ── Chart capture (spectrum sp- divs only) ────────────────────────────────────
+function captureChart(panelEl) {
+  if (!window.Plotly) return;
+  const plotDiv = panelEl.querySelector('[id^="sp-"]'); // spectrum only
+  if (!plotDiv) return;
+  const W = 512, H = Math.round(W * SPEC_SCREEN_CONFIG.size.height / SPEC_SCREEN_CONFIG.size.width);
+  window.Plotly.toImage(plotDiv, { format: 'png', width: W, height: H })
+    .then(url => applyImageTexture(url))
+    .catch(e => console.warn('[BenchAlly] Spectrum chart capture failed:', e));
+}
+
+function watchForFileLoad() {
+  const tabPanels = document.getElementById('tab-panels');
+  if (!tabPanels) return;
+  new MutationObserver(mutations => {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        setTimeout(() => captureChart(node), 1200);
+      }
+    }
+  }).observe(tabPanels, { childList: true });
+}
+
+// ── Raycast click detection ───────────────────────────────────────────────────
+const _raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+function pointerHitsScreen(e) {
+  if (!screenMesh || !renderer || !camera) return false;
+  const rect = renderer.domElement.getBoundingClientRect();
+  _ndc.set(
+    ((e.clientX - rect.left) / rect.width) * 2 - 1,
+    -((e.clientY - rect.top) / rect.height) * 2 + 1
+  );
+  _raycaster.setFromCamera(_ndc, camera);
+  return _raycaster.intersectObject(screenMesh, false).length > 0;
+}
+
+function setupCanvasEvents(canvas) {
+  const stage = canvas.parentElement;
+  let ptrDownX = 0, ptrDownY = 0;
+  canvas.addEventListener('pointerdown', e => { ptrDownX = e.clientX; ptrDownY = e.clientY; });
+  canvas.addEventListener('pointerup', e => {
+    const d = Math.hypot(e.clientX - ptrDownX, e.clientY - ptrDownY);
+    if (d < 5 && pointerHitsScreen(e) && typeof window.labClickBrowse === 'function') {
+      window.labClickBrowse();
+    }
+  });
+  stage.addEventListener('dragenter', e => e.preventDefault());
+  stage.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (!isDraggingOver) {
+      isDraggingOver = true;
+      setScreenTexture(dragTex);
+      if (typeof window.labDragOver === 'function') window.labDragOver(e);
+    }
+  });
+  stage.addEventListener('dragleave', e => {
+    if (!stage.contains(e.relatedTarget)) {
+      isDraggingOver = false;
+      setScreenTexture(chartTex || iconTex);
+      if (typeof window.labDragLeave === 'function') window.labDragLeave(e);
+    }
+  });
+  stage.addEventListener('drop', e => {
+    e.preventDefault();
+    isDraggingOver = false;
+    setScreenTexture(chartTex || iconTex);
+    if (typeof window.labDrop === 'function') window.labDrop(e);
+  });
+}
+
+// ── Three.js scene ────────────────────────────────────────────────────────────
+function initThreeSpec() {
+  console.log('[BenchAlly] Three.js Spectrum initializing...');
+  const stage = document.getElementById('spec-three-stage');
+  if (!stage) return;
+  const canvas = document.getElementById('spec-three-canvas');
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(stage.clientWidth, stage.clientHeight);
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(35, stage.clientWidth / stage.clientHeight, 0.01, 100);
+  camera.position.set(0, 0.3, 4);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+  sun.position.set(2, 4, 3); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x8090ff, 0.8);
+  fill.position.set(-3, 1, -2); scene.add(fill);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0, 0);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.autoRotate = false;
+  controls.enablePan = false;
+  controls.minDistance = 1.5;
+  controls.maxDistance = 8;
+
+  const loader = new GLTFLoader();
+  loader.load(
+    'assets/spec.glb',
+    (gltf) => {
+      console.log('[BenchAlly] assets/spec.glb loaded successfully');
+      specModel = gltf.scene;
+      const box    = new THREE.Box3().setFromObject(specModel);
+      const size   = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const scale  = 2 / Math.max(size.x, size.y, size.z);
+      specModel.scale.setScalar(scale);
+      specModel.position.sub(center.multiplyScalar(scale));
+      scene.add(specModel);
+      createScreenPlane(specModel);
+    },
+    undefined,
+    (error) => {
+      console.error('[BenchAlly] Failed to load assets/spec.glb:', error);
+      loadFallback(stage);
+    }
+  );
+
+  setupCanvasEvents(canvas);
+  watchForFileLoad();
+  new ResizeObserver(onSpecResize).observe(stage);
+  animate();
+}
+
+function animate() {
+  animId = requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function onSpecResize() {
+  const stage = document.getElementById('spec-three-stage');
+  if (!stage || !renderer) return;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+function loadFallback(stage) {
+  console.warn('[BenchAlly] spec.glb load failed — falling back to SPEC.png');
+  const canvas = document.getElementById('spec-three-canvas');
+  if (canvas) canvas.remove();
+  if (animId) cancelAnimationFrame(animId);
+  const img = document.createElement('img');
+  img.src = 'assets/SPEC.png';
+  img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;border-radius:inherit;position:absolute;inset:0';
+  stage.insertBefore(img, stage.firstChild);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initThreeSpec);
+} else {
+  initThreeSpec();
 }
 </script>
 
