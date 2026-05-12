@@ -152,12 +152,12 @@ body.light .lab-title{
 
 /* ── Instrument selector panel (left) ── */
 .inst-panel{display:flex;flex-direction:column;gap:9px;min-width:194px;max-width:210px;flex-shrink:0}
-.inst-panel-lbl,.model-lbl{
+.inst-panel-lbl{
   font-size:.56rem;font-weight:700;letter-spacing:.12em;
   text-transform:uppercase;color:var(--text4);padding-left:2px}
 .inst-type-grid{display:flex;flex-direction:column;gap:4px}
 .inst-type-btn{
-  display:flex;align-items:center;gap:8px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
   background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
   border-radius:9px;color:var(--text3);cursor:pointer;
   padding:8px 10px;text-align:left;
@@ -189,18 +189,12 @@ body.light .inst-type-btn{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.07
 .inst-type-btn.active .inst-check{
   background:var(--accent);border-color:var(--accent);color:#fff;
   box-shadow:0 0 8px rgba(88,166,255,.4)}
-.model-section{display:flex;flex-direction:column;gap:5px;margin-top:2px}
-.model-sel-wrap{position:relative}
-.model-sel{
-  width:100%;background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.09);
-  border-radius:7px;color:var(--text2);cursor:pointer;
-  font-size:.75rem;padding:6px 26px 6px 10px;
-  -webkit-appearance:none;appearance:none;
-  outline:none;transition:all .2s;font-family:inherit}
-body.light .model-sel{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.1);color:var(--text)}
-.model-sel:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(88,166,255,.1)}
-.model-sel-arr{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--text4);font-size:.62rem;pointer-events:none}
+.inst-model-inline{display:none;flex-basis:100%;margin-top:5px;padding-top:6px;border-top:1px solid rgba(255,255,255,.07)}
+.inst-type-btn.active .inst-model-inline{display:block}
+.inst-model-sel{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(88,166,255,.2);border-radius:6px;color:var(--text2);cursor:pointer;font-size:.72rem;padding:5px 8px;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none;transition:border-color .2s}
+.inst-model-sel:focus{border-color:var(--accent)}
+body.light .inst-model-inline{border-top-color:rgba(0,0,0,.1)}
+body.light .inst-model-sel{background:rgba(0,0,0,.04);border-color:rgba(9,105,218,.2);color:var(--text)}
 
 /* ── Center bench ── */
 .lab-bench{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;max-width:720px;min-height:0}
@@ -283,6 +277,12 @@ body.light .vna-screen-dropzone:hover,body.light .vna-screen-dropzone.drag-over{
 
 /* Spectrum Analyzer real-image view */
 .spec-view{position:relative;width:100%;max-height:58vh;display:flex;align-items:center;justify-content:center;overflow:visible}
+
+/* RedPitaya view */
+.rp-view{position:relative;width:100%;max-height:58vh;display:flex;align-items:center;justify-content:center;overflow:visible}
+
+/* Oscilloscope view */
+.scope-view{position:relative;width:100%;max-height:58vh;display:flex;align-items:center;justify-content:center;overflow:visible}
 .spec-img{
   display:block;width:auto;max-width:100%;max-height:58vh;height:auto;border-radius:10px;
   filter:drop-shadow(0 14px 48px rgba(0,0,0,.65)) drop-shadow(0 0 1px rgba(88,166,255,.18))}
@@ -433,9 +433,6 @@ body.light .device-brand{color:rgba(0,0,0,.2)}
   .inst-panel{max-width:100%;min-width:0;width:100%}
   .inst-type-grid{flex-direction:row;flex-wrap:wrap}
   .inst-type-btn{flex:1;min-width:130px}
-  .model-section{flex-direction:row;align-items:center;gap:8px}
-  .model-lbl{flex-shrink:0}
-  .model-sel-wrap{flex:1}
 }
 @media(max-width:560px){
   .lab-nav{padding:10px 14px}
@@ -578,6 +575,26 @@ input[type=number]::placeholder{color:var(--text4)}
   border:1px solid var(--border);border-radius:6px}
 .ana-title{font-size:.6rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
   color:var(--text4);margin-bottom:4px}
+/* ── Oscilloscope Viewer ── */
+.scope-info-bar{display:flex;flex-wrap:wrap;gap:5px 16px;padding:7px 14px;background:var(--bg3);border-bottom:1px solid var(--border)}
+.scope-info-item{display:flex;flex-direction:column;gap:1px}
+.scope-info-lbl{font-size:.54rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text4)}
+.scope-info-val{font-size:.78rem;font-weight:600;color:var(--text)}
+.scope-ctrl-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:7px 14px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.scope-ctrl-group{display:flex;align-items:center;gap:5px}
+.scope-ctrl-lbl{font-size:.58rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text4);white-space:nowrap}
+.scope-chan-btn{padding:3px 9px;border-radius:5px;font-size:.72rem;font-weight:600;border:1.5px solid;cursor:pointer;transition:all .15s;background:transparent;opacity:.38;font-family:inherit}
+.scope-chan-btn.active{opacity:1;color:#fff}
+.scope-view-btn{padding:3px 9px;border-radius:5px;font-size:.72rem;font-weight:500;border:1px solid var(--border);background:var(--bg3);color:var(--text3);cursor:pointer;transition:all .15s;font-family:inherit}
+.scope-view-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.scope-sel{background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:.72rem;padding:3px 7px;cursor:pointer;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none}
+.scope-stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:5px;padding:10px 14px;background:var(--bg2);border-top:1px solid var(--border)}
+.scope-stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 9px}
+.scope-stat-lbl{font-size:.54rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text4)}
+.scope-stat-val{font-size:.85rem;font-weight:700;color:var(--text);margin-top:1px}
+.scope-stat-unit{font-size:.64rem;color:var(--text3);font-weight:500}
+.scope-ch-hdr{display:flex;align-items:center;gap:6px;grid-column:1/-1;margin-top:6px;padding-bottom:2px;border-bottom:1px solid var(--border)}
+.scope-ch-name{font-size:.6rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
 .ana-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:4px;margin-bottom:1px}
 .ana-card{background:var(--bg3);border:1px solid var(--border);border-radius:5px;
   padding:5px 7px;display:flex;flex-direction:column;gap:0;min-width:0;overflow:hidden}
@@ -1009,7 +1026,7 @@ body.light .lab-title{letter-spacing:-1.8px}
 }
 
 /* ── Instrument panel labels ── */
-.inst-panel-lbl,.model-lbl{
+.inst-panel-lbl{
   font-size:.56rem;font-weight:700;letter-spacing:.13em
 }
 
@@ -1050,12 +1067,6 @@ body.light .inst-type-btn.active{
 .inst-name{font-size:.76rem;font-weight:600;letter-spacing:-.015em}
 .inst-abbr{font-size:.59rem;letter-spacing:.035em}
 .inst-check{border-radius:50%;width:15px;height:15px;border-width:1.5px}
-
-/* ── Model selector ── */
-.model-sel{
-  border-radius:7px;font-size:.75rem;font-weight:500;
-  padding:6px 28px 6px 10px
-}
 
 /* ── Right info panel sections ── */
 .binfo-lbl{font-size:.55rem;font-weight:700;letter-spacing:.13em}
@@ -1300,7 +1311,7 @@ body.light .bench-surface::after{
   background:transparent
 }
 .vna-view{border-radius:10px;overflow:hidden;background:transparent}
-#vna-three-canvas{display:block;background:transparent}
+#vna-three-canvas{display:block;background:transparent;transition:opacity .35s ease}
 
 /* ── Three.js Spectrum Analyzer stage ── */
 .spec-three-stage{
@@ -1311,7 +1322,29 @@ body.light .bench-surface::after{
   overflow:hidden;
   background:transparent
 }
-#spec-three-canvas{display:block;background:transparent}
+#spec-three-canvas{display:block;background:transparent;transition:opacity .35s ease}
+
+/* ── Three.js RedPitaya stage ── */
+.rp-three-stage{
+  position:relative;
+  width:100%;
+  height:min(500px,56vh);
+  border-radius:10px;
+  overflow:hidden;
+  background:transparent
+}
+#rp-three-canvas{display:block;background:transparent;transition:opacity .35s ease}
+
+/* ── Three.js Oscilloscope stage ── */
+.scope-three-stage{
+  position:relative;
+  width:100%;
+  height:min(500px,56vh);
+  border-radius:10px;
+  overflow:hidden;
+  background:transparent
+}
+#scope-three-canvas{display:block;background:transparent;transition:opacity .35s ease}
 
 /* Three.js VNA screen HTML overlay / drop zone — icon-only */
 .vna-html-dropzone{
@@ -1423,6 +1456,12 @@ body.light .vna-html-dropzone.drag-over{
               <div class="inst-abbr">VNA &nbsp;·&nbsp; Touchstone</div>
             </div>
             <div class="inst-check">✓</div>
+            <div class="inst-model-inline" onclick="event.stopPropagation()">
+              <select class="inst-model-sel" id="inst-model-sel-vna" onchange="updateInstModel(this.value)">
+                <option value="R&amp;S ZNB 4" selected>R&amp;S ZNB 4</option>
+                <option value="R&amp;S ZND">R&amp;S ZND</option>
+              </select>
+            </div>
           </button>
           <button class="inst-type-btn" data-inst="spectrum" onclick="selectInstrument('spectrum')">
             <span class="inst-icon">📊</span>
@@ -1431,39 +1470,42 @@ body.light .vna-html-dropzone.drag-over{
               <div class="inst-abbr">SA &nbsp;·&nbsp; CSV</div>
             </div>
             <div class="inst-check"></div>
+            <div class="inst-model-inline" onclick="event.stopPropagation()">
+              <select class="inst-model-sel" id="inst-model-sel-spectrum" onchange="updateInstModel(this.value)">
+                <option value="">Select model…</option>
+                <option value="R&amp;S ZVH 8">R&amp;S ZVH 8</option>
+              </select>
+            </div>
           </button>
-          <button class="inst-type-btn placeholder" disabled>
-            <span class="inst-icon">〰</span>
+          <button class="inst-type-btn" data-inst="scope" onclick="selectInstrument('scope')">
+            <span class="inst-icon">📈</span>
             <div class="inst-info">
               <div class="inst-name">Oscilloscope</div>
-              <div class="inst-abbr">Coming soon</div>
+              <div class="inst-abbr">Scope &nbsp;·&nbsp; CSV</div>
+            </div>
+            <div class="inst-check"></div>
+            <div class="inst-model-inline" onclick="event.stopPropagation()">
+              <select class="inst-model-sel" id="inst-model-sel-scope" onchange="updateInstModel(this.value)">
+                <option value="">Select model…</option>
+                <option value="MSO5034">Tektronix MSO5034</option>
+              </select>
             </div>
           </button>
-          <button class="inst-type-btn placeholder" disabled>
-            <span class="inst-icon">〜</span>
+          <button class="inst-type-btn" data-inst="rp" onclick="selectInstrument('rp')">
+            <span class="inst-icon">🔬</span>
             <div class="inst-info">
-              <div class="inst-name">Signal Generator</div>
-              <div class="inst-abbr">Coming soon</div>
+              <div class="inst-name">RedPitaya</div>
+              <div class="inst-abbr">RP &nbsp;·&nbsp; bin</div>
+            </div>
+            <div class="inst-check"></div>
+            <div class="inst-model-inline" onclick="event.stopPropagation()">
+              <select class="inst-model-sel" id="inst-model-sel-rp" onchange="updateInstModel(this.value)">
+                <option value="">Select model…</option>
+                <option value="RP122-16">STEMlab 122-16</option>
+                <option value="RP125-14">STEMlab 125-14</option>
+              </select>
             </div>
           </button>
-        </div>
-        <!-- Model selector -->
-        <div class="model-section">
-          <div class="model-lbl">Instrument Model</div>
-          <div class="model-sel-wrap">
-            <select class="model-sel" id="inst-model-sel" onchange="updateInstModel(this.value)">
-              <option value="">Select model…</option>
-              <option value="NanoVNA">NanoVNA</option>
-              <option value="Keysight E5061B">Keysight E5061B</option>
-              <option value="Keysight PNA-X">Keysight PNA-X</option>
-              <option value="R&amp;S ZNB">Rohde &amp; Schwarz ZNB</option>
-              <option value="R&amp;S ZVA">Rohde &amp; Schwarz ZVA</option>
-              <option value="FieldFox">Keysight FieldFox</option>
-              <option value="Copper Mountain">Copper Mountain</option>
-              <option value="Other">Other / Custom</option>
-            </select>
-            <div class="model-sel-arr">▾</div>
-          </div>
         </div>
       </div>
 
@@ -1484,6 +1526,22 @@ body.light .vna-html-dropzone.drag-over{
               <canvas id="spec-three-canvas"></canvas>
               <!-- Hidden: drag/drop handled on canvas; kept for _labClearDragState selector -->
               <div class="spec-screen-dropzone" id="spec-screen-dropzone" style="display:none" aria-hidden="true"></div>
+            </div>
+          </div>
+          <!-- RedPitaya: Three.js GLB model. Drop zone is a 3D texture plane on the screen surface. -->
+          <div class="rp-view" id="rp-view" style="display:none">
+            <div class="rp-three-stage" id="rp-three-stage">
+              <canvas id="rp-three-canvas"></canvas>
+              <!-- Hidden: drag/drop handled on canvas; kept for _labClearDragState selector -->
+              <div class="rp-screen-dropzone" id="rp-screen-dropzone" style="display:none" aria-hidden="true"></div>
+            </div>
+          </div>
+          <!-- Oscilloscope: Three.js GLB model. Drop zone is a 3D texture plane on the screen surface. -->
+          <div class="scope-view" id="scope-view" style="display:none">
+            <div class="scope-three-stage" id="scope-three-stage">
+              <canvas id="scope-three-canvas"></canvas>
+              <!-- Hidden: drag/drop handled on canvas; kept for _labClearDragState selector -->
+              <div class="scope-screen-dropzone" id="scope-screen-dropzone" style="display:none" aria-hidden="true"></div>
             </div>
           </div>
         </div>
@@ -1635,6 +1693,9 @@ function resizePlots(f){
   } else if(f.kind==='spectrum'){
     const sp=document.getElementById('sp-'+f.id);
     if(sp)Plotly.Plots.resize(sp);
+  } else if(f.kind==='waveform'){
+    const td=document.getElementById('sc-td-'+f.id),fd=document.getElementById('sc-fd-'+f.id);
+    if(td)Plotly.Plots.resize(td);if(fd)Plotly.Plots.resize(fd);
   } else {
     const md=document.getElementById('md-'+f.id),sc=document.getElementById('sc-'+f.id);
     if(md)Plotly.Plots.resize(md); if(sc)Plotly.Plots.resize(sc);
@@ -1671,9 +1732,9 @@ function resumeSession(){
 // ── tabs ──────────────────────────────────────────────────────────────────────
 function renderTabs(){
   document.getElementById('tab-bar').innerHTML=S.files.map((f,i)=>{
-    const isCmp=f.kind==='compare',isSpec=f.kind==='spectrum';
-    const badge=isCmp?'CMP':isSpec?'SPEC':f.type.toUpperCase();
-    const badgeCls=isCmp?'tab-badge cmp':isSpec?'tab-badge spec':'tab-badge';
+    const isCmp=f.kind==='compare',isSpec=f.kind==='spectrum',isWav=f.kind==='waveform';
+    const badge=isCmp?'CMP':isSpec?'SPEC':isWav?'SCOPE':f.type.toUpperCase();
+    const badgeCls=isCmp?'tab-badge cmp':isSpec?'tab-badge spec':isWav?'tab-badge spec':'tab-badge';
     return `<div class="tab${i===S.active?' active':''}" onclick="setActiveTab(${i})">
       <span class="tab-name" title="${f.name}">${f.name}</span>
       <span class="${badgeCls}">${badge}</span>
@@ -1700,6 +1761,9 @@ function closeTab(i){
     } else if(f.kind==='spectrum'){
       const sp=document.getElementById('sp-'+f.id);
       if(sp)Plotly.purge(sp);
+    } else if(f.kind==='waveform'){
+      const td=document.getElementById('sc-td-'+f.id),fd=document.getElementById('sc-fd-'+f.id);
+      if(td)Plotly.purge(td);if(fd)Plotly.purge(fd);
     } else {
       const md=document.getElementById('md-'+f.id),sc=document.getElementById('sc-'+f.id);
       if(md)Plotly.purge(md); if(sc)Plotly.purge(sc);
@@ -1822,6 +1886,388 @@ function parseSpectrumCsv(text,filename){
   const result=tryParseRSZVH(lines)||tryParseGenericCsv(lines);
   if(!result)throw new Error('Cannot parse CSV: no recognised frequency+magnitude columns found. Supported formats: R&S ZVH export, or CSV with Frequency/Magnitude headers.');
   return result;
+}
+
+// ── Oscilloscope support ───────────────────────────────────────────────────────
+
+function fmtHz(f){
+  if(f>=1e9)return(f/1e9).toFixed(3)+' GHz';
+  if(f>=1e6)return(f/1e6).toFixed(3)+' MHz';
+  if(f>=1e3)return(f/1e3).toFixed(3)+' kHz';
+  return f.toFixed(2)+' Hz';
+}
+function fmtSciTime(dt){
+  if(dt<1e-6)return(dt*1e9).toFixed(2)+' ns';
+  if(dt<1e-3)return(dt*1e6).toFixed(2)+' µs';
+  if(dt<1)return(dt*1e3).toFixed(2)+' ms';
+  return dt.toFixed(4)+' s';
+}
+function fmtSciVolt(v){
+  const a=Math.abs(v);
+  if(a>=1)return v.toFixed(4)+' V';
+  if(a>=1e-3)return(v*1e3).toFixed(3)+' mV';
+  return(v*1e6).toFixed(2)+' µV';
+}
+
+// LTTB downsampling for large waveforms
+function _lttbDecimate(xs,ys,threshold){
+  const n=xs.length;
+  if(n<=threshold)return{xs,ys};
+  const ox=[],oy=[];
+  ox.push(xs[0]);oy.push(ys[0]);
+  const every=(n-2)/(threshold-2);
+  let a=0;
+  for(let i=0;i<threshold-2;i++){
+    const rs=Math.floor((i+1)*every)+1;
+    const re=Math.min(Math.floor((i+2)*every)+1,n-1);
+    let avgX=0,avgY=0,cnt=0;
+    for(let j=rs;j<re;j++){avgX+=xs[j];avgY+=ys[j];cnt++;}
+    avgX/=cnt;avgY/=cnt;
+    const ax=xs[a],ay=ys[a];
+    let maxA=-1,maxI=rs;
+    for(let j=rs;j<re;j++){
+      const area=Math.abs((ax-avgX)*(ys[j]-ay)-(ax-xs[j])*(avgY-ay));
+      if(area>maxA){maxA=area;maxI=j;}
+    }
+    ox.push(xs[maxI]);oy.push(ys[maxI]);
+    a=maxI;
+  }
+  ox.push(xs[n-1]);oy.push(ys[n-1]);
+  return{xs:ox,ys:oy};
+}
+
+// Cooley-Tukey FFT (in-place, power-of-2)
+function _scopeFFT(re,im){
+  const n=re.length;
+  let j=0;
+  for(let i=1;i<n;i++){
+    let bit=n>>1;
+    for(;j&bit;bit>>=1)j^=bit;
+    j^=bit;
+    if(i<j){[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]];}
+  }
+  for(let len=2;len<=n;len<<=1){
+    const ang=-2*Math.PI/len;
+    const wr=Math.cos(ang),wi=Math.sin(ang);
+    for(let i=0;i<n;i+=len){
+      let cr=1,ci=0;
+      for(let k=0;k<len/2;k++){
+        const ur=re[i+k],ui=im[i+k];
+        const vr=re[i+k+len/2]*cr-im[i+k+len/2]*ci;
+        const vi=re[i+k+len/2]*ci+im[i+k+len/2]*cr;
+        re[i+k]=ur+vr;im[i+k]=ui+vi;
+        re[i+k+len/2]=ur-vr;im[i+k+len/2]=ui-vi;
+        const nr=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=nr;
+      }
+    }
+  }
+}
+
+function scopeComputeFFT(signal,sampleRate,opts){
+  const{dcRemove=true,window='hann',freqMax=null}=opts||{};
+  let n=1;while(n<signal.length)n<<=1;
+  n=Math.min(n,1<<18);
+  const re=new Float64Array(n),im=new Float64Array(n);
+  const len=Math.min(signal.length,n);
+  let mean=0;
+  if(dcRemove){for(let i=0;i<len;i++)mean+=signal[i];mean/=len;}
+  for(let i=0;i<len;i++){
+    const v=signal[i]-mean;
+    const w=window==='hann'?0.5*(1-Math.cos(2*Math.PI*i/(n-1))):
+             window==='hamming'?0.54-0.46*Math.cos(2*Math.PI*i/(n-1)):1;
+    re[i]=v*w;
+  }
+  _scopeFFT(re,im);
+  const half=n/2,df=sampleRate/n;
+  const freqs=new Float64Array(half),mag=new Float64Array(half);
+  for(let i=0;i<half;i++){
+    freqs[i]=i*df;
+    const m=Math.sqrt(re[i]*re[i]+im[i]*im[i])/n;
+    mag[i]=20*Math.log10(Math.max(m,1e-15));
+  }
+  let domIdx=1;
+  for(let i=2;i<half;i++)if(mag[i]>mag[domIdx])domIdx=i;
+  let cut=half;
+  if(freqMax){cut=Math.ceil(freqMax/df);if(cut>half)cut=half;}
+  return{freqs:freqs.slice(0,cut),mag:mag.slice(0,cut),domFreq:freqs[domIdx],df};
+}
+
+function scopeChannelStats(ch){
+  let mn=ch[0],mx=ch[0],sum=0,sq=0;
+  for(let i=0;i<ch.length;i++){
+    if(ch[i]<mn)mn=ch[i];if(ch[i]>mx)mx=ch[i];
+    sum+=ch[i];sq+=ch[i]*ch[i];
+  }
+  const n=ch.length,mean=sum/n;
+  return{min:mn,max:mx,vpp:mx-mn,mean,rms:Math.sqrt(sq/n)};
+}
+
+// Detect oscilloscope CSV by checking for a "Time" column header
+function _isOscilloscopeCSV(text){
+  const lines=text.slice(0,3000).split(/\r?\n/);
+  for(let i=0;i<Math.min(lines.length,25);i++){
+    const ln=lines[i].trim();if(!ln)continue;
+    const cols=ln.split(',').map(s=>s.trim());
+    if(cols.some(c=>/^time/i.test(c)))return true;
+  }
+  return false;
+}
+
+function parseOscilloscopeCSV(text){
+  if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+  const lines=text.split(/\r?\n/);
+  let timeCol=-1,headerIdx=-1;
+  let chanCols=[],chanNames=[];
+
+  for(let i=0;i<Math.min(lines.length,30);i++){
+    const ln=lines[i].trim();if(!ln)continue;
+    const cols=ln.split(',').map(s=>s.trim());
+    const ti=cols.findIndex(c=>/^time/i.test(c));
+    if(ti<0)continue;
+    timeCol=ti;headerIdx=i;
+    // Check if previous row has channel labels (Rigol 2-row header)
+    if(i>0){
+      const prev=lines[i-1].trim();
+      if(prev){
+        const pc=prev.split(',').map(s=>s.trim());
+        const pch=pc.map((c,j)=>j!==ti&&/^(CH\d+|C\d+)/i.test(c)?{j,name:c.toUpperCase()}:null).filter(Boolean);
+        if(pch.length){pch.forEach(({j,name})=>{chanCols.push(j);chanNames.push(name);});break;}
+      }
+    }
+    // Channel names in current row
+    cols.forEach((c,j)=>{
+      if(j===ti)return;
+      const m=c.match(/^(CH\d+|C\d+)/i);
+      if(m){chanCols.push(j);chanNames.push(m[1].toUpperCase());}
+    });
+    if(!chanCols.length){
+      cols.forEach((c,j)=>{
+        if(j!==ti&&c)chanCols.push(j),chanNames.push('CH'+(chanCols.length));
+      });
+    }
+    break;
+  }
+  if(headerIdx<0)throw new Error('No time column found. Expected Rigol oscilloscope CSV format.');
+  if(!chanCols.length)throw new Error('No channel columns found in oscilloscope CSV.');
+
+  const timeArr=[],chanArr=chanCols.map(()=>[]);
+  for(let i=headerIdx+1;i<lines.length;i++){
+    const ln=lines[i].trim();if(!ln)continue;
+    const cols=ln.split(',');
+    const t=parseFloat(cols[timeCol]);
+    if(isNaN(t))continue;
+    timeArr.push(t);
+    chanCols.forEach((ci,j)=>{const v=parseFloat(cols[ci]);chanArr[j].push(isNaN(v)?0:v);});
+  }
+  if(timeArr.length<2)throw new Error('Not enough data points in oscilloscope CSV.');
+  const n=timeArr.length;
+  const dt=Math.abs((timeArr[n-1]-timeArr[0])/(n-1));
+  const sampleRate=dt>0?1/dt:1;
+  const channels={};
+  chanNames.forEach((name,j)=>{channels[name]=new Float64Array(chanArr[j]);});
+  return{kind:'waveform',time:new Float64Array(timeArr),channels,chanNames,n,dt,sampleRate,tStart:timeArr[0],tEnd:timeArr[n-1]};
+}
+
+const SCOPE_CHAN_COLORS={CH1:'#f0a500',CH2:'#58a6ff',CH3:'#3fb950',CH4:'#ff7b72'};
+const SCOPE_CHAN_DEF='#aaaaaa';
+
+function createScopePanel(fs){
+  const id=fs.id;
+  const fnSafe=fs.name.replace(/[^a-z0-9_\-]/gi,'_');
+  const d=fs.data;
+  const el=document.createElement('div');
+  el.id='panel-'+id;el.className='tab-panel';
+  const chanBtns=d.chanNames.map(ch=>{
+    const col=SCOPE_CHAN_COLORS[ch]||SCOPE_CHAN_DEF;
+    return`<button class="scope-chan-btn active" id="sc-cb-${id}-${ch}" style="border-color:${col};color:${col}" onclick="scopeToggleChan('${id}','${ch}')">${ch}</button>`;
+  }).join('');
+  el.innerHTML=`
+    <div class="err-box" id="eb-${id}"></div>
+    <div class="scope-info-bar">
+      <div class="scope-info-item"><span class="scope-info-lbl">File</span><span class="scope-info-val">${fs.name}</span></div>
+      <div class="scope-info-item"><span class="scope-info-lbl">Points</span><span class="scope-info-val">${d.n.toLocaleString()}</span></div>
+      <div class="scope-info-item"><span class="scope-info-lbl">Duration</span><span class="scope-info-val">${fmtSciTime(Math.abs(d.tEnd-d.tStart))}</span></div>
+      <div class="scope-info-item"><span class="scope-info-lbl">Sample Rate</span><span class="scope-info-val">${fmtHz(d.sampleRate)}</span></div>
+      <div class="scope-info-item"><span class="scope-info-lbl">dt</span><span class="scope-info-val">${fmtSciTime(d.dt)}</span></div>
+      <div class="scope-info-item"><span class="scope-info-lbl">Channels</span><span class="scope-info-val">${d.chanNames.join(', ')}</span></div>
+    </div>
+    <div class="scope-ctrl-bar">
+      <div class="scope-ctrl-group"><span class="scope-ctrl-lbl">Channels</span>${chanBtns}</div>
+      <div class="scope-ctrl-group">
+        <span class="scope-ctrl-lbl">View</span>
+        <button class="scope-view-btn active" id="sc-vb-${id}-both" onclick="scopeSetView('${id}','both')">Both</button>
+        <button class="scope-view-btn" id="sc-vb-${id}-time" onclick="scopeSetView('${id}','time')">Time</button>
+        <button class="scope-view-btn" id="sc-vb-${id}-fft" onclick="scopeSetView('${id}','fft')">FFT</button>
+      </div>
+      <div class="scope-ctrl-group">
+        <span class="scope-ctrl-lbl">Window</span>
+        <select class="scope-sel" id="sc-win-${id}" onchange="scopeSetWindow('${id}',this.value)">
+          <option value="hann" selected>Hann</option>
+          <option value="hamming">Hamming</option>
+          <option value="rect">Rect</option>
+        </select>
+      </div>
+      <div class="scope-ctrl-group">
+        <span class="scope-ctrl-lbl">DC Remove</span>
+        <select class="scope-sel" id="sc-dc-${id}" onchange="scopeSetDcRemove('${id}',this.value==='true')">
+          <option value="true" selected>On</option>
+          <option value="false">Off</option>
+        </select>
+      </div>
+      <div class="scope-ctrl-group">
+        <span class="scope-ctrl-lbl">Freq Max</span>
+        <select class="scope-sel" id="sc-fm-${id}" onchange="scopeSetFreqMax('${id}',this.value)">
+          <option value="">Auto</option>
+          <option value="1000">1 kHz</option>
+          <option value="10000">10 kHz</option>
+          <option value="100000">100 kHz</option>
+          <option value="1000000">1 MHz</option>
+          <option value="10000000">10 MHz</option>
+          <option value="100000000">100 MHz</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost" style="font-size:.72rem;padding:3px 9px" onclick="scopeResetZoom('${id}')">Reset Zoom</button>
+    </div>
+    <div class="plots-grid" style="grid-template-columns:1fr">
+      <div class="plot-card" id="sc-td-card-${id}">
+        <div class="plot-card-hdr">
+          <span class="pch-title">Time Domain</span>
+          <button class="btn btn-save" onclick="previewPlot('sc-td-${id}','${fnSafe}_time')">Preview / Save</button>
+        </div>
+        <div class="plot-shell" style="grid-template-columns:1fr">
+          <div class="plot-main"><div id="sc-td-${id}" class="plot-div plot-div-tall"></div></div>
+        </div>
+      </div>
+      <div class="plot-card" id="sc-fd-card-${id}">
+        <div class="plot-card-hdr">
+          <span class="pch-title">Frequency Spectrum (FFT)</span>
+          <button class="btn btn-save" onclick="previewPlot('sc-fd-${id}','${fnSafe}_fft')">Preview / Save</button>
+        </div>
+        <div class="plot-shell" style="grid-template-columns:1fr">
+          <div class="plot-main"><div id="sc-fd-${id}" class="plot-div plot-div-tall"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="scope-stats-grid" id="sc-stats-${id}"></div>`;
+  return el;
+}
+
+function renderScopeAll(id){
+  const fs=fileById(id);if(!fs||!fs.data)return;
+  _scopeUpdateViewLayout(id,fs);
+  renderScopeTimeDomain(id,fs);
+  renderScopeFFT(id,fs);
+  renderScopeStats(id,fs);
+}
+
+function _scopeUpdateViewLayout(id,fs){
+  const view=fs._scope?.view||'both';
+  const td=document.getElementById('sc-td-card-'+id);
+  const fd=document.getElementById('sc-fd-card-'+id);
+  if(td)td.style.display=(view==='both'||view==='time')?'':'none';
+  if(fd)fd.style.display=(view==='both'||view==='fft')?'':'none';
+  ['both','time','fft'].forEach(v=>{
+    const btn=document.getElementById('sc-vb-'+id+'-'+v);
+    if(btn)btn.classList.toggle('active',v===view);
+  });
+}
+
+function renderScopeTimeDomain(id,fs){
+  const th=TH(),d=fs.data,sc=fs._scope||{};
+  const vis=sc.chanVisible||Object.fromEntries(d.chanNames.map(n=>[n,true]));
+  const MAX=8000;
+  const timeArr=Array.from(d.time);
+  const traces=d.chanNames.filter(ch=>vis[ch]).map(ch=>{
+    const col=SCOPE_CHAN_COLORS[ch]||SCOPE_CHAN_DEF;
+    const{xs,ys}=_lttbDecimate(timeArr,Array.from(d.channels[ch]),MAX);
+    return{x:xs,y:ys,name:ch,mode:'lines',line:{color:col,width:1.5},type:'scattergl'};
+  });
+  const xr=sc.tdXr||[null,null];
+  const xax={title:{text:'Time (s)'},gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line,
+    rangeslider:{visible:true,bgcolor:th.rsBg,bordercolor:th.line,thickness:.07}};
+  if(xr[0]!==null)xax.range=xr;
+  Plotly.react('sc-td-'+id,traces,{
+    paper_bgcolor:th.paper,plot_bgcolor:th.plot,font:{color:th.text,size:11},
+    margin:{t:20,r:20,b:80,l:70},xaxis:xax,
+    yaxis:{title:{text:'Voltage (V)'},gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line},
+    showlegend:true,legend:{orientation:'h',x:0,y:1.08},hovermode:'x unified',
+  },{responsive:true,displayModeBar:true,modeBarButtonsToRemove:['select2d','lasso2d'],displaylogo:false});
+  const div=document.getElementById('sc-td-'+id);
+  if(div&&!fs._tdEvAttached){
+    fs._tdEvAttached=true;
+    div.on('plotly_relayout',e=>{
+      if('xaxis.range[0]'in e){if(!fs._scope)fs._scope={};fs._scope.tdXr=[e['xaxis.range[0]'],e['xaxis.range[1]']];}
+      else if(e['xaxis.autorange']){if(!fs._scope)fs._scope={};fs._scope.tdXr=[null,null];}
+    });
+  }
+}
+
+function renderScopeFFT(id,fs){
+  const th=TH(),d=fs.data,sc=fs._scope||{};
+  const vis=sc.chanVisible||Object.fromEntries(d.chanNames.map(n=>[n,true]));
+  const opts={dcRemove:sc.dcRemove!==false,window:sc.fftWindow||'hann',freqMax:sc.freqMax||null};
+  const traces=d.chanNames.filter(ch=>vis[ch]).map(ch=>{
+    const col=SCOPE_CHAN_COLORS[ch]||SCOPE_CHAN_DEF;
+    const{freqs,mag}=scopeComputeFFT(d.channels[ch],d.sampleRate,opts);
+    const{xs,ys}=_lttbDecimate(Array.from(freqs),Array.from(mag),4000);
+    return{x:xs,y:ys,name:ch,mode:'lines',line:{color:col,width:1.5},type:'scattergl'};
+  });
+  Plotly.react('sc-fd-'+id,traces,{
+    paper_bgcolor:th.paper,plot_bgcolor:th.plot,font:{color:th.text,size:11},
+    margin:{t:20,r:20,b:60,l:70},
+    xaxis:{title:{text:'Frequency (Hz)'},gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line,type:'log'},
+    yaxis:{title:{text:'Magnitude (dB)'},gridcolor:th.grid,zerolinecolor:th.zero,color:th.axis,linecolor:th.line},
+    showlegend:true,legend:{orientation:'h',x:0,y:1.08},hovermode:'x unified',
+  },{responsive:true,displayModeBar:true,modeBarButtonsToRemove:['select2d','lasso2d'],displaylogo:false});
+}
+
+function renderScopeStats(id,fs){
+  const el=document.getElementById('sc-stats-'+id);if(!el)return;
+  const d=fs.data,sc=fs._scope||{};
+  const vis=sc.chanVisible||Object.fromEntries(d.chanNames.map(n=>[n,true]));
+  const opts={dcRemove:sc.dcRemove!==false,window:sc.fftWindow||'hann',freqMax:sc.freqMax||null};
+  let html='';
+  d.chanNames.filter(ch=>vis[ch]).forEach(ch=>{
+    const col=SCOPE_CHAN_COLORS[ch]||SCOPE_CHAN_DEF;
+    const s=scopeChannelStats(d.channels[ch]);
+    const{domFreq}=scopeComputeFFT(d.channels[ch],d.sampleRate,opts);
+    html+=`<div class="scope-ch-hdr"><div class="scope-ch-name" style="color:${col}">${ch}</div></div>`;
+    [{lbl:'V pp',val:fmtSciVolt(s.vpp)},{lbl:'V max',val:fmtSciVolt(s.max)},{lbl:'V min',val:fmtSciVolt(s.min)},
+     {lbl:'Mean',val:fmtSciVolt(s.mean)},{lbl:'RMS',val:fmtSciVolt(s.rms)},{lbl:'Dom Freq',val:fmtHz(domFreq)}
+    ].forEach(c=>{html+=`<div class="scope-stat-card"><div class="scope-stat-lbl">${c.lbl}</div><div class="scope-stat-val">${c.val}</div></div>`;});
+  });
+  el.innerHTML=html;
+}
+
+function scopeToggleChan(id,ch){
+  const fs=fileById(id);if(!fs||!fs._scope)return;
+  const vis=fs._scope.chanVisible;
+  vis[ch]=!vis[ch];
+  const btn=document.getElementById('sc-cb-'+id+'-'+ch);
+  if(btn)btn.classList.toggle('active',vis[ch]);
+  renderScopeAll(id);
+}
+function scopeSetView(id,view){
+  const fs=fileById(id);if(!fs||!fs._scope)return;
+  fs._scope.view=view;
+  _scopeUpdateViewLayout(id,fs);
+}
+function scopeSetWindow(id,val){
+  const fs=fileById(id);if(!fs||!fs._scope)return;
+  fs._scope.fftWindow=val;renderScopeFFT(id,fs);renderScopeStats(id,fs);
+}
+function scopeSetDcRemove(id,val){
+  const fs=fileById(id);if(!fs||!fs._scope)return;
+  fs._scope.dcRemove=val;renderScopeFFT(id,fs);renderScopeStats(id,fs);
+}
+function scopeSetFreqMax(id,val){
+  const fs=fileById(id);if(!fs||!fs._scope)return;
+  fs._scope.freqMax=val?parseFloat(val):null;renderScopeFFT(id,fs);
+}
+function scopeResetZoom(id){
+  const fs=fileById(id);if(!fs||!fs._scope)return;
+  fs._scope.tdXr=[null,null];fs._scope.fdXr=[null,null];
+  renderScopeTimeDomain(id,fs);renderScopeFFT(id,fs);
 }
 
 // Format a spectrum metadata value for display
@@ -2024,6 +2470,10 @@ function renderSpectrum(divId,data,mkrs,xr,yr,fs){
 // ── renderAll: branches on kind ───────────────────────────────────────────────
 function renderAll(id){
   const fs=fileById(id); if(!fs||!fs.data)return;
+  if(fs.kind==='waveform'){
+    renderScopeAll(id);
+    return;
+  }
   if(fs.kind==='compare'){
     renderCompareTabPlot(id,fs);
     renderCompareSidePanel(id,fs);
@@ -3917,77 +4367,98 @@ function loadFiles(fileList,hint){
   setTimeout(()=>{
     validFiles.forEach(file=>{
       const ext=file.name.split('.').pop().toLowerCase();
-      const kind=ext==='csv'?'spectrum':'sparameter';
       const fs={
         id:'f'+(_fid++),name:file.name,type:ext,
-        kind,
+        kind:ext==='csv'?'spectrum':'sparameter',
         data:null,mkrs:[],activeMkr:0,xr:[null,null],yr:[null,null],
         _ev:false,_dragAttached:false,_legendAttached:false,sp:'S11',axisFont:'Helvetica',axisFontSize:null,
       };
       const r=new FileReader();
       r.onload=ev=>{
         try{
-          const d=kind==='spectrum'
-            ?parseSpectrumCsv(ev.target.result,file.name)
-            :parse(ev.target.result,file.name);
-          fs.data=d;
-          if(kind==='sparameter'){
+          const text=ev.target.result;
+
+          if(ext==='csv'&&_isOscilloscopeCSV(text)){
+            // ── Oscilloscope waveform branch ──────────────────────────────
+            fs.kind='waveform';
+            const d=parseOscilloscopeCSV(text);
+            fs.data=d;
+            fs._scope={
+              chanVisible:Object.fromEntries(d.chanNames.map(n=>[n,true])),
+              view:'both',fftWindow:'hann',dcRemove:true,freqMax:null,
+              tdXr:[null,null],fdXr:[null,null],
+            };
+            const panel=createScopePanel(fs);
+            document.getElementById('tab-panels').appendChild(panel);
+            const idx=S.files.length;
+            S.files.push(fs);
+            renderScopeAll(fs.id);
+            setActiveTab(idx);renderTabs();hideLoading();goTo('viewer');
+
+          } else if(ext==='csv'){
+            // ── Spectrum branch ───────────────────────────────────────────
+            const d=parseSpectrumCsv(text,file.name);
+            fs.data=d;
+            fs.traceNames={Spectrum:'Spectrum'};
+            fs.traceStyles={Spectrum:{color:isLight()?'#0969da':'#58a6ff',width:1.6,dash:'solid'}};
+            const panel=createSpectrumPanel(fs);
+            document.getElementById('tab-panels').appendChild(panel);
+            const idx=S.files.length;
+            S.files.push(fs);
+            initSliders(fs.id);setupSliders(fs.id);
+            renderAll(fs.id);
+            if(!fs._ev){
+              fs._ev=true;
+              document.getElementById('sp-'+fs.id).on('plotly_relayout',e=>{
+                if('xaxis.range[0]'in e)fs.xr=[e['xaxis.range[0]'],e['xaxis.range[1]']];
+                else if(e['xaxis.autorange'])fs.xr=[null,null];
+                renderAnalysisSummary(fs.id);
+              });
+            }
+            attachDragListener(fs.id);
+            document.getElementById('mk-inp-'+fs.id).addEventListener('keydown',e=>{if(e.key==='Enter')addMkr(fs.id);});
+            const freqs=fsFreqs(fs);
+            const midFreq=freqs[Math.floor(freqs.length/2)]||127.74;
+            fs.mkrs=[{freq:midFreq,color:MC()[0],name:'M1',showLine:true,trace:null}];
+            renderAll(fs.id);renderMkrList(fs.id);
+            setActiveTab(idx);renderTabs();hideLoading();goTo('viewer');
+
+          } else {
+            // ── S-parameter branch ────────────────────────────────────────
+            const d=parse(text,file.name);
+            fs.data=d;
             fs.traceVisible=Object.fromEntries(Object.keys(d.sp).map(n=>[n,true]));
             fs.traceNames=Object.fromEntries(Object.keys(d.sp).map(n=>[n,n]));
             const dc=PC();
             fs.traceStyles=Object.fromEntries(Object.keys(d.sp).map(n=>[n,{color:dc[n]||'#888888',width:1.9,dash:'solid'}]));
-          } else {
-            fs.traceNames={Spectrum:'Spectrum'};
-            fs.traceStyles={Spectrum:{color:isLight()?'#0969da':'#58a6ff',width:1.6,dash:'solid'}};
-          }
-
-          // create appropriate panel
-          const panel=kind==='spectrum'?createSpectrumPanel(fs):createPanel(fs);
-          document.getElementById('tab-panels').appendChild(panel);
-          const idx=S.files.length;
-          S.files.push(fs);
-
-          if(kind==='sparameter'){
-            // fill s-parameter info bar
+            const panel=createPanel(fs);
+            document.getElementById('tab-panels').appendChild(panel);
             document.getElementById('iifmt-'+fs.id).textContent=d.fmt;
             document.getElementById('iin-'+fs.id).textContent=d.n;
             document.getElementById('iiz-'+fs.id).textContent=d.z0+' Ω';
-            document.getElementById('iifr-'+fs.id).textContent=
-              fmtF(Math.min(...d.freqs))+' – '+fmtF(Math.max(...d.freqs));
+            document.getElementById('iifr-'+fs.id).textContent=fmtF(Math.min(...d.freqs))+' – '+fmtF(Math.max(...d.freqs));
+            const idx=S.files.length;
+            S.files.push(fs);
+            initSliders(fs.id);setupSliders(fs.id);
+            renderAll(fs.id);
+            if(!fs._ev){
+              fs._ev=true;
+              document.getElementById('md-'+fs.id).on('plotly_relayout',e=>{
+                if('xaxis.range[0]'in e)fs.xr=[e['xaxis.range[0]'],e['xaxis.range[1]']];
+                else if(e['xaxis.autorange'])fs.xr=[null,null];
+                renderAnalysisSummary(fs.id);
+              });
+            }
+            attachDragListener(fs.id);
+            document.getElementById('mk-inp-'+fs.id).addEventListener('keydown',e=>{if(e.key==='Enter')addMkr(fs.id);});
+            const freqs=fsFreqs(fs);
+            const midFreq=freqs[Math.floor(freqs.length/2)]||127.74;
+            fs.mkrs=[{freq:midFreq,color:MC()[0],name:'M1',showLine:true,trace:null}];
+            renderAll(fs.id);renderMkrList(fs.id);
+            setActiveTab(idx);renderTabs();hideLoading();goTo('viewer');
           }
-
-          initSliders(fs.id); setupSliders(fs.id);
-          renderAll(fs.id);
-
-          // x-range tracking — use correct plot div id
-          if(!fs._ev){
-            fs._ev=true;
-            const trackId=kind==='spectrum'?'sp-'+fs.id:'md-'+fs.id;
-            document.getElementById(trackId).on('plotly_relayout',e=>{
-              if('xaxis.range[0]'in e)fs.xr=[e['xaxis.range[0]'],e['xaxis.range[1]']];
-              else if(e['xaxis.autorange'])fs.xr=[null,null];
-              renderAnalysisSummary(fs.id);
-            });
-          }
-
-          attachDragListener(fs.id);
-          document.getElementById('mk-inp-'+fs.id).addEventListener('keydown',e=>{
-            if(e.key==='Enter')addMkr(fs.id);
-          });
-
-          // default marker at centre frequency
-          const freqs=fsFreqs(fs);
-          const midFreq=freqs[Math.floor(freqs.length/2)]||127.74;
-          fs.mkrs=[{freq:midFreq,color:MC()[0],name:'M1',showLine:true,trace:null}];
-          renderAll(fs.id); renderMkrList(fs.id);
-
-          setActiveTab(idx);
-          renderTabs();
-          hideLoading();
-          goTo('viewer');
         }catch(err){
           hideLoading();
-          // try to show in error box if panel exists, otherwise alert
           const eb=document.getElementById('eb-'+fs.id);
           if(eb){eb.textContent='Parse error: '+err.message;eb.classList.add('on');}
           else{console.error(err);}
@@ -4002,12 +4473,14 @@ function loadFiles(fileList,hint){
 
 /* Instrument model options per type */
 const INST_MODELS={
-  vna:['NanoVNA','Keysight E5061B','Keysight PNA-X','R&S ZNB','R&S ZVA','FieldFox','Copper Mountain','Other'],
-  spectrum:['RTL-SDR','R&S FSW','Keysight N9048B','LimeSDR','HackRF One','USRP B200','Other']
+  vna:['R&S ZNB 4','R&S ZND'],
+  spectrum:['R&S ZVH 8'],
+  rp:['RP122-16','RP125-14'],
+  scope:['MSO5034']
 };
 
 /* Landing scene state */
-const _lab={inst:'vna',model:'',screenRaf:null};
+const _lab={inst:'vna',model:'R&S ZNB 4',screenRaf:null};
 
 /* Select instrument category — updates UI and restarts screen animation */
 function selectInstrument(inst){
@@ -4020,22 +4493,26 @@ function selectInstrument(inst){
     if(ck)ck.textContent=on?'✓':'';
   });
 
-  const sel=document.getElementById('inst-model-sel');
-  if(sel){
-    sel.innerHTML='<option value="">Select model…</option>';
-    (INST_MODELS[inst]||[]).forEach(m=>{
-      const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);
-    });
+  const inlineSel=document.getElementById('inst-model-sel-'+inst);
+  if(inlineSel){
+    const firstReal=inlineSel.querySelector('option[value]:not([value=""])');
+    const defaultVal=firstReal?firstReal.value:'';
+    inlineSel.value=defaultVal;
+    if(defaultVal) updateInstModel(defaultVal);
   }
 
   const vnaView=document.getElementById('vna-view');
   const specView=document.getElementById('spec-view');
+  const rpView=document.getElementById('rp-view');
+  const scopeView=document.getElementById('scope-view');
   if(vnaView)vnaView.style.display=inst==='vna'?'':'none';
   if(specView)specView.style.display=inst==='spectrum'?'':'none';
+  if(rpView)rpView.style.display=inst==='rp'?'':'none';
+  if(scopeView)scopeView.style.display=inst==='scope'?'':'none';
   const fmt=document.getElementById('dz-fmt');
   if(fmt)fmt.textContent=inst==='vna'?'.s1p · .s2p':'.csv';
 
-  const instNames={vna:'Vector Network Analyzer',spectrum:'Spectrum Analyzer'};
+  const instNames={vna:'Vector Network Analyzer',spectrum:'Spectrum Analyzer',rp:'RedPitaya',scope:'Oscilloscope'};
   const bInst=document.getElementById('binfo-inst');
   if(bInst)bInst.textContent=instNames[inst]||'';
   const bFmts=document.getElementById('binfo-fmts');
@@ -4051,11 +4528,14 @@ function selectInstrument(inst){
 function updateInstModel(val){
   _lab.model=val;
   _labUpdateDeviceLabels();
+  if(_lab.inst==='vna' && val && typeof window.loadVNAModel==='function') window.loadVNAModel(val);
+  if(_lab.inst==='rp' && val && typeof window.loadRPModel==='function') window.loadRPModel(val);
 }
 
 function _labUpdateDeviceLabels(){
   const mname=document.getElementById('device-model-name');
-  if(mname)mname.textContent=_lab.model||(_lab.inst==='vna'?'VNA':'SA');
+  const fallback={vna:'VNA',spectrum:'SA',rp:'RP',scope:'Scope'};
+  if(mname)mname.textContent=_lab.model||(fallback[_lab.inst]||'');
   const brand=document.getElementById('device-brand');
   if(brand)brand.textContent=_lab.model?_lab.model.substring(0,12).toUpperCase():'BenchAlly';
 }
@@ -4083,7 +4563,7 @@ function _labShowError(msg){
 
 /* Drag / drop / click handlers wired via HTML attributes */
 function _labClearDragState(){
-  document.querySelectorAll('.vna-screen-dropzone,.spec-screen-dropzone,.screen-dz').forEach(el=>el.classList.remove('drag-over'));
+  document.querySelectorAll('.vna-screen-dropzone,.spec-screen-dropzone,.rp-screen-dropzone,.scope-screen-dropzone,.screen-dz').forEach(el=>el.classList.remove('drag-over'));
 }
 function labDragOver(e){
   e.preventDefault();
@@ -4105,18 +4585,20 @@ function _labTryLoad(fileList){
   const exts=_lab.inst==='vna'?['s1p','s2p']:['csv'];
   const valid=Array.from(fileList).filter(f=>exts.includes(f.name.split('.').pop().toLowerCase()));
   if(!valid.length){
-    _labShowError(_lab.inst==='vna'?'⚠ Please drop .s1p or .s2p files.':'⚠ Please drop a spectrum .csv file.');
+    _labShowError(_lab.inst==='vna'?'⚠ Please drop .s1p or .s2p files.':'⚠ Please drop a .csv file.');
     return;
   }
   _labSetStatus('loading');
-  loadFiles(valid,_lab.inst==='vna'?'Analyzing Touchstone file…':'Analyzing Spectrum CSV…');
+  const hint=_lab.inst==='vna'?'Analyzing Touchstone file…':
+             _lab.inst==='scope'?'Analyzing Oscilloscope CSV…':'Analyzing Spectrum CSV…';
+  loadFiles(valid,hint);
 }
 
 (()=>{
   const fiVna=document.getElementById('fi-vna');
   const fiSpec=document.getElementById('fi-spectrum');
   if(fiVna)fiVna.addEventListener('change',e=>{if(_lab.inst==='vna'){_labTryLoad(e.target.files);fiVna.value='';}});
-  if(fiSpec)fiSpec.addEventListener('change',e=>{if(_lab.inst==='spectrum'){_labTryLoad(e.target.files);fiSpec.value='';}});
+  if(fiSpec)fiSpec.addEventListener('change',e=>{if(_lab.inst==='spectrum'||_lab.inst==='scope'||_lab.inst==='rp'){_labTryLoad(e.target.files);fiSpec.value='';}});
   // Broad landing page drop (outside device screen)
   const landing=document.getElementById('page-landing');
   if(landing){
@@ -4151,7 +4633,7 @@ if(localStorage.getItem('spv-theme')==='light'){
 // ── Device screen canvas (animated traces on the instrument) ──────────────────
 function initDeviceScreenCanvas(){
   if(_lab.screenRaf){cancelAnimationFrame(_lab.screenRaf);_lab.screenRaf=null;}
-  if(_lab.inst==='vna'||_lab.inst==='spectrum')return;
+  if(_lab.inst==='vna'||_lab.inst==='spectrum'||_lab.inst==='rp'||_lab.inst==='scope')return;
   const canvas=document.getElementById('device-screen-canvas');
   if(!canvas)return;
   const ctx=canvas.getContext('2d');
@@ -4619,8 +5101,14 @@ function _buildReportHTML(fs,opts){
     fMin=fmtF(Math.min(...freqs));fMax=fmtF(Math.max(...freqs));
   }
 
+  const instNames={vna:'Vector Network Analyzer',spectrum:'Spectrum Analyzer',rp:'RedPitaya',scope:'Oscilloscope'};
+  const instLabel=instNames[_lab.inst]||_lab.inst||'—';
+  const modelLabel=_lab.model||'—';
+
   let meta=`<tr><td>DUT Name</td><td>${htmlEsc(dut||'—')}</td></tr>
 <tr><td>Operator</td><td>${htmlEsc(operator||'—')}</td></tr>
+<tr><td>Instrument</td><td>${htmlEsc(instLabel)}</td></tr>
+<tr><td>Model</td><td>${htmlEsc(modelLabel)}</td></tr>
 <tr><td>File</td><td>${htmlEsc(fs.name)}</td></tr>
 <tr><td>Type</td><td>${typeLabel}</td></tr>
 <tr><td>Generated</td><td>${now}</td></tr>
@@ -4797,10 +5285,22 @@ const SCREEN_CONFIG = {
 // Flip false once the plane sits exactly on the black VNA screen.
 const VNA_SCREEN_DEBUG = false;
 
+const VNA_MODEL_FILES = {
+  'R&S ZNB 4': 'assets/vna.glb',
+  'R&S ZND':   'assets/vna_znd.glb'
+};
+
+// Per-model screen plane offset overrides (negative = push into surface)
+const VNA_MODEL_OFFSETS = {
+  'R&S ZNB 4': -0.16,
+  'R&S ZND':   -0.18
+};
+
 let renderer, scene, camera, controls, vnaModel, animId;
 let screenMesh = null, screenGroup = null;
 let iconTex = null, dragTex = null, chartTex = null;
 let isDraggingOver = false;
+let vnaStage = null;
 
 // ── Canvas textures ───────────────────────────────────────────────────────────
 function makeIconTex() {
@@ -5005,8 +5505,9 @@ function setupCanvasEvents(canvas) {
 // ── Three.js scene ────────────────────────────────────────────────────────────
 function initThreeVNA() {
   console.log('[BenchAlly] Three.js VNA initializing...');
-  const stage = document.getElementById('vna-three-stage');
-  if (!stage) return;
+  vnaStage = document.getElementById('vna-three-stage');
+  if (!vnaStage) return;
+  const stage = vnaStage;
   const canvas = document.getElementById('vna-three-canvas');
 
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
@@ -5040,34 +5541,54 @@ function initThreeVNA() {
   controls.minDistance = 1.5;
   controls.maxDistance = 8;
 
-  const loader = new GLTFLoader();
-  loader.load(
-    'assets/vna.glb',
-    (gltf) => {
-      console.log('[BenchAlly] assets/vna.glb loaded successfully');
-      vnaModel = gltf.scene;
-      const box    = new THREE.Box3().setFromObject(vnaModel);
-      const size   = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      const scale  = 2 / Math.max(size.x, size.y, size.z);
-      vnaModel.scale.setScalar(scale);
-      vnaModel.position.sub(center.multiplyScalar(scale));
-      scene.add(vnaModel);
-      // Screen plane is a child of vnaModel → rotates with it as camera orbits
-      createScreenPlane(vnaModel);
-    },
-    undefined,
-    (error) => {
-      console.error('[BenchAlly] Failed to load assets/vna.glb:', error);
-      loadFallback(stage);
-    }
-  );
-
   setupCanvasEvents(canvas);
   watchForFileLoad();
   new ResizeObserver(onVnaResize).observe(stage);
   animate();
+
+  // Load default model
+  loadVNAModel('R&S ZNB 4');
 }
+
+function loadVNAModel(name) {
+  const glbPath = VNA_MODEL_FILES[name] || 'assets/vna.glb';
+  if (!scene) return;
+
+  const canvas = document.getElementById('vna-three-canvas');
+  if (canvas) canvas.style.opacity = '0';
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (vnaModel) { scene.remove(vnaModel); vnaModel = null; }
+    screenMesh = null; screenGroup = null;
+    if (chartTex) { chartTex.dispose(); chartTex = null; }
+
+    const loader = new GLTFLoader();
+    loader.load(
+      glbPath,
+      (gltf) => {
+        console.log(`[BenchAlly] ${glbPath} loaded successfully`);
+        vnaModel = gltf.scene;
+        const box    = new THREE.Box3().setFromObject(vnaModel);
+        const size   = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const scale  = 2.6 / Math.max(size.x, size.y, size.z);
+        vnaModel.scale.setScalar(scale);
+        vnaModel.position.sub(center.multiplyScalar(scale));
+        scene.add(vnaModel);
+        if (VNA_MODEL_OFFSETS[name] !== undefined) SCREEN_CONFIG.offset = VNA_MODEL_OFFSETS[name];
+        createScreenPlane(vnaModel);
+        if (canvas) canvas.style.opacity = '1';
+      },
+      undefined,
+      (error) => {
+        console.error(`[BenchAlly] Failed to load ${glbPath}:`, error);
+        if (canvas) canvas.style.opacity = '1';
+        if (vnaStage) loadFallback(vnaStage);
+      }
+    );
+  }));
+}
+window.loadVNAModel = loadVNAModel;
 
 function animate() {
   animId = requestAnimationFrame(animate);
@@ -5387,10 +5908,643 @@ function loadFallback(stage) {
   stage.insertBefore(img, stage.firstChild);
 }
 
+// Fade in the spec canvas when the user selects Spectrum Analyzer
+(function wireSelectInstrument() {
+  const _orig = window.selectInstrument;
+  if (typeof _orig !== 'function') return;
+  window.selectInstrument = function(name) {
+    _orig.apply(this, arguments);
+    if (name === 'spectrum') {
+      const canvas = document.getElementById('spec-three-canvas');
+      if (canvas) {
+        canvas.style.opacity = '0';
+        requestAnimationFrame(() => requestAnimationFrame(() => { canvas.style.opacity = '1'; }));
+      }
+    }
+  };
+})();
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initThreeSpec);
 } else {
   initThreeSpec();
+}
+</script>
+
+<!-- ════════ THREE.JS REDPITAYA SCENE ══════════════════════════════════════════ -->
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── Screen plane calibration for RedPitaya ────────────────────────────────────
+const RP_SCREEN_CONFIG = {
+  position: { x: 0, y: 0.18, z: 0.54 },
+  rotation: { x: 0, y: 0, z: 0 },
+  size:     { width: 0.95, height: 0.65 },
+  offset:   -0.07
+};
+
+const RP_SCREEN_DEBUG = false;
+
+const RP_MODEL_FILES = {
+  'RP122-16': 'assets/RP122-16.glb',
+  'RP125-14': 'assets/RP125-14.glb'
+};
+
+let renderer, scene, camera, controls, rpModel, animId;
+let screenMesh = null, screenGroup = null;
+let iconTex = null, dragTex = null, chartTex = null;
+let isDraggingOver = false;
+let rpStage = null;
+
+// ── Canvas textures ───────────────────────────────────────────────────────────
+function makeIconTex() {
+  const W = 512, H = Math.round(W * RP_SCREEN_CONFIG.size.height / RP_SCREEN_CONFIG.size.width);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#040e1c';
+  g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(88,166,255,.07)'; g.lineWidth = 1;
+  for (let x = W/8; x < W; x += W/8) { g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+  for (let y = H/6; y < H; y += H/6) { g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+  const cx = W/2, iy = H/2 - 80, r = 30;
+  g.strokeStyle = 'rgba(88,166,255,.78)'; g.lineWidth = 2.5;
+  g.beginPath(); g.arc(cx, iy, r, 0, Math.PI*2); g.stroke();
+  g.strokeStyle = 'rgba(88,166,255,.92)'; g.lineWidth = 2.5; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(cx, iy+13); g.lineTo(cx, iy-12); g.stroke();
+  g.beginPath(); g.moveTo(cx-10, iy-2); g.lineTo(cx, iy-14); g.lineTo(cx+10, iy-2); g.stroke();
+  g.beginPath(); g.moveTo(cx-13, iy+16); g.lineTo(cx+13, iy+16); g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = 'rgba(226,232,240,.88)';
+  g.font = '600 30px -apple-system, BlinkMacSystemFont, Inter, sans-serif';
+  g.fillText('Drop files here', cx, iy + 62);
+  g.fillText('or click to browse', cx, iy + 98);
+  g.fillStyle = 'rgba(121,192,255,.92)';
+  g.font = '500 24px -apple-system, BlinkMacSystemFont, Inter, sans-serif';
+  g.fillText('.csv', cx, iy + 132);
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeDragOverTex() {
+  const W = 512, H = Math.round(W * RP_SCREEN_CONFIG.size.height / RP_SCREEN_CONFIG.size.width);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#041628'; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(88,166,255,.12)'; g.lineWidth = 1;
+  for (let x = W/8; x < W; x += W/8) { g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+  for (let y = H/6; y < H; y += H/6) { g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+  const p = 14;
+  g.strokeStyle = 'rgba(88,166,255,.88)'; g.lineWidth = 3; g.setLineDash([14,9]);
+  g.strokeRect(p, p, W-p*2, H-p*2); g.setLineDash([]);
+  const cx = W/2, cy = H/2;
+  g.strokeStyle = 'rgba(88,166,255,.95)'; g.lineWidth = 3.2; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(cx, cy-22); g.lineTo(cx, cy+20); g.stroke();
+  g.beginPath(); g.moveTo(cx-17, cy+5); g.lineTo(cx, cy+24); g.lineTo(cx+17, cy+5); g.stroke();
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+// ── Screen plane ──────────────────────────────────────────────────────────────
+function createScreenPlane(model) {
+  iconTex = makeIconTex();
+  dragTex = makeDragOverTex();
+  screenGroup = new THREE.Group();
+  const cfg = RP_SCREEN_CONFIG;
+  screenGroup.position.set(cfg.position.x, cfg.position.y, cfg.position.z + cfg.offset);
+  screenGroup.rotation.set(cfg.rotation.x, cfg.rotation.y, cfg.rotation.z);
+  model.add(screenGroup);
+  const geo = new THREE.PlaneGeometry(cfg.size.width, cfg.size.height);
+  const mat = RP_SCREEN_DEBUG
+    ? new THREE.MeshBasicMaterial({ color: 0x00ff55, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+    : new THREE.MeshBasicMaterial({ map: iconTex });
+  screenMesh = new THREE.Mesh(geo, mat);
+  screenGroup.add(screenMesh);
+  if (RP_SCREEN_DEBUG) {
+    scene.add(new THREE.BoxHelper(model, 0xff8800));
+    scene.add(new THREE.AxesHelper(2));
+    screenGroup.add(new THREE.AxesHelper(0.25));
+    console.log('[BenchAlly] RP_SCREEN_DEBUG ON — tune RP_SCREEN_CONFIG then set false.');
+  }
+}
+
+function setScreenTexture(tex) {
+  if (!screenMesh) return;
+  screenMesh.material.map = tex;
+  screenMesh.material.needsUpdate = true;
+}
+
+function applyImageTexture(url) {
+  if (!screenMesh) return;
+  new THREE.TextureLoader().load(url, tex => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    if (chartTex) chartTex.dispose();
+    chartTex = tex;
+    if (!RP_SCREEN_DEBUG) setScreenTexture(chartTex);
+  });
+}
+
+// ── Chart capture ─────────────────────────────────────────────────────────────
+function captureChart(panelEl) {
+  if (!window.Plotly) return;
+  const plotDiv = panelEl.querySelector('[id^="sp-"]');
+  if (!plotDiv) return;
+  const W = 512, H = Math.round(W * RP_SCREEN_CONFIG.size.height / RP_SCREEN_CONFIG.size.width);
+  window.Plotly.toImage(plotDiv, { format: 'png', width: W, height: H })
+    .then(url => applyImageTexture(url))
+    .catch(e => console.warn('[BenchAlly] RedPitaya chart capture failed:', e));
+}
+
+function watchForFileLoad() {
+  const tabPanels = document.getElementById('tab-panels');
+  if (!tabPanels) return;
+  new MutationObserver(mutations => {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        setTimeout(() => captureChart(node), 1200);
+      }
+    }
+  }).observe(tabPanels, { childList: true });
+}
+
+// ── Raycast click detection ───────────────────────────────────────────────────
+const _raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+function pointerHitsScreen(e) {
+  if (!screenMesh || !renderer || !camera) return false;
+  const rect = renderer.domElement.getBoundingClientRect();
+  _ndc.set(
+    ((e.clientX - rect.left) / rect.width) * 2 - 1,
+    -((e.clientY - rect.top) / rect.height) * 2 + 1
+  );
+  _raycaster.setFromCamera(_ndc, camera);
+  return _raycaster.intersectObject(screenMesh, false).length > 0;
+}
+
+function setupCanvasEvents(canvas) {
+  const stage = canvas.parentElement;
+  let ptrDownX = 0, ptrDownY = 0;
+  canvas.addEventListener('pointerdown', e => { ptrDownX = e.clientX; ptrDownY = e.clientY; });
+  canvas.addEventListener('pointerup', e => {
+    const d = Math.hypot(e.clientX - ptrDownX, e.clientY - ptrDownY);
+    if (d < 5 && pointerHitsScreen(e) && typeof window.labClickBrowse === 'function') {
+      window.labClickBrowse();
+    }
+  });
+  stage.addEventListener('dragenter', e => e.preventDefault());
+  stage.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (!isDraggingOver) {
+      isDraggingOver = true;
+      setScreenTexture(dragTex);
+      if (typeof window.labDragOver === 'function') window.labDragOver(e);
+    }
+  });
+  stage.addEventListener('dragleave', e => {
+    if (!stage.contains(e.relatedTarget)) {
+      isDraggingOver = false;
+      setScreenTexture(chartTex || iconTex);
+      if (typeof window.labDragLeave === 'function') window.labDragLeave(e);
+    }
+  });
+  stage.addEventListener('drop', e => {
+    e.preventDefault();
+    isDraggingOver = false;
+    setScreenTexture(chartTex || iconTex);
+    if (typeof window.labDrop === 'function') window.labDrop(e);
+  });
+}
+
+// ── Three.js scene ────────────────────────────────────────────────────────────
+function initThreeRP() {
+  console.log('[BenchAlly] Three.js RedPitaya initializing...');
+  rpStage = document.getElementById('rp-three-stage');
+  if (!rpStage) return;
+  const stage = rpStage;
+  const canvas = document.getElementById('rp-three-canvas');
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(stage.clientWidth, stage.clientHeight);
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(35, stage.clientWidth / stage.clientHeight, 0.01, 100);
+  camera.position.set(0, 0.3, 4);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+  sun.position.set(2, 4, 3); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x8090ff, 0.8);
+  fill.position.set(-3, 1, -2); scene.add(fill);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0, 0);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.autoRotate = false;
+  controls.enablePan = false;
+  controls.minDistance = 1.5;
+  controls.maxDistance = 8;
+
+  setupCanvasEvents(canvas);
+  watchForFileLoad();
+  new ResizeObserver(onRPResize).observe(stage);
+  animate();
+
+  // Load default model
+  loadRPModel('RP122-16');
+}
+
+function loadRPModel(name) {
+  const glbPath = RP_MODEL_FILES[name];
+  if (!glbPath || !scene) return;
+
+  const canvas = document.getElementById('rp-three-canvas');
+  if (canvas) canvas.style.opacity = '0';
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+  if (rpModel) { scene.remove(rpModel); rpModel = null; }
+  screenMesh = null;
+  screenGroup = null;
+  if (chartTex) { chartTex.dispose(); chartTex = null; }
+
+  const loader = new GLTFLoader();
+  loader.load(
+    glbPath,
+    (gltf) => {
+      console.log(`[BenchAlly] ${glbPath} loaded successfully`);
+      rpModel = gltf.scene;
+      const box    = new THREE.Box3().setFromObject(rpModel);
+      const size   = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const scale  = 2 / Math.max(size.x, size.y, size.z);
+      rpModel.scale.setScalar(scale);
+      rpModel.position.sub(center.multiplyScalar(scale));
+      scene.add(rpModel);
+
+      // Recolor green PCB board → deep red
+      rpModel.traverse(obj => {
+        if (!obj.isMesh) return;
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach((mat, i) => {
+          if (!mat || !mat.color) return;
+          const { r, g, b } = mat.color;
+          if (g > r * 1.5 && g > b * 1.5 && g > 0.03) {
+            const cloned = mat.clone();
+            cloned.color.set('#b01822');
+            if (cloned.map) cloned.map = null;
+            if (Array.isArray(obj.material)) obj.material[i] = cloned;
+            else obj.material = cloned;
+          // Cyan/sky-blue → black
+          } else if (b > 0.45 && g > 0.45 && r < 0.75 && Math.abs(b - g) < 0.35 && b > r * 1.1 && g > r * 1.1) {
+            const cloned = mat.clone();
+            cloned.color.set('#111111');
+            if (cloned.map) cloned.map = null;
+            if (Array.isArray(obj.material)) obj.material[i] = cloned;
+            else obj.material = cloned;
+          }
+        });
+      });
+
+      createScreenPlane(rpModel);
+      if (canvas) canvas.style.opacity = '1';
+    },
+    undefined,
+    (error) => {
+      console.error(`[BenchAlly] Failed to load ${glbPath}:`, error);
+      if (canvas) canvas.style.opacity = '1';
+      if (rpStage) loadFallback(rpStage);
+    }
+  );
+  }));
+}
+window.loadRPModel = loadRPModel;
+
+function animate() {
+  animId = requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function onRPResize() {
+  const stage = document.getElementById('rp-three-stage');
+  if (!stage || !renderer) return;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+function loadFallback(stage) {
+  console.warn('[BenchAlly] RP122-16.glb load failed — showing placeholder');
+  const canvas = document.getElementById('rp-three-canvas');
+  if (canvas) canvas.remove();
+  if (animId) cancelAnimationFrame(animId);
+}
+
+// Wire into selectInstrument to stop autoRotate on switch
+(function wireSelectInstrument() {
+  const _orig = window.selectInstrument;
+  if (typeof _orig !== 'function') return;
+  window.selectInstrument = function(name) {
+    _orig.apply(this, arguments);
+    if (controls) controls.autoRotate = false;
+  };
+})();
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initThreeRP);
+} else {
+  initThreeRP();
+}
+</script>
+
+<!-- ════════ THREE.JS OSCILLOSCOPE SCENE ══════════════════════════════════════ -->
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const SCOPE_SCREEN_CONFIG = {
+  position: { x: -0.35, y: 0.13, z: 0.44 },
+  rotation: { x: 0, y: 0, z: 0 },
+  size:     { width: 1.1, height: 0.60 },
+  offset:   -0.07
+};
+
+const SCOPE_SCREEN_DEBUG = false;
+
+let renderer, scene, camera, controls, scopeModel, animId;
+let screenMesh = null, screenGroup = null;
+let iconTex = null, dragTex = null, chartTex = null;
+let isDraggingOver = false;
+
+function makeIconTex() {
+  const W = 512, H = Math.round(W * SCOPE_SCREEN_CONFIG.size.height / SCOPE_SCREEN_CONFIG.size.width);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#040e1c';
+  g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(88,166,255,.07)'; g.lineWidth = 1;
+  for (let x = W/8; x < W; x += W/8) { g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+  for (let y = H/6; y < H; y += H/6) { g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+  const cx = W/2, iy = H/2 - 40, r = 30;
+  g.strokeStyle = 'rgba(88,166,255,.78)'; g.lineWidth = 2.5;
+  g.beginPath(); g.arc(cx, iy, r, 0, Math.PI*2); g.stroke();
+  g.strokeStyle = 'rgba(88,166,255,.92)'; g.lineWidth = 2.5; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(cx, iy+13); g.lineTo(cx, iy-12); g.stroke();
+  g.beginPath(); g.moveTo(cx-10, iy-2); g.lineTo(cx, iy-14); g.lineTo(cx+10, iy-2); g.stroke();
+  g.beginPath(); g.moveTo(cx-13, iy+16); g.lineTo(cx+13, iy+16); g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = 'rgba(226,232,240,.88)';
+  g.font = '600 30px -apple-system, BlinkMacSystemFont, Inter, sans-serif';
+  g.fillText('Drop files here', cx, iy + 62);
+  g.fillText('or click to browse', cx, iy + 98);
+  g.fillStyle = 'rgba(121,192,255,.92)';
+  g.font = '500 24px -apple-system, BlinkMacSystemFont, Inter, sans-serif';
+  g.fillText('.csv', cx, iy + 132);
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeDragOverTex() {
+  const W = 512, H = Math.round(W * SCOPE_SCREEN_CONFIG.size.height / SCOPE_SCREEN_CONFIG.size.width);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#041628'; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(88,166,255,.12)'; g.lineWidth = 1;
+  for (let x = W/8; x < W; x += W/8) { g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+  for (let y = H/6; y < H; y += H/6) { g.beginPath(); g.moveTo(0,y); g.lineTo(W,y); g.stroke(); }
+  const p = 14;
+  g.strokeStyle = 'rgba(88,166,255,.88)'; g.lineWidth = 3; g.setLineDash([14,9]);
+  g.strokeRect(p, p, W-p*2, H-p*2); g.setLineDash([]);
+  const cx = W/2, cy = H/2;
+  g.strokeStyle = 'rgba(88,166,255,.95)'; g.lineWidth = 3.2; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(cx, cy-22); g.lineTo(cx, cy+20); g.stroke();
+  g.beginPath(); g.moveTo(cx-17, cy+5); g.lineTo(cx, cy+24); g.lineTo(cx+17, cy+5); g.stroke();
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function createScreenPlane(model) {
+  iconTex = makeIconTex();
+  dragTex = makeDragOverTex();
+  screenGroup = new THREE.Group();
+  const cfg = SCOPE_SCREEN_CONFIG;
+  screenGroup.position.set(cfg.position.x, cfg.position.y, cfg.position.z + cfg.offset);
+  screenGroup.rotation.set(cfg.rotation.x, cfg.rotation.y, cfg.rotation.z);
+  model.add(screenGroup);
+  const geo = new THREE.PlaneGeometry(cfg.size.width, cfg.size.height);
+  const mat = SCOPE_SCREEN_DEBUG
+    ? new THREE.MeshBasicMaterial({ color: 0x00ff55, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+    : new THREE.MeshBasicMaterial({ map: iconTex });
+  screenMesh = new THREE.Mesh(geo, mat);
+  screenGroup.add(screenMesh);
+  if (SCOPE_SCREEN_DEBUG) {
+    scene.add(new THREE.BoxHelper(model, 0xff8800));
+    scene.add(new THREE.AxesHelper(2));
+    screenGroup.add(new THREE.AxesHelper(0.25));
+    console.log('[BenchAlly] SCOPE_SCREEN_DEBUG ON — tune SCOPE_SCREEN_CONFIG then set false.');
+  }
+}
+
+function setScreenTexture(tex) {
+  if (!screenMesh) return;
+  screenMesh.material.map = tex;
+  screenMesh.material.needsUpdate = true;
+}
+
+function applyImageTexture(url) {
+  if (!screenMesh) return;
+  new THREE.TextureLoader().load(url, tex => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    if (chartTex) chartTex.dispose();
+    chartTex = tex;
+    if (!SCOPE_SCREEN_DEBUG) setScreenTexture(chartTex);
+  });
+}
+
+function captureChart(panelEl) {
+  if (!window.Plotly) return;
+  const plotDiv = panelEl.querySelector('[id^="sp-"]');
+  if (!plotDiv) return;
+  const W = 512, H = Math.round(W * SCOPE_SCREEN_CONFIG.size.height / SCOPE_SCREEN_CONFIG.size.width);
+  window.Plotly.toImage(plotDiv, { format: 'png', width: W, height: H })
+    .then(url => applyImageTexture(url))
+    .catch(e => console.warn('[BenchAlly] Scope chart capture failed:', e));
+}
+
+function watchForFileLoad() {
+  const tabPanels = document.getElementById('tab-panels');
+  if (!tabPanels) return;
+  new MutationObserver(mutations => {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        setTimeout(() => captureChart(node), 1200);
+      }
+    }
+  }).observe(tabPanels, { childList: true });
+}
+
+const _raycaster = new THREE.Raycaster();
+const _ndc = new THREE.Vector2();
+function pointerHitsScreen(e) {
+  if (!screenMesh || !renderer || !camera) return false;
+  const rect = renderer.domElement.getBoundingClientRect();
+  _ndc.set(
+    ((e.clientX - rect.left) / rect.width) * 2 - 1,
+    -((e.clientY - rect.top) / rect.height) * 2 + 1
+  );
+  _raycaster.setFromCamera(_ndc, camera);
+  return _raycaster.intersectObject(screenMesh, false).length > 0;
+}
+
+function setupCanvasEvents(canvas) {
+  const stage = canvas.parentElement;
+  let ptrDownX = 0, ptrDownY = 0;
+  canvas.addEventListener('pointerdown', e => { ptrDownX = e.clientX; ptrDownY = e.clientY; });
+  canvas.addEventListener('pointerup', e => {
+    const d = Math.hypot(e.clientX - ptrDownX, e.clientY - ptrDownY);
+    if (d < 5 && pointerHitsScreen(e) && typeof window.labClickBrowse === 'function') {
+      window.labClickBrowse();
+    }
+  });
+  stage.addEventListener('dragenter', e => e.preventDefault());
+  stage.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (!isDraggingOver) {
+      isDraggingOver = true;
+      setScreenTexture(dragTex);
+      if (typeof window.labDragOver === 'function') window.labDragOver(e);
+    }
+  });
+  stage.addEventListener('dragleave', e => {
+    if (!stage.contains(e.relatedTarget)) {
+      isDraggingOver = false;
+      setScreenTexture(chartTex || iconTex);
+      if (typeof window.labDragLeave === 'function') window.labDragLeave(e);
+    }
+  });
+  stage.addEventListener('drop', e => {
+    e.preventDefault();
+    isDraggingOver = false;
+    setScreenTexture(chartTex || iconTex);
+    if (typeof window.labDrop === 'function') window.labDrop(e);
+  });
+}
+
+function initThreeScope() {
+  console.log('[BenchAlly] Three.js Oscilloscope initializing...');
+  const stage = document.getElementById('scope-three-stage');
+  if (!stage) return;
+  const canvas = document.getElementById('scope-three-canvas');
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(stage.clientWidth, stage.clientHeight);
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(35, stage.clientWidth / stage.clientHeight, 0.01, 100);
+  camera.position.set(0, 0.3, 4);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+  sun.position.set(2, 4, 3); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x8090ff, 0.8);
+  fill.position.set(-3, 1, -2); scene.add(fill);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0, 0);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.autoRotate = false;
+  controls.enablePan = false;
+  controls.minDistance = 1.5;
+  controls.maxDistance = 8;
+
+  const loader = new GLTFLoader();
+  loader.load(
+    'assets/Scope_MSO5034.glb',
+    (gltf) => {
+      console.log('[BenchAlly] assets/Scope_MSO5034.glb loaded successfully');
+      scopeModel = gltf.scene;
+      const box    = new THREE.Box3().setFromObject(scopeModel);
+      const size   = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const scale  = 2.6 / Math.max(size.x, size.y, size.z);
+      scopeModel.scale.setScalar(scale);
+      scopeModel.position.sub(center.multiplyScalar(scale));
+      scene.add(scopeModel);
+      createScreenPlane(scopeModel);
+    },
+    undefined,
+    (error) => {
+      console.error('[BenchAlly] Failed to load assets/Scope_MSO5034.glb:', error);
+    }
+  );
+
+  setupCanvasEvents(canvas);
+  watchForFileLoad();
+  new ResizeObserver(onScopeResize).observe(stage);
+  animate();
+}
+
+function animate() {
+  animId = requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+function onScopeResize() {
+  const stage = document.getElementById('scope-three-stage');
+  if (!stage || !renderer) return;
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+(function wireSelectInstrument() {
+  const _orig = window.selectInstrument;
+  if (typeof _orig !== 'function') return;
+  window.selectInstrument = function(name) {
+    _orig.apply(this, arguments);
+    if (controls) controls.autoRotate = false;
+    if (name === 'scope') {
+      const canvas = document.getElementById('scope-three-canvas');
+      if (canvas) {
+        canvas.style.opacity = '0';
+        requestAnimationFrame(() => requestAnimationFrame(() => { canvas.style.opacity = '1'; }));
+      }
+    }
+  };
+})();
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initThreeScope);
+} else {
+  initThreeScope();
 }
 </script>
 
