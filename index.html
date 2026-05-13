@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BenchAlly — Hardware Measurement Analysis</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<!-- ── Supabase Auth SDK v2 (UMD build — exposes window.supabase) ── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1395,6 +1397,81 @@ body.light .vna-html-dropzone.drag-over{
   background:rgba(88,166,255,.18);
   box-shadow:inset 0 0 24px rgba(88,166,255,.24),0 0 26px rgba(88,166,255,.32)
 }
+
+/* ── Auth buttons in nav ── */
+.auth-btn{
+  background:transparent;border:1px solid rgba(255,255,255,.13);
+  border-radius:20px;color:var(--text3);cursor:pointer;
+  font-size:.72rem;padding:5px 14px;letter-spacing:.02em;
+  transition:all .2s ease;font-family:inherit;white-space:nowrap}
+.auth-btn:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);color:var(--text2)}
+body.light .auth-btn{border-color:rgba(0,0,0,.13);background:transparent}
+body.light .auth-btn:hover{background:rgba(0,0,0,.06);border-color:rgba(0,0,0,.2)}
+.auth-btn-signup{
+  background:var(--accent);border-color:var(--accent);color:#fff}
+.auth-btn-signup:hover{
+  background:color-mix(in srgb,var(--accent) 85%,#fff);
+  border-color:color-mix(in srgb,var(--accent) 85%,#fff);color:#fff}
+.auth-user-email{
+  font-size:.7rem;color:var(--text3);
+  max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding:0 6px;align-self:center}
+
+/* ── Auth modal overlay ── */
+#auth-modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  z-index:2000;align-items:center;justify-content:center}
+#auth-modal.open{display:flex}
+.auth-modal-box{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:13px;width:100%;max-width:360px;
+  box-shadow:0 24px 64px rgba(0,0,0,.55);
+  overflow:hidden;animation:authBoxIn .22s cubic-bezier(.16,1,.3,1) both}
+@keyframes authBoxIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+body.light .auth-modal-box{box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.auth-modal-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px 14px;border-bottom:1px solid var(--border)}
+.auth-modal-title{font-size:.95rem;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.auth-modal-close{
+  background:none;border:none;color:var(--text3);cursor:pointer;
+  font-size:1rem;line-height:1;padding:2px 5px;border-radius:5px;
+  transition:color .15s;font-family:inherit}
+.auth-modal-close:hover{color:var(--text)}
+.auth-modal-body{padding:20px 18px;display:flex;flex-direction:column;gap:12px}
+.auth-field-lbl{font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text4);margin-bottom:4px}
+.auth-input{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:7px;color:var(--text);font-size:.83rem;font-family:inherit;
+  padding:9px 12px;outline:none;transition:border-color .15s}
+.auth-input:focus{border-color:var(--accent)}
+.auth-input::placeholder{color:var(--text4)}
+.auth-actions{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+.auth-submit-btn{
+  width:100%;padding:10px;border-radius:8px;font-size:.83rem;font-weight:600;
+  cursor:pointer;border:none;font-family:inherit;transition:all .18s}
+.auth-submit-login{background:var(--accent);color:#fff}
+.auth-submit-login:hover{background:color-mix(in srgb,var(--accent) 82%,#fff)}
+.auth-submit-signup{
+  background:transparent;border:1px solid var(--border);
+  color:var(--text2)}
+.auth-submit-signup:hover{border-color:var(--accent);color:var(--accent)}
+.auth-divider{
+  font-size:.68rem;color:var(--text4);text-align:center;
+  display:flex;align-items:center;gap:8px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-error{
+  font-size:.75rem;color:var(--red);background:color-mix(in srgb,var(--red) 10%,var(--bg3));
+  border:1px solid color-mix(in srgb,var(--red) 30%,var(--border));
+  border-radius:6px;padding:7px 10px;display:none}
+.auth-error.show{display:block}
+.auth-success{
+  font-size:.75rem;color:var(--green);background:color-mix(in srgb,var(--green) 10%,var(--bg3));
+  border:1px solid color-mix(in srgb,var(--green) 30%,var(--border));
+  border-radius:6px;padding:7px 10px;display:none}
+.auth-success.show{display:block}
+.auth-loading{opacity:.55;pointer-events:none}
 </style>
 </head>
 <body>
@@ -1428,6 +1505,8 @@ body.light .vna-html-dropzone.drag-over{
         </div>
         <div id="resume-sub"></div>
       </button>
+      <!-- Auth buttons — toggled by updateAuthUI() -->
+      <div id="auth-nav-landing" style="display:flex;align-items:center;gap:6px"></div>
       <button class="lab-theme-btn" onclick="toggleTheme()" id="tbtn-landing">Light mode</button>
     </div>
   </nav>
@@ -1595,7 +1674,9 @@ body.light .vna-html-dropzone.drag-over{
     <input type="file" id="fi-add" accept=".s1p,.s2p,.S1P,.S2P,.csv,.CSV" multiple style="display:none">
     <button class="btn btn-compare" onclick="openCompareModal()">Compare Traces</button>
     <button class="btn btn-report" onclick="openReportModal()">Generate Report</button>
-    <div style="margin-left:6px;flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:6px;margin-left:6px;flex-shrink:0">
+      <!-- Auth buttons in viewer header — toggled by updateAuthUI() -->
+      <div id="auth-nav-viewer" style="display:flex;align-items:center;gap:5px"></div>
       <button class="btn btn-theme" onclick="toggleTheme()" id="tbtn-viewer">Light mode</button>
     </div>
   </div>
@@ -1607,6 +1688,196 @@ body.light .vna-html-dropzone.drag-over{
   <div class="loading-scanner"></div>
   <div class="loading-text" id="loading-text">Analyzing file…</div>
 </div>
+
+<!-- ════════ AUTH MODAL -->
+<div id="auth-modal" onclick="authModalBgClick(event)">
+  <div class="auth-modal-box">
+    <div class="auth-modal-hdr">
+      <span class="auth-modal-title" id="auth-modal-title">Sign in to BenchAlly</span>
+      <button class="auth-modal-close" onclick="closeAuthModal()" title="Close">&#x2715;</button>
+    </div>
+    <div class="auth-modal-body" id="auth-modal-body">
+      <div>
+        <div class="auth-field-lbl">Email</div>
+        <input class="auth-input" id="auth-email" type="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div>
+        <div class="auth-field-lbl">Password</div>
+        <input class="auth-input" id="auth-password" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="auth-error" id="auth-error"></div>
+      <div class="auth-success" id="auth-success"></div>
+      <div class="auth-actions">
+        <button class="auth-submit-btn auth-submit-login" id="auth-login-btn" onclick="authDoLogin()">Log in</button>
+        <div class="auth-divider">or</div>
+        <button class="auth-submit-btn auth-submit-signup" id="auth-signup-btn" onclick="authDoSignUp()">Create account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════════
+     SUPABASE AUTH — Step 1
+     ─────────────────────────────────────────────────────────────────────────────
+     SETUP: Replace the two placeholder values below with your project credentials.
+     Find them at: https://supabase.com/dashboard → your project → Settings → API
+
+       SUPABASE_URL  →  "Project URL"  (looks like https://xxxx.supabase.co)
+       SUPABASE_ANON_KEY  →  "anon / public" key  (starts with eyJ...)
+
+     ⚠  Never use the service_role key on the front end.
+     ════════════════════════════════════════════════════════════════════════════ -->
+<script>
+(function initSupabaseAuth() {
+
+  // ── ① PASTE YOUR CREDENTIALS HERE ────────────────────────────────────────────
+  const SUPABASE_URL      = 'https://yovrrtjriqhanxwkrnwd.supabase.co';       // e.g. https://abcdef.supabase.co
+  const SUPABASE_ANON_KEY = 'sb_publishable_qRB2dnzSKNgmHVhHxHO4Iw_YZiCmNLg';  // anon / public key (starts with eyJ)
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // Guard: if credentials are not filled in, disable auth silently
+  if (SUPABASE_URL.startsWith('YOUR_') || SUPABASE_ANON_KEY.startsWith('YOUR_')) {
+    console.warn('[BenchAlly Auth] Supabase credentials not configured. Auth is disabled.');
+    window._authReady = false;
+    window._supabase  = null;
+    _renderAuthUI(null);
+    return;
+  }
+
+  // ── ② Initialise client ───────────────────────────────────────────────────────
+  const { createClient } = window.supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window._supabase = sb;
+  window._authReady = true;
+
+  // ── ③ Bootstrap: check existing session on page load ─────────────────────────
+  sb.auth.getSession().then(({ data: { session } }) => {
+    _renderAuthUI(session?.user ?? null);
+  });
+
+  // ── ④ Keep UI in sync with any future auth state changes ─────────────────────
+  sb.auth.onAuthStateChange((_event, session) => {
+    _renderAuthUI(session?.user ?? null);
+  });
+
+})();
+
+// ── Auth UI rendering ─────────────────────────────────────────────────────────
+// Renders login/signup buttons when logged out; email + logout when logged in.
+// Called after every auth state change.
+function _authEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function _renderAuthUI(user) {
+  const slots = ['auth-nav-landing', 'auth-nav-viewer'];
+  slots.forEach(slotId => {
+    const el = document.getElementById(slotId);
+    if (!el) return;
+    if (user) {
+      el.innerHTML = `
+        <span class="auth-user-email" title="${_authEsc(user.email)}">${_authEsc(user.email)}</span>
+        <button class="auth-btn" onclick="authDoLogout()">Log out</button>`;
+    } else {
+      el.innerHTML = `
+        <button class="auth-btn" onclick="openAuthModal('login')">Log in</button>
+        <button class="auth-btn auth-btn-signup" onclick="openAuthModal('signup')">Sign up</button>`;
+    }
+  });
+}
+
+// ── Modal open / close ────────────────────────────────────────────────────────
+function openAuthModal(mode) {
+  const modal = document.getElementById('auth-modal');
+  if (!modal) return;
+  _authClearMessages();
+  document.getElementById('auth-email').value    = '';
+  document.getElementById('auth-password').value = '';
+  document.getElementById('auth-modal-title').textContent =
+    mode === 'signup' ? 'Create your account' : 'Sign in to BenchAlly';
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('auth-email').focus(), 80);
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('auth-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function authModalBgClick(e) {
+  if (e.target === document.getElementById('auth-modal')) closeAuthModal();
+}
+
+// ── Input helpers ─────────────────────────────────────────────────────────────
+function _authSetLoading(on) {
+  const body = document.getElementById('auth-modal-body');
+  if (body) body.classList.toggle('auth-loading', on);
+}
+function _authClearMessages() {
+  const err = document.getElementById('auth-error');
+  const ok  = document.getElementById('auth-success');
+  if (err) { err.textContent = ''; err.classList.remove('show'); }
+  if (ok)  { ok.textContent  = ''; ok.classList.remove('show'); }
+}
+function _authShowError(msg) {
+  const el = document.getElementById('auth-error');
+  if (el) { el.textContent = msg; el.classList.add('show'); }
+}
+function _authShowSuccess(msg) {
+  const el = document.getElementById('auth-success');
+  if (el) { el.textContent = msg; el.classList.add('show'); }
+}
+
+// ── Log in ────────────────────────────────────────────────────────────────────
+async function authDoLogin() {
+  if (!window._supabase) { _authShowError('Auth not configured.'); return; }
+  _authClearMessages();
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if (!email || !password) { _authShowError('Please enter your email and password.'); return; }
+  _authSetLoading(true);
+  const { error } = await window._supabase.auth.signInWithPassword({ email, password });
+  _authSetLoading(false);
+  if (error) { _authShowError(error.message); return; }
+  closeAuthModal();
+}
+
+// ── Sign up ───────────────────────────────────────────────────────────────────
+async function authDoSignUp() {
+  if (!window._supabase) { _authShowError('Auth not configured.'); return; }
+  _authClearMessages();
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if (!email)         { _authShowError('Please enter your email.');    return; }
+  if (password.length < 6) { _authShowError('Password must be at least 6 characters.'); return; }
+  _authSetLoading(true);
+  const { error } = await window._supabase.auth.signUp({ email, password });
+  _authSetLoading(false);
+  if (error) { _authShowError(error.message); return; }
+  _authShowSuccess('Account created! Check your email to confirm your address, then log in.');
+}
+
+// ── Log out ───────────────────────────────────────────────────────────────────
+async function authDoLogout() {
+  if (!window._supabase) return;
+  await window._supabase.auth.signOut();
+}
+
+// ── requireLogin() — gate future paid / cloud features ───────────────────────
+// Usage:  const user = await requireLogin();  if (!user) return;
+async function requireLogin() {
+  if (!window._supabase) return null;
+  const { data: { session } } = await window._supabase.auth.getSession();
+  if (session?.user) return session.user;
+  // Not logged in — open modal with a contextual prompt
+  _authClearMessages();
+  _authShowError('Please log in or create an account to save your work.');
+  openAuthModal('login');
+  return null;
+}
+
+// Keyboard shortcut: Escape closes the auth modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAuthModal();
+});
+</script>
 
 <script>
 // ── state ─────────────────────────────────────────────────────────────────────
